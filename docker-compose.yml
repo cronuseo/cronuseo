@@ -1,0 +1,13 @@
+version: '3.8'
+services:
+  db:
+    image: postgres
+    volumes: 
+      - ./data/db:/var/lib/postgressql/data
+    ports:
+      - "{DB_PORT}:{DB_PORT}"
+    environment:
+      - POSTGRES_USER={DB_USERNAME}
+      - POSTGRES_PASSWORD={DB_PASSWORD}
+      - POSTGRES_DB={DB_NAME}
+
