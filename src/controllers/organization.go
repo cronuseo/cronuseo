@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"time"
 
@@ -19,12 +20,10 @@ func GetOrganization(c *gin.Context) {
 func CreateOrganization(c *gin.Context) {
 	var orgs models.Organization
 	c.BindJSON(&orgs)
-	count := int64(0)
-	err := config.DB.Model(&models.Organization{}).Where("key = ?", orgs.Key).Count(&count).Error
+	exists, err := checkOrganizationExists(&orgs)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 	}
-	exists := count > 0
 	if exists {
 		c.JSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
 	} else {
@@ -38,7 +37,7 @@ func CreateOrganization(c *gin.Context) {
 func DeleteOrganization(c *gin.Context) {
 	var orgs models.Organization
 	config.DB.Where("id = ?", c.Param("id")).Delete(&orgs)
-	c.JSON(http.StatusOK, &orgs)
+	c.JSON(http.StatusOK, "")
 }
 
 func UpdateOrganization(c *gin.Context) {
@@ -47,4 +46,17 @@ func UpdateOrganization(c *gin.Context) {
 	c.BindJSON(&orgs)
 	config.DB.Save(&orgs)
 	c.JSON(http.StatusOK, &orgs)
+}
+
+func checkOrganizationExists(orgs *models.Organization) (bool, error) {
+	var exists bool
+	err := config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("key = ?", orgs.Key).Find(&exists).Error
+	if err != nil {
+		return false, errors.New("")
+	}
+	if exists {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }
