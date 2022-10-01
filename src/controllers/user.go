@@ -8,12 +8,6 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func UserController(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"greet": "hello, world!",
-	})
-}
-
 func GetUsers(c *gin.Context) {
 	users := []models.User{}
 	config.DB.Find(&users)
