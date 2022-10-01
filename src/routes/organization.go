@@ -7,7 +7,7 @@ import (
 
 func OrganizationRoutes(router *gin.Engine) {
 
-	router.GET("/orgs", controllers.GetOrganization)
+	router.GET("/orgs", controllers.GetOrganizations)
 	router.POST("/orgs", controllers.CreateOrganization)
 	router.DELETE("/orgs/:id", controllers.DeleteOrganization)
 	router.POST("/orgs/:id", controllers.UpdateOrganization)

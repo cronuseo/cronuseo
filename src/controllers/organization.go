@@ -11,7 +11,7 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetOrganization(c *gin.Context) {
+func GetOrganizations(c *gin.Context) {
 	orgs := []models.Organization{}
 	config.DB.Find(&orgs)
 	c.JSON(http.StatusOK, &orgs)
@@ -19,13 +19,19 @@ func GetOrganization(c *gin.Context) {
 
 func CreateOrganization(c *gin.Context) {
 	var orgs models.Organization
-	c.BindJSON(&orgs)
+	if err := c.ShouldBindJSON(&orgs); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest,
+			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
+		return
+	}
 	exists, err := checkOrganizationExists(&orgs)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
 	}
 	if exists {
-		c.JSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
+		return
 	} else {
 		c.BindJSON(&orgs)
 		config.DB.Create(&orgs)
