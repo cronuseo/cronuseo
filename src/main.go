@@ -17,6 +17,7 @@ func main() {
 	router := gin.Default()
 	config.ConnectDB()
 	config.InitLogger()
+	routes.OAuth2Routes(router)
 	routes.UserRoutes(router)
 	routes.OrganizationRoutes(router)
 	routes.ProjectRoutes(router)
