@@ -32,12 +32,9 @@ func CreateOrganization(c *gin.Context) {
 	if exists {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
 		return
-	} else {
-		c.BindJSON(&orgs)
-		config.DB.Create(&orgs)
-		c.JSON(http.StatusOK, &orgs)
 	}
-
+	config.DB.Create(&orgs)
+	c.JSON(http.StatusOK, &orgs)
 }
 
 func DeleteOrganization(c *gin.Context) {
