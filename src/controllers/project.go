@@ -39,7 +39,7 @@ func CreateProjects(c *gin.Context) {
 		return
 	}
 	if exists {
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project already exists"})
 		return
 	} else {
 		config.DB.Create(&project)
@@ -57,7 +57,7 @@ func DeleteProjects(c *gin.Context) {
 		return
 	}
 	if !exists {
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
 	}
 	config.DB.Where("id = ?", c.Param("id")).Delete(&project)
@@ -75,17 +75,18 @@ func UpdateProjects(c *gin.Context) {
 			return
 		}
 	}
-	exists, err := checkOrganizationExistsById(c)
+	exists, err := checkProjectExistsById(c)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if !exists {
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
 	}
 	config.DB.Where("id = ?", c.Param("id")).First(&project)
 	project.Name = reqProject.Name
+	project.Description = reqProject.Description
 	config.DB.Save(&project)
 	c.JSON(http.StatusOK, &project)
 }
