@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -33,12 +32,13 @@ func CreateProjects(c *gin.Context) {
 	org_id, _ := strconv.Atoi(c.Param("org_id"))
 	project.OrganizationID = org_id
 	exists, err := checkProjectExistsByKey(&project)
-	fmt.Print(project)
 	if err != nil {
+		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if exists {
+		config.Log.Info("Project already exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project already exists"})
 		return
 	} else {
@@ -53,10 +53,12 @@ func DeleteProjects(c *gin.Context) {
 	checkOrganizationExists(c)
 	exists, err := checkProjectExistsById(c)
 	if err != nil {
+		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if !exists {
+		config.Log.Info("Project not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
 	}
@@ -77,10 +79,12 @@ func UpdateProjects(c *gin.Context) {
 	}
 	exists, err := checkProjectExistsById(c)
 	if err != nil {
+		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if !exists {
+		config.Log.Info("Project not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
 	}
@@ -113,6 +117,7 @@ func checkProjectExistsById(c *gin.Context) (bool, error) {
 	var exists bool
 	err := config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("id = ?", c.Param("id")).Find(&exists).Error
 	if err != nil {
+		config.Log.Panic("Server Error!")
 		return false, errors.New("")
 	}
 	if exists {
@@ -126,10 +131,12 @@ func checkOrganizationExists(c *gin.Context) {
 	var exists bool
 	err := config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("id = ?", c.Param("org_id")).Find(&exists).Error
 	if err != nil {
+		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if !exists {
+		config.Log.Info("Organization not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}

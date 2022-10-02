@@ -26,10 +26,12 @@ func CreateOrganization(c *gin.Context) {
 	}
 	exists, err := checkOrganizationExistsByKey(&orgs)
 	if err != nil {
+		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if exists {
+		config.Log.Info("Organization already exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
 		return
 	}
@@ -41,10 +43,12 @@ func DeleteOrganization(c *gin.Context) {
 	var orgs models.Organization
 	exists, err := checkOrganizationExistsById(c)
 	if err != nil {
+		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if !exists {
+		config.Log.Info("Organization not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
@@ -64,10 +68,12 @@ func UpdateOrganization(c *gin.Context) {
 	}
 	exists, err := checkOrganizationExistsById(c)
 	if err != nil {
+		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if !exists {
+		config.Log.Info("Organization not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
