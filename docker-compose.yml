@@ -2,7 +2,7 @@ version: '3.8'
 services:
   db:
     image: postgres
-    container_name: postgres
+    # container_name: postgres
     volumes: 
       - data:/var/lib/postgressql/data
     ports:
@@ -11,11 +11,11 @@ services:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
-  api:
-    build: .
-    container_name: api
-    ports:
-      - "8080:8080"
+#   api:
+#     build: .
+#     container_name: api
+#     ports:
+#       - "8080:8080"
 
 
 volumes:

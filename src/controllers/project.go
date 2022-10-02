@@ -2,7 +2,9 @@ package controllers
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -11,20 +13,25 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetOrganizations(c *gin.Context) {
-	orgs := []models.Organization{}
-	config.DB.Find(&orgs)
-	c.JSON(http.StatusOK, &orgs)
+func GetProjects(c *gin.Context) {
+	projects := []models.Project{}
+	config.DB.Model(&models.Project{}).Where("organization_id = ?", c.Param("org_id")).Find(&projects)
+	c.JSON(http.StatusOK, &projects)
 }
 
-func CreateOrganization(c *gin.Context) {
-	var orgs models.Organization
-	if err := c.ShouldBindJSON(&orgs); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest,
-			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
-		return
+func CreateProjects(c *gin.Context) {
+	var project models.Project
+	if err := c.ShouldBindJSON(&project); err != nil {
+		if project.Key == "" || len(project.Key) < 4 || project.Name == "" || len(project.Name) < 4 {
+			c.AbortWithStatusJSON(http.StatusBadRequest,
+				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: err.Error()})
+			return
+		}
 	}
-	exists, err := checkOrganizationExistsByKey(&orgs)
+	org_id, _ := strconv.Atoi(c.Param("org_id"))
+	project.OrganizationID = org_id
+	exists, err := checkProjectExistsByKey(&project)
+	fmt.Print(project)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
@@ -33,16 +40,15 @@ func CreateOrganization(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
 		return
 	} else {
-		c.BindJSON(&orgs)
-		config.DB.Create(&orgs)
-		c.JSON(http.StatusOK, &orgs)
+		config.DB.Create(&project)
+		c.JSON(http.StatusOK, &project)
 	}
 
 }
 
-func DeleteOrganization(c *gin.Context) {
-	var orgs models.Organization
-	exists, err := checkOrganizationExistsById(c)
+func DeleteProjects(c *gin.Context) {
+	var project models.Project
+	exists, err := checkProjectExistsById(c)
 	if err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
@@ -51,15 +57,15 @@ func DeleteOrganization(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).Delete(&orgs)
+	config.DB.Where("id = ?", c.Param("id")).Delete(&project)
 	c.JSON(http.StatusOK, "")
 }
 
-func UpdateOrganization(c *gin.Context) {
-	var orgs models.Organization
-	var reqOrgs models.Organization
-	if err := c.ShouldBindJSON(&reqOrgs); err != nil {
-		if reqOrgs.Name == "" || len(reqOrgs.Name) < 4 {
+func UpdateProjects(c *gin.Context) {
+	var project models.Project
+	var reqProject models.Project
+	if err := c.ShouldBindJSON(&reqProject); err != nil {
+		if reqProject.Name == "" || len(reqProject.Name) < 4 {
 			c.AbortWithStatusJSON(http.StatusBadRequest,
 				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
 			return
@@ -74,10 +80,10 @@ func UpdateOrganization(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).First(&orgs)
-	orgs.Name = reqOrgs.Name
-	config.DB.Save(&orgs)
-	c.JSON(http.StatusOK, &orgs)
+	config.DB.Where("id = ?", c.Param("id")).First(&project)
+	project.Name = reqProject.Name
+	config.DB.Save(&project)
+	c.JSON(http.StatusOK, &project)
 }
 
 /*
@@ -85,9 +91,9 @@ func UpdateOrganization(c *gin.Context) {
 
 **
  */
-func checkOrganizationExistsByKey(orgs *models.Organization) (bool, error) {
+func checkProjectExistsByKey(project *models.Project) (bool, error) {
 	var exists bool
-	err := config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("key = ?", orgs.Key).Find(&exists).Error
+	err := config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("key = ?", project.Key).Find(&exists).Error
 	if err != nil {
 		return false, errors.New("")
 	}
@@ -98,9 +104,9 @@ func checkOrganizationExistsByKey(orgs *models.Organization) (bool, error) {
 	}
 }
 
-func checkOrganizationExistsById(c *gin.Context) (bool, error) {
+func checkProjectExistsById(c *gin.Context) (bool, error) {
 	var exists bool
-	err := config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("id = ?", c.Param("id")).Find(&exists).Error
+	err := config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("id = ?", c.Param("id")).Find(&exists).Error
 	if err != nil {
 		return false, errors.New("")
 	}
