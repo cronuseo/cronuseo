@@ -7,8 +7,10 @@ import (
 
 func OrganizationRoutes(router *gin.Engine) {
 
-	router.GET("/orgs", controllers.GetOrganizations)
-	router.POST("/orgs", controllers.CreateOrganization)
-	router.DELETE("/orgs/:id", controllers.DeleteOrganization)
-	router.PUT("/orgs/:id", controllers.UpdateOrganization)
+	orgRouter := router.Group("/orgs")
+
+	orgRouter.GET("/", controllers.GetOrganizations)
+	orgRouter.POST("/", controllers.CreateOrganization)
+	orgRouter.DELETE("/:id", controllers.DeleteOrganization)
+	orgRouter.PUT("/:id", controllers.UpdateOrganization)
 }
