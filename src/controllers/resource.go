@@ -42,7 +42,7 @@ func CreateResource(c *gin.Context) {
 	}
 	if exists {
 		config.Log.Info("Resource already exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project already exists"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource already exists"})
 		return
 	} else {
 		config.DB.Create(&resource)
@@ -65,7 +65,7 @@ func DeleteResource(c *gin.Context) {
 	}
 	if !exists {
 		config.Log.Info("Resource not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
 		return
 	}
 	config.DB.Where("id = ?", c.Param("id")).Delete(&resource)
@@ -86,7 +86,7 @@ func UpdateResource(c *gin.Context) {
 			return
 		}
 	}
-	exists, err := checkResourceExistsById(c)
+	exists, err := checkProjectExistsById(c)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
