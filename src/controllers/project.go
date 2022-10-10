@@ -19,6 +19,24 @@ func GetProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, &projects)
 }
 
+func GetProject(c *gin.Context) {
+	var proj models.Project
+	exists, err := checkProjectExistsById(c)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !exists {
+		config.Log.Info("Project not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
+		return
+	}
+	config.DB.Where("id = ?", c.Param("id")).First(&proj)
+	c.JSON(http.StatusOK, &proj)
+
+}
+
 func CreateProjects(c *gin.Context) {
 	var project models.Project
 	orgExists := checkOrganizationExists(c)
