@@ -9,17 +9,19 @@ import (
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/exceptions"
 	"github.com/shashimalcse/Cronuseo/models"
+	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
 func GetOrganizations(c *gin.Context) {
 	orgs := []models.Organization{}
-	config.DB.Find(&orgs)
+	repositories.GetOrganizations(&orgs)
 	c.JSON(http.StatusOK, &orgs)
 }
 
 func GetOrganization(c *gin.Context) {
-	var orgs models.Organization
-	exists, err := checkOrganizationExistsById(c)
+	var org models.Organization
+	org_id := string(c.Param("id"))
+	exists, err := repositories.CheckOrganizationExistsById(org_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
@@ -30,19 +32,19 @@ func GetOrganization(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).First(&orgs)
-	c.JSON(http.StatusOK, &orgs)
+	repositories.GetOrganization(&org, org_id)
+	c.JSON(http.StatusOK, &org)
 
 }
 
 func CreateOrganization(c *gin.Context) {
-	var orgs models.Organization
-	if err := c.ShouldBindJSON(&orgs); err != nil {
+	var org models.Organization
+	if err := c.ShouldBindJSON(&org); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest,
 			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
 		return
 	}
-	exists, err := checkOrganizationExistsByKey(&orgs)
+	exists, err := repositories.CheckOrganizationExistsByKey(org.Key)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
@@ -53,13 +55,14 @@ func CreateOrganization(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
 		return
 	}
-	config.DB.Create(&orgs)
-	c.JSON(http.StatusOK, &orgs)
+	repositories.CreateOrganization(&org)
+	c.JSON(http.StatusOK, &org)
 }
 
 func DeleteOrganization(c *gin.Context) {
-	var orgs models.Organization
-	exists, err := checkOrganizationExistsById(c)
+	var org models.Organization
+	org_id := string(c.Param("id"))
+	exists, err := repositories.CheckOrganizationExistsById(org_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
@@ -70,21 +73,22 @@ func DeleteOrganization(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).Delete(&orgs)
+	repositories.DeleteOrganization(&org, org_id)
 	c.JSON(http.StatusOK, "")
 }
 
 func UpdateOrganization(c *gin.Context) {
-	var orgs models.Organization
-	var reqOrgs models.Organization
-	if err := c.ShouldBindJSON(&reqOrgs); err != nil {
-		if reqOrgs.Name == "" || len(reqOrgs.Name) < 4 {
+	var org models.Organization
+	org_id := string(c.Param("id"))
+	var reqOrg models.Organization
+	if err := c.ShouldBindJSON(&reqOrg); err != nil {
+		if reqOrg.Name == "" || len(reqOrg.Name) < 4 {
 			c.AbortWithStatusJSON(http.StatusBadRequest,
 				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
 			return
 		}
 	}
-	exists, err := checkOrganizationExistsById(c)
+	exists, err := repositories.CheckOrganizationExistsById(org_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
@@ -95,10 +99,8 @@ func UpdateOrganization(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).First(&orgs)
-	orgs.Name = reqOrgs.Name
-	config.DB.Save(&orgs)
-	c.JSON(http.StatusOK, &orgs)
+	repositories.UpdateOrganization(&org, &reqOrg, org_id)
+	c.JSON(http.StatusOK, &org)
 }
 
 /*

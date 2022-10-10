@@ -15,7 +15,7 @@ import (
 func GetResources(c *gin.Context) {
 	resources := []models.Resource{}
 	checkProjectExists(c)
-	config.DB.Model(&models.Project{}).Where("project_id = ?", c.Param("proj_id")).Find(&resources)
+	config.DB.Model(&models.Resource{}).Where("project_id = ?", c.Param("proj_id")).Find(&resources)
 	c.JSON(http.StatusOK, &resources)
 }
 

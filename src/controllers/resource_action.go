@@ -15,7 +15,7 @@ import (
 func GetResourceActions(c *gin.Context) {
 	resourceActions := []models.ResourceAction{}
 	checkProjectExists(c)
-	config.DB.Model(&models.Resource{}).Where("resource_id = ?", c.Param("res_id")).Find(&resourceActions)
+	config.DB.Model(&models.ResourceAction{}).Where("resource_id = ?", c.Param("res_id")).Find(&resourceActions)
 	c.JSON(http.StatusOK, &resourceActions)
 }
 

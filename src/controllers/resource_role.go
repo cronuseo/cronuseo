@@ -15,7 +15,7 @@ import (
 func GetResourceRoles(c *gin.Context) {
 	resourceRoles := []models.ResourceRole{}
 	checkProjectExists(c)
-	config.DB.Model(&models.Resource{}).Where("resource_id = ?", c.Param("res_id")).Find(&resourceRoles)
+	config.DB.Model(&models.ResourceRole{}).Where("resource_id = ?", c.Param("res_id")).Find(&resourceRoles)
 	c.JSON(http.StatusOK, &resourceRoles)
 }
 
