@@ -94,7 +94,7 @@ func UpdateResource(c *gin.Context) {
 	}
 	if !exists {
 		config.Log.Info("Resource not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
 		return
 	}
 	config.DB.Where("id = ?", c.Param("id")).First(&resource)

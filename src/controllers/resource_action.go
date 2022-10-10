@@ -93,8 +93,8 @@ func UpdateResourceAction(c *gin.Context) {
 		return
 	}
 	if !exists {
-		config.Log.Info("Resource ACtion not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
+		config.Log.Info("Resource Action not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action not exists"})
 		return
 	}
 	config.DB.Where("id = ?", c.Param("id")).First(&resourceAction)
