@@ -19,6 +19,24 @@ func GetResourceRoles(c *gin.Context) {
 	c.JSON(http.StatusOK, &resourceRoles)
 }
 
+func GetResourceRole(c *gin.Context) {
+	var resRole models.ResourceRole
+	exists, err := checkResourceRoleExistsById(c)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !exists {
+		config.Log.Info("Resource Role Action not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Role not exists"})
+		return
+	}
+	config.DB.Where("id = ?", c.Param("id")).First(&resRole)
+	c.JSON(http.StatusOK, &resRole)
+
+}
+
 func CreateResourceRole(c *gin.Context) {
 	var resourceRole models.ResourceRole
 	resExists := checkResourceExists(c)

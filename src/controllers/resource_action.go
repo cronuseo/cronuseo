@@ -19,6 +19,24 @@ func GetResourceActions(c *gin.Context) {
 	c.JSON(http.StatusOK, &resourceActions)
 }
 
+func GetResourceAction(c *gin.Context) {
+	var resAction models.ResourceAction
+	exists, err := checkResourceActionExistsById(c)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !exists {
+		config.Log.Info("Resource Action not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action not exists"})
+		return
+	}
+	config.DB.Where("id = ?", c.Param("id")).First(&resAction)
+	c.JSON(http.StatusOK, &resAction)
+
+}
+
 func CreateResourceAction(c *gin.Context) {
 	var resourceAction models.ResourceAction
 	resExists := checkResourceExists(c)

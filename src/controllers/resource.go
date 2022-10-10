@@ -12,11 +12,29 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetResource(c *gin.Context) {
+func GetResources(c *gin.Context) {
 	resources := []models.Resource{}
 	checkProjectExists(c)
 	config.DB.Model(&models.Project{}).Where("project_id = ?", c.Param("proj_id")).Find(&resources)
 	c.JSON(http.StatusOK, &resources)
+}
+
+func GetResource(c *gin.Context) {
+	var res models.Resource
+	exists, err := checkResourceExistsById(c)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !exists {
+		config.Log.Info("Resource not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
+		return
+	}
+	config.DB.Where("id = ?", c.Param("id")).First(&res)
+	c.JSON(http.StatusOK, &res)
+
 }
 
 func CreateResource(c *gin.Context) {
