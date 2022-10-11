@@ -12,6 +12,6 @@ func ProjectRoutes(router *gin.Engine) {
 	projectRouter.GET("/:org_id", controllers.GetProjects)
 	projectRouter.GET("/:org_id/:id", controllers.GetProject)
 	projectRouter.POST("/:org_id", controllers.CreateProject)
-	projectRouter.DELETE("/:org_id/:id", controllers.DeleteProjects)
+	projectRouter.DELETE("/:org_id/:id", controllers.DeleteProject)
 	projectRouter.PUT("/:org_id/:id", controllers.UpdateProject)
 }

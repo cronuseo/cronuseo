@@ -4,10 +4,10 @@ import (
 	"gorm.io/gorm"
 )
 
-type User struct {
+type Group struct {
 	gorm.Model
 	ID             int    `json:"id" gorm:"primary_key"`
-	Username       string `json:"username"`
-	Name           string `json:"name"`
+	Key            string `json:"key" binding:"required,min=4"`
+	Name           string `json:"name" binding:"required,min=4"`
 	OrganizationID int    `gorm:"foreignKey:ID"`
 }

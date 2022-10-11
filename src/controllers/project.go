@@ -100,7 +100,7 @@ func CreateProject(c *gin.Context) {
 
 }
 
-func DeleteProjects(c *gin.Context) {
+func DeleteProject(c *gin.Context) {
 	var project models.Project
 	proj_id := string(c.Param("id"))
 	org_id := string(c.Param("org_id"))

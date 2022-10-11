@@ -12,8 +12,8 @@ import (
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetUsers(c *gin.Context) {
-	users := []models.User{}
+func GetGroups(c *gin.Context) {
+	groups := []models.Group{}
 	org_id := string(c.Param("org_id"))
 	exists, err := repositories.CheckOrganizationExistsById(org_id)
 	if err != nil {
@@ -26,14 +26,14 @@ func GetUsers(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	repositories.GetUsers(&users, org_id)
-	c.JSON(http.StatusOK, &users)
+	repositories.GetGroups(&groups, org_id)
+	c.JSON(http.StatusOK, &groups)
 }
 
-func GetUser(c *gin.Context) {
-	var user models.User
+func GetGroup(c *gin.Context) {
+	var group models.Group
 	org_id := string(c.Param("org_id"))
-	user_id := string(c.Param("id"))
+	group_id := string(c.Param("id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
 		config.Log.Panic("Server Error!")
@@ -45,24 +45,24 @@ func GetUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	user_exists, user_err := repositories.CheckUserExistsById(user_id)
-	if user_err != nil {
+	group_exists, group_err := repositories.CheckGroupExistsById(group_id)
+	if group_err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
-	if !user_exists {
-		config.Log.Info("User not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User not exists"})
+	if !group_exists {
+		config.Log.Info("Group not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Group not exists"})
 		return
 	}
-	repositories.GetUser(&user, user_id)
-	c.JSON(http.StatusOK, &user)
+	repositories.GetGroup(&group, group_id)
+	c.JSON(http.StatusOK, &group)
 
 }
 
-func CreateUser(c *gin.Context) {
-	var user models.User
+func CreateGroup(c *gin.Context) {
+	var group models.Group
 	org_id := string(c.Param("org_id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
@@ -75,34 +75,34 @@ func CreateUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	if err := c.ShouldBindJSON(&user); err != nil {
-		if user.Username == "" || len(user.Username) < 4 || user.Name == "" || len(user.Name) < 4 {
+	if err := c.ShouldBindJSON(&group); err != nil {
+		if group.Key == "" || len(group.Key) < 4 || group.Name == "" || len(group.Name) < 4 {
 			c.AbortWithStatusJSON(http.StatusBadRequest,
 				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: err.Error()})
 			return
 		}
 	}
 	int_org_id, _ := strconv.Atoi(org_id)
-	user.OrganizationID = int_org_id
-	exists, err := repositories.CheckUserExistsByUsername(user.Username, org_id)
+	group.OrganizationID = int_org_id
+	exists, err := repositories.CheckGroupExistsByKey(group.Key, org_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if exists {
-		config.Log.Info("User already exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User already exists"})
+		config.Log.Info("Group already exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Group already exists"})
 		return
 	}
-	repositories.CreateUser(&user)
-	c.JSON(http.StatusOK, &user)
+	repositories.CreateGroup(&group)
+	c.JSON(http.StatusOK, &group)
 
 }
 
-func DeleteUser(c *gin.Context) {
-	var user models.User
-	user_id := string(c.Param("id"))
+func DeleteGroup(c *gin.Context) {
+	var group models.Group
+	group_id := string(c.Param("id"))
 	org_id := string(c.Param("org_id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
@@ -115,25 +115,25 @@ func DeleteUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	user_exists, user_err := repositories.CheckUserExistsById(user_id)
-	if user_err != nil {
+	group_exists, group_err := repositories.CheckGroupExistsById(group_id)
+	if group_err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
-	if !user_exists {
-		config.Log.Info("User not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User not exists"})
+	if !group_exists {
+		config.Log.Info("Group not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Group not exists"})
 		return
 	}
-	repositories.DeleteUser(&user, user_id)
+	repositories.DeleteGroup(&group, group_id)
 	c.JSON(http.StatusOK, "")
 }
 
-func UpdateUser(c *gin.Context) {
-	var user models.User
-	var reqUser models.User
-	user_id := string(c.Param("id"))
+func UpdateGroup(c *gin.Context) {
+	var group models.Group
+	var reqGroup models.Group
+	group_id := string(c.Param("id"))
 	org_id := string(c.Param("org_id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
@@ -146,17 +146,17 @@ func UpdateUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
-	user_exists, user_err := repositories.CheckUserExistsById(user_id)
-	if user_err != nil {
+	group_exists, group_err := repositories.CheckGroupExistsById(group_id)
+	if group_err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
-	if !user_exists {
-		config.Log.Info("User not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User not exists"})
+	if !group_exists {
+		config.Log.Info("Group not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Group not exists"})
 		return
 	}
-	repositories.UpdateUser(&user, &reqUser, user_id)
-	c.JSON(http.StatusOK, &user)
+	repositories.UpdateGroup(&group, &reqGroup, group_id)
+	c.JSON(http.StatusOK, &group)
 }

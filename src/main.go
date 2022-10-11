@@ -19,6 +19,7 @@ func main() {
 	config.InitLogger()
 	routes.OAuth2Routes(router)
 	routes.UserRoutes(router)
+	routes.GroupRoutes(router)
 	routes.OrganizationRoutes(router)
 	routes.ProjectRoutes(router)
 	routes.ResourceRoutes(router)
