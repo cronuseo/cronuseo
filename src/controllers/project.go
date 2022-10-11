@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,37 +9,70 @@ import (
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/exceptions"
 	"github.com/shashimalcse/Cronuseo/models"
+	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
 func GetProjects(c *gin.Context) {
 	projects := []models.Project{}
-	checkOrganizationExists(c)
-	config.DB.Model(&models.Project{}).Where("organization_id = ?", c.Param("org_id")).Find(&projects)
-	c.JSON(http.StatusOK, &projects)
-}
-
-func GetProject(c *gin.Context) {
-	var proj models.Project
-	exists, err := checkProjectExistsById(c)
+	org_id := string(c.Param("org_id"))
+	exists, err := repositories.CheckOrganizationExistsById(org_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if !exists {
+		config.Log.Info("Organization not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		return
+	}
+	repositories.GetProjects(&projects, org_id)
+	c.JSON(http.StatusOK, &projects)
+}
+
+func GetProject(c *gin.Context) {
+	var proj models.Project
+	org_id := string(c.Param("org_id"))
+	proj_id := string(c.Param("proj_id"))
+	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
+	if org_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !org_exists {
+		config.Log.Info("Organization not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		return
+	}
+	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
+	if proj_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !proj_exists {
 		config.Log.Info("Project not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).First(&proj)
+	repositories.GetProject(&proj, proj_id)
 	c.JSON(http.StatusOK, &proj)
 
 }
 
 func CreateProjects(c *gin.Context) {
 	var project models.Project
-	orgExists := checkOrganizationExists(c)
-	if !orgExists {
+	org_id := string(c.Param("org_id"))
+	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
+	if org_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !org_exists {
+		config.Log.Info("Organization not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 		return
 	}
 	if err := c.ShouldBindJSON(&project); err != nil {
@@ -50,9 +82,9 @@ func CreateProjects(c *gin.Context) {
 			return
 		}
 	}
-	org_id, _ := strconv.Atoi(c.Param("org_id"))
-	project.OrganizationID = org_id
-	exists, err := checkProjectExistsByKey(&project)
+	int_org_id, _ := strconv.Atoi(org_id)
+	project.OrganizationID = int_org_id
+	exists, err := repositories.CheckProjectExistsByKey(project.Key, org_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
@@ -62,111 +94,69 @@ func CreateProjects(c *gin.Context) {
 		config.Log.Info("Project already exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project already exists"})
 		return
-	} else {
-		config.DB.Create(&project)
-		c.JSON(http.StatusOK, &project)
 	}
+	repositories.CreateProject(&project)
+	c.JSON(http.StatusOK, &project)
 
 }
 
 func DeleteProjects(c *gin.Context) {
 	var project models.Project
-	orgExists := checkOrganizationExists(c)
-	if !orgExists {
-		return
-	}
-	exists, err := checkProjectExistsById(c)
-	if err != nil {
+	proj_id := string(c.Param("proj_id"))
+	org_id := string(c.Param("org_id"))
+	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
+	if org_err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
-	if !exists {
+	if !org_exists {
+		config.Log.Info("Organization not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		return
+	}
+	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
+	if proj_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !proj_exists {
 		config.Log.Info("Project not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).Delete(&project)
+	repositories.DeleteProject(&project, proj_id)
 	c.JSON(http.StatusOK, "")
 }
 
 func UpdateProjects(c *gin.Context) {
 	var project models.Project
 	var reqProject models.Project
-	orgExists := checkOrganizationExists(c)
-	if !orgExists {
-		return
-	}
-	if err := c.ShouldBindJSON(&reqProject); err != nil {
-		if reqProject.Name == "" || len(reqProject.Name) < 4 {
-			c.AbortWithStatusJSON(http.StatusBadRequest,
-				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
-			return
-		}
-	}
-	exists, err := checkProjectExistsById(c)
-	if err != nil {
+	proj_id := string(c.Param("proj_id"))
+	org_id := string(c.Param("org_id"))
+	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
+	if org_err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
-	if !exists {
+	if !org_exists {
+		config.Log.Info("Organization not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		return
+	}
+	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
+	if proj_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !proj_exists {
 		config.Log.Info("Project not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).First(&project)
-	project.Name = reqProject.Name
-	project.Description = reqProject.Description
-	config.DB.Save(&project)
+	repositories.UpdateProject(&project, &reqProject, proj_id)
 	c.JSON(http.StatusOK, &project)
-}
-
-/*
-**
-
-**
- */
-func checkProjectExistsByKey(project *models.Project) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("key = ?", project.Key).Find(&exists).Error
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
-
-func checkProjectExistsById(c *gin.Context) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("id = ?", c.Param("id")).Find(&exists).Error
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
-
-func checkOrganizationExists(c *gin.Context) bool {
-	var exists bool
-	err := config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("id = ?", c.Param("org_id")).Find(&exists).Error
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
-		return false
-	}
-	if !exists {
-		config.Log.Info("Organization not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
-		return false
-	}
-
-	return true
 }

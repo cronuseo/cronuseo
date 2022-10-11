@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 	"time"
 
@@ -101,35 +100,4 @@ func UpdateOrganization(c *gin.Context) {
 	}
 	repositories.UpdateOrganization(&org, &reqOrg, org_id)
 	c.JSON(http.StatusOK, &org)
-}
-
-/*
-**
-
-**
- */
-func checkOrganizationExistsByKey(orgs *models.Organization) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("key = ?", orgs.Key).Find(&exists).Error
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
-
-func checkOrganizationExistsById(c *gin.Context) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("id = ?", c.Param("id")).Find(&exists).Error
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
 }
