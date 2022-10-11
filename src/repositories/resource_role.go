@@ -30,6 +30,10 @@ func UpdateResourceRole(resourceRole *models.ResourceRole, reqResourceRole *mode
 	config.DB.Save(&resourceRole)
 }
 
+func DeleteAllResourceRoles(res_id string) {
+	config.DB.Where("resource_id = ?", res_id).Delete(&models.ResourceRole{})
+}
+
 func CheckResourceRoleExistsById(resact_id string) (bool, error) {
 	var exists bool
 	err := config.DB.Model(&models.ResourceRole{}).Select("count(*) > 0").Where("id = ?", resact_id).Find(&exists).Error

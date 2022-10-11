@@ -13,7 +13,7 @@ import (
 )
 
 func GetResources(c *gin.Context) {
-	resources := []models.Project{}
+	resources := []models.Resource{}
 	proj_id := string(c.Param("proj_id"))
 	exists, err := repositories.CheckProjectExistsById(proj_id)
 	if err != nil {
@@ -26,7 +26,7 @@ func GetResources(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
 	}
-	repositories.GetProjects(&resources, proj_id)
+	repositories.GetResources(&resources, proj_id)
 	c.JSON(http.StatusOK, &resources)
 }
 

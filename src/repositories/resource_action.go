@@ -30,6 +30,10 @@ func UpdateResourceAction(resourceAction *models.ResourceAction, reqResourceActi
 	config.DB.Save(&resourceAction)
 }
 
+func DeleteAllResourceActions(proj_id string) {
+	config.DB.Where("project_id = ?", proj_id).Delete(&models.ResourceAction{})
+}
+
 func CheckResourceActionExistsById(resact_id string) (bool, error) {
 	var exists bool
 	err := config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where("id = ?", resact_id).Find(&exists).Error

@@ -30,6 +30,17 @@ func UpdateResource(resource *models.Resource, reqResource *models.Resource, res
 	config.DB.Save(&resource)
 }
 
+func DeleteAllResources(proj_id string) {
+	resources := []models.Resource{}
+	GetResources(&resources, proj_id)
+	for _, resource := range resources {
+		res_id := resource.ID
+		DeleteAllResourceActions(string(res_id))
+		DeleteAllResourceRoles(string(res_id))
+	}
+	config.DB.Where("project_id = ?", proj_id).Delete(&models.Resource{})
+}
+
 func CheckResourceExistsById(res_id string) (bool, error) {
 	var exists bool
 	err := config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("id = ?", res_id).Find(&exists).Error

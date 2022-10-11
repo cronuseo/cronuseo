@@ -20,6 +20,7 @@ func CreateProject(project *models.Project) {
 }
 
 func DeleteProject(project *models.Project, proj_id string) {
+	DeleteAllResources(proj_id)
 	config.DB.Where("id = ?", proj_id).Delete(&project)
 }
 
