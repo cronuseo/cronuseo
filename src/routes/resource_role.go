@@ -7,7 +7,7 @@ import (
 
 func ResourceRoleRoutes(router *gin.Engine) {
 
-	resourceActionRouter := router.Group("/resource_role")
+	resourceActionRouter := router.Group("/resource_roles")
 
 	resourceActionRouter.GET("/:res_id/:id", controllers.GetResourceRole)
 	resourceActionRouter.GET("/:res_id", controllers.GetResourceRoles)

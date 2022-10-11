@@ -9,9 +9,9 @@ func GroupRoutes(router *gin.Engine) {
 
 	userRouter := router.Group("/groups")
 
-	userRouter.GET("/:org_id", controllers.GetProjects)
-	userRouter.GET("/:org_id/:id", controllers.GetProject)
-	userRouter.POST("/:org_id", controllers.CreateProject)
-	userRouter.DELETE("/:org_id/:id", controllers.Delete)
-	userRouter.PUT("/:org_id/:id", controllers.UpdateProject)
+	userRouter.GET("/:org_id", controllers.GetGroups)
+	userRouter.GET("/:org_id/:id", controllers.GetGroup)
+	userRouter.POST("/:org_id", controllers.CreateGroup)
+	userRouter.DELETE("/:org_id/:id", controllers.DeleteGroup)
+	userRouter.PUT("/:org_id/:id", controllers.UpdateGroup)
 }
