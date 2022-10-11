@@ -33,7 +33,7 @@ func GetProjects(c *gin.Context) {
 func GetProject(c *gin.Context) {
 	var proj models.Project
 	org_id := string(c.Param("org_id"))
-	proj_id := string(c.Param("proj_id"))
+	proj_id := string(c.Param("id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
 		config.Log.Panic("Server Error!")
@@ -61,7 +61,7 @@ func GetProject(c *gin.Context) {
 
 }
 
-func CreateProjects(c *gin.Context) {
+func CreateProject(c *gin.Context) {
 	var project models.Project
 	org_id := string(c.Param("org_id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
@@ -102,7 +102,7 @@ func CreateProjects(c *gin.Context) {
 
 func DeleteProjects(c *gin.Context) {
 	var project models.Project
-	proj_id := string(c.Param("proj_id"))
+	proj_id := string(c.Param("id"))
 	org_id := string(c.Param("org_id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
@@ -130,10 +130,10 @@ func DeleteProjects(c *gin.Context) {
 	c.JSON(http.StatusOK, "")
 }
 
-func UpdateProjects(c *gin.Context) {
+func UpdateProject(c *gin.Context) {
 	var project models.Project
 	var reqProject models.Project
-	proj_id := string(c.Param("proj_id"))
+	proj_id := string(c.Param("id"))
 	org_id := string(c.Param("org_id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {

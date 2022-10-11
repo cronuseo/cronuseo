@@ -32,7 +32,7 @@ func GetResources(c *gin.Context) {
 
 func GetResource(c *gin.Context) {
 	var resource models.Resource
-	res_id := string(c.Param("res_id"))
+	res_id := string(c.Param("id"))
 	proj_id := string(c.Param("proj_id"))
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
@@ -103,7 +103,7 @@ func CreateResource(c *gin.Context) {
 func DeleteResource(c *gin.Context) {
 	var resource models.Resource
 	proj_id := string(c.Param("proj_id"))
-	res_id := string(c.Param("res_id"))
+	res_id := string(c.Param("id"))
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
@@ -114,13 +114,6 @@ func DeleteResource(c *gin.Context) {
 		config.Log.Info("Project not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
 		return
-	}
-	if err := c.ShouldBindJSON(&resource); err != nil {
-		if resource.Key == "" || len(resource.Key) < 4 || resource.Name == "" || len(resource.Name) < 4 {
-			c.AbortWithStatusJSON(http.StatusBadRequest,
-				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: err.Error()})
-			return
-		}
 	}
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
@@ -141,7 +134,7 @@ func UpdateResource(c *gin.Context) {
 	var resource models.Resource
 	var reqResource models.Resource
 	proj_id := string(c.Param("proj_id"))
-	res_id := string(c.Param("res_id"))
+	res_id := string(c.Param("id"))
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
@@ -160,10 +153,10 @@ func UpdateResource(c *gin.Context) {
 		return
 	}
 	if !res_exists {
-		config.Log.Info("Project not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
+		config.Log.Info("Resource not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
 		return
 	}
-	repositories.UpdateResource(&resource, &reqResource, proj_id)
+	repositories.UpdateResource(&resource, &reqResource, res_id)
 	c.JSON(http.StatusOK, &resource)
 }

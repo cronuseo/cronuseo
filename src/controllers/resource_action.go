@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -10,37 +9,70 @@ import (
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/exceptions"
 	"github.com/shashimalcse/Cronuseo/models"
+	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
 func GetResourceActions(c *gin.Context) {
 	resourceActions := []models.ResourceAction{}
-	checkProjectExists(c)
-	config.DB.Model(&models.ResourceAction{}).Where("resource_id = ?", c.Param("res_id")).Find(&resourceActions)
-	c.JSON(http.StatusOK, &resourceActions)
-}
-
-func GetResourceAction(c *gin.Context) {
-	var resAction models.ResourceAction
-	exists, err := checkResourceActionExistsById(c)
+	res_id := string(c.Param("res_id"))
+	exists, err := repositories.CheckResourceExistsById(res_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
 	if !exists {
+		config.Log.Info("Resource not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
+		return
+	}
+	repositories.GetResourceActions(&resourceActions, res_id)
+	c.JSON(http.StatusOK, &resourceActions)
+}
+
+func GetResourceAction(c *gin.Context) {
+	var resourceAction models.ResourceAction
+	res_id := string(c.Param("res_id"))
+	resact_id := string(c.Param("id"))
+	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
+	if res_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !res_exists {
+		config.Log.Info("Resource not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
+		return
+	}
+	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
+	if resact_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !resact_exists {
 		config.Log.Info("Resource Action not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).First(&resAction)
-	c.JSON(http.StatusOK, &resAction)
+	repositories.GetResourceAction(&resourceAction, resact_id)
+	c.JSON(http.StatusOK, &resourceAction)
 
 }
 
 func CreateResourceAction(c *gin.Context) {
 	var resourceAction models.ResourceAction
-	resExists := checkResourceExists(c)
-	if !resExists {
+	res_id := string(c.Param("res_id"))
+	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
+	if res_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !res_exists {
+		config.Log.Info("Resource not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
 		return
 	}
 	if err := c.ShouldBindJSON(&resourceAction); err != nil {
@@ -50,9 +82,9 @@ func CreateResourceAction(c *gin.Context) {
 			return
 		}
 	}
-	org_id, _ := strconv.Atoi(c.Param("res_id"))
-	resourceAction.ResourceID = org_id
-	exists, err := checkResourceActionExistsByKey(&resourceAction)
+	int_res_id, _ := strconv.Atoi(res_id)
+	resourceAction.ResourceID = int_res_id
+	exists, err := repositories.CheckResourceActionExistsByKey(resourceAction.Key, res_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
@@ -62,106 +94,69 @@ func CreateResourceAction(c *gin.Context) {
 		config.Log.Info("Resource Action already exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action already exists"})
 		return
-	} else {
-		config.DB.Create(&resourceAction)
-		c.JSON(http.StatusOK, &resourceAction)
 	}
+	repositories.CreateResourceActionAction(&resourceAction)
+	c.JSON(http.StatusOK, &resourceAction)
 
 }
 
 func DeleteResourceAction(c *gin.Context) {
 	var resourceAction models.ResourceAction
-	resExists := checkResourceExists(c)
-	if !resExists {
-		return
-	}
-	exists, err := checkResourceActionExistsById(c)
-	if err != nil {
+	res_id := string(c.Param("res_id"))
+	resact_id := string(c.Param("id"))
+	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
+	if res_err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
-	if !exists {
+	if !res_exists {
+		config.Log.Info("Resource not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
+		return
+	}
+	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
+	if resact_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !resact_exists {
 		config.Log.Info("Resource Action not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).Delete(&resourceAction)
+	repositories.DeleteResourceAction(&resourceAction, resact_id)
 	c.JSON(http.StatusOK, "")
 }
 
 func UpdateResourceAction(c *gin.Context) {
 	var resourceAction models.ResourceAction
 	var reqResourceAction models.ResourceAction
-	resExists := checkProjectExists(c)
-	if !resExists {
-		return
-	}
-	if err := c.ShouldBindJSON(&reqResourceAction); err != nil {
-		if reqResourceAction.Name == "" || len(reqResourceAction.Name) < 4 {
-			c.AbortWithStatusJSON(http.StatusBadRequest,
-				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
-			return
-		}
-	}
-	exists, err := checkResourceActionExistsById(c)
-	if err != nil {
+	res_id := string(c.Param("res_id"))
+	resact_id := string(c.Param("id"))
+	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
+	if res_err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
-	if !exists {
+	if !res_exists {
+		config.Log.Info("Resource not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
+		return
+	}
+	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
+	if resact_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !resact_exists {
 		config.Log.Info("Resource Action not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action not exists"})
 		return
 	}
-	config.DB.Where("id = ?", c.Param("id")).First(&resourceAction)
-	resourceAction.Name = reqResourceAction.Name
-	resourceAction.Description = reqResourceAction.Description
-	config.DB.Save(&resourceAction)
+	repositories.UpdateResourceAction(&resourceAction, &reqResourceAction, resact_id)
 	c.JSON(http.StatusOK, &resourceAction)
-}
-
-func checkResourceActionExistsByKey(resourceAction *models.ResourceAction) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where("key = ?", resourceAction.Key).Find(&exists).Error
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
-
-func checkResourceActionExistsById(c *gin.Context) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where("id = ?", c.Param("id")).Find(&exists).Error
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
-}
-
-func checkResourceExists(c *gin.Context) bool {
-	var exists bool
-	err := config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("id = ?", c.Param("res_id")).Find(&exists).Error
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
-		return false
-	}
-	if !exists {
-		config.Log.Info("Resource not exists")
-		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
-		return false
-	}
-
-	return true
 }
