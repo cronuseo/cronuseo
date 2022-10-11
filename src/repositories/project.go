@@ -11,8 +11,8 @@ func GetProjects(projects *[]models.Project, org_id string) {
 	config.DB.Model(&models.Project{}).Where("organization_id = ?", org_id).Find(&projects)
 }
 
-func GetProject(org *models.Project, proj_id string) {
-	config.DB.Where("id = ?", proj_id).First(&org)
+func GetProject(project *models.Project, proj_id string) {
+	config.DB.Where("id = ?", proj_id).First(&project)
 }
 
 func CreateProject(project *models.Project) {
