@@ -22,5 +22,7 @@ func main() {
 	routes.OrganizationRoutes(router)
 	routes.ProjectRoutes(router)
 	routes.ResourceRoutes(router)
+	routes.ResourceActionRoutes(router)
+	routes.ResourceRoleRoutes(router)
 	router.Run() // listen and serve on 0.0.0.0:8080
 }

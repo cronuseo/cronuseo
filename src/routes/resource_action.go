@@ -8,9 +8,9 @@ import (
 func ResourceActionRoutes(router *gin.Engine) {
 
 	resourceActionRouter := router.Group("/resource_action")
-	resourceActionRouter.GET("/:res_id", controllers.GetResources)
-	resourceActionRouter.GET("/:res_id/:id", controllers.GetResource)
-	resourceActionRouter.POST("/:res_id", controllers.CreateResource)
-	resourceActionRouter.DELETE("/:res_id/:id", controllers.DeleteResource)
-	resourceActionRouter.PUT("/:res_id/:id", controllers.UpdateResource)
+	resourceActionRouter.GET("/:res_id", controllers.GetResourceActions)
+	resourceActionRouter.GET("/:res_id/:id", controllers.GetResourceAction)
+	resourceActionRouter.POST("/:res_id", controllers.CreateResourceAction)
+	resourceActionRouter.DELETE("/:res_id/:id", controllers.DeleteResourceAction)
+	resourceActionRouter.PUT("/:res_id/:id", controllers.UpdateResourceAction)
 }
