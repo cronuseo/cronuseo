@@ -20,6 +20,8 @@ func CreateResource(resource *models.Resource) {
 }
 
 func DeleteResource(resource *models.Resource, res_id string) {
+	DeleteAllResourceActions(string(res_id))
+	DeleteAllResourceRoles(string(res_id))
 	config.DB.Where("id = ?", res_id).Delete(&resource)
 }
 
