@@ -31,7 +31,7 @@ func GetUsers(c *gin.Context) {
 }
 
 func GetUser(c *gin.Context) {
-	var user models.User
+	var user models.UserWithGroup
 	org_id := string(c.Param("org_id"))
 	user_id := string(c.Param("id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
@@ -56,7 +56,7 @@ func GetUser(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User not exists"})
 		return
 	}
-	repositories.GetUser(&user, user_id)
+	repositories.GetUsersWithGroups(user_id, &user)
 	c.JSON(http.StatusOK, &user)
 
 }
