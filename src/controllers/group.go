@@ -31,7 +31,7 @@ func GetGroups(c *gin.Context) {
 }
 
 func GetGroup(c *gin.Context) {
-	var group models.Group
+	var group models.GroupUsers
 	org_id := string(c.Param("org_id"))
 	group_id := string(c.Param("id"))
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
@@ -56,7 +56,7 @@ func GetGroup(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Group not exists"})
 		return
 	}
-	repositories.GetGroup(&group, group_id)
+	repositories.GetUsersFromGroup(group_id, &group)
 	c.JSON(http.StatusOK, &group)
 
 }
@@ -159,4 +159,46 @@ func UpdateGroup(c *gin.Context) {
 	}
 	repositories.UpdateGroup(&group, &reqGroup, group_id)
 	c.JSON(http.StatusOK, &group)
+}
+
+func AddUserToGroup(c *gin.Context) {
+	org_id := string(c.Param("org_id"))
+	group_id := string(c.Param("id"))
+	user_id := string(c.Param("user_id"))
+	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
+	if org_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !org_exists {
+		config.Log.Info("Organization not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		return
+	}
+	group_exists, group_err := repositories.CheckGroupExistsById(group_id)
+	if group_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !group_exists {
+		config.Log.Info("Group not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Group not exists"})
+		return
+	}
+	user_exists, user_err := repositories.CheckUserExistsById(user_id)
+	if user_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !user_exists {
+		config.Log.Info("User not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User not exists"})
+		return
+	}
+	repositories.AddUserToGroup(group_id, user_id)
+	c.JSON(http.StatusOK, "")
+
 }

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/models"
@@ -29,6 +30,31 @@ func UpdateGroup(group *models.Group, reqGroup *models.Group, group_id string) {
 	group.Name = reqGroup.Name
 	group.Key = reqGroup.Key
 	config.DB.Save(&group)
+}
+
+func AddUserToGroup(group_id string, user_id string) {
+	groupuser := models.GroupUser{}
+	int_group_id, _ := strconv.Atoi(group_id)
+	int_user_id, _ := strconv.Atoi(user_id)
+	groupuser.GroupID = int_group_id
+	groupuser.UserID = int_user_id
+	config.DB.Create(groupuser)
+
+}
+
+func GetUsersFromGroup(group_id string, resGroupusers *models.GroupUsers) {
+	groupusers := []models.GroupUser{}
+	int_group_id, _ := strconv.Atoi(group_id)
+	GetGroup(&resGroupusers.Group, group_id)
+	config.DB.Model(&models.GroupUser{}).Where("group_id = ?", int_group_id).Find(&groupusers)
+	if len(groupusers) > 0 {
+		for _, groupuser := range groupusers {
+			user_id := groupuser.UserID
+			user := models.UserOnlyWithID{UserID: user_id}
+			resGroupusers.Users = append(resGroupusers.Users, user)
+		}
+	}
+
 }
 
 func CheckGroupExistsById(group_id string) (bool, error) {

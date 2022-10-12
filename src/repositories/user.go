@@ -45,7 +45,7 @@ func CheckUserExistsById(user_id string) (bool, error) {
 
 func CheckUserExistsByUsername(username string, org_id string) (bool, error) {
 	var exists bool
-	err := config.DB.Model(&models.User{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?", username, org_id).Find(&exists).Error
+	err := config.DB.Model(&models.User{}).Select("count(*) > 0").Where("username = ? AND organization_id = ?", username, org_id).Find(&exists).Error
 	if err != nil {
 		return false, errors.New("")
 	}
