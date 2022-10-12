@@ -45,7 +45,7 @@ func AddUserToGroup(group_id string, user_id string) {
 func GetUsersFromGroup(group_id string, resGroupusers *models.GroupUsers) {
 	groupusers := []models.GroupUser{}
 	int_group_id, _ := strconv.Atoi(group_id)
-	GetGroup(&resGroupusers.Group, group_id)
+	config.DB.Model(&models.Group{}).Select("id", "key", "name", "organization_id").Where("id = ?", group_id).Find(&resGroupusers)
 	config.DB.Model(&models.GroupUser{}).Where("group_id = ?", int_group_id).Find(&groupusers)
 	if len(groupusers) > 0 {
 		for _, groupuser := range groupusers {
