@@ -79,9 +79,9 @@ func GetUResourceRoleWithGroupsAndUsers(resrole_id string, resourceRoleWithGroup
 
 }
 
-func CheckResourceRoleExistsById(resact_id string) (bool, error) {
+func CheckResourceRoleExistsById(resrole_id string) (bool, error) {
 	var exists bool
-	err := config.DB.Model(&models.ResourceRole{}).Select("count(*) > 0").Where("id = ?", resact_id).Find(&exists).Error
+	err := config.DB.Model(&models.ResourceRole{}).Select("count(*) > 0").Where("id = ?", resrole_id).Find(&exists).Error
 	if err != nil {
 		return false, errors.New("resource role not exists")
 	}
