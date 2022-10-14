@@ -34,5 +34,6 @@ func ConnectDB() {
 	db.AutoMigrate(&models.GroupUser{})
 	db.AutoMigrate(&models.ResourceRoleToGroup{})
 	db.AutoMigrate(&models.ResourceRoleToUser{})
+	db.AutoMigrate(&models.ResourceRoleToResourceAction{})
 	DB = db
 }

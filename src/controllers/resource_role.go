@@ -244,3 +244,45 @@ func AddGroupToResourceRole(c *gin.Context) {
 	c.JSON(http.StatusOK, "")
 
 }
+
+func AddResourceActionToResourceRole(c *gin.Context) {
+	res_id := string(c.Param("res_id"))
+	resrole_id := string(c.Param("id"))
+	resact_id := string(c.Param("resact_id"))
+	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
+	if res_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !res_exists {
+		config.Log.Info("Resource not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource not exists"})
+		return
+	}
+	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
+	if resrole_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !resrole_exists {
+		config.Log.Info("Resource Role not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Role not exists"})
+		return
+	}
+	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
+	if resact_err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !resact_exists {
+		config.Log.Info("Resource Action not exists")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action not exists"})
+		return
+	}
+	repositories.AddResourceActionToResourceRole(resrole_id, resact_id)
+	c.JSON(http.StatusOK, "")
+
+}

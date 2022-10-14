@@ -55,13 +55,25 @@ func AddGroupToResourceRole(resrole_id string, group_id string) {
 
 }
 
+func AddResourceActionToResourceRole(resrole_id string, resact_id string) {
+	roleaction := models.ResourceRoleToResourceAction{}
+	int_resrole_id, _ := strconv.Atoi(resrole_id)
+	int_resact_id, _ := strconv.Atoi(resact_id)
+	roleaction.ResourceRoleID = int_resrole_id
+	roleaction.ResourceActionID = int_resact_id
+	config.DB.Create(roleaction)
+
+}
+
 func GetUResourceRoleWithGroupsAndUsers(resrole_id string, resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers) {
 	resourceRoleToGroup := []models.ResourceRoleToGroup{}
 	resourceRoleToUser := []models.ResourceRoleToUser{}
+	resourceRoleToAction := []models.ResourceRoleToResourceAction{}
 	int_resrole_id, _ := strconv.Atoi(resrole_id)
 	config.DB.Model(&models.ResourceRole{}).Select("id", "key", "name", "resource_id").Where("id = ?", resrole_id).Find(&resourceRoleWithGroupsUsers)
 	config.DB.Model(&models.ResourceRoleToGroup{}).Where("resource_role_id = ?", int_resrole_id).Find(&resourceRoleToGroup)
 	config.DB.Model(&models.ResourceRoleToUser{}).Where("resource_role_id = ?", int_resrole_id).Find(&resourceRoleToUser)
+	config.DB.Model(&models.ResourceRoleToResourceAction{}).Where("resource_role_id = ?", int_resrole_id).Find(&resourceRoleToAction)
 	if len(resourceRoleToUser) > 0 {
 		for _, user := range resourceRoleToUser {
 			user_id := user.UserID
@@ -74,6 +86,13 @@ func GetUResourceRoleWithGroupsAndUsers(resrole_id string, resourceRoleWithGroup
 			group_id := group.GroupID
 			group := models.GroupOnlyWithID{GroupID: group_id}
 			resourceRoleWithGroupsUsers.Groups = append(resourceRoleWithGroupsUsers.Groups, group)
+		}
+	}
+	if len(resourceRoleToAction) > 0 {
+		for _, action := range resourceRoleToAction {
+			action_id := action.ResourceActionID
+			action := models.ResourceActionWithID{ResourceActionID: action_id}
+			resourceRoleWithGroupsUsers.ResourceActions = append(resourceRoleWithGroupsUsers.ResourceActions, action)
 		}
 	}
 

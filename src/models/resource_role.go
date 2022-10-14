@@ -18,11 +18,21 @@ type ResourceRoleToUser struct {
 	ResourceRoleID int `gorm:"foreignKey:ID"`
 }
 
+type ResourceRoleToResourceAction struct {
+	ResourceActionID int `gorm:"foreignKey:ID"`
+	ResourceRoleID   int `gorm:"foreignKey:ID"`
+}
+
 type ResourceRoleWithGroupsUsers struct {
-	ID         int               `json:"id"`
-	Key        string            `json:"key"`
-	Name       string            `json:"name"`
-	ResourceID int               `json:"res_id"`
-	Users      []UserOnlyWithID  `json:"users"`
-	Groups     []GroupOnlyWithID `json:"groups"`
+	ID              int                    `json:"id"`
+	Key             string                 `json:"key"`
+	Name            string                 `json:"name"`
+	ResourceID      int                    `json:"res_id"`
+	Users           []UserOnlyWithID       `json:"users"`
+	Groups          []GroupOnlyWithID      `json:"groups"`
+	ResourceActions []ResourceActionWithID `json:"actions"`
+}
+
+type ResourceActionWithID struct {
+	ResourceActionID int `json:"resact_id"`
 }
