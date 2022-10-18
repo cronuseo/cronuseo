@@ -16,7 +16,15 @@ func main() {
 	}
 	router := gin.Default()
 	config.ConnectDB()
+	config.InitLogger()
+	routes.OAuth2Routes(router)
 	routes.UserRoutes(router)
+	routes.GroupRoutes(router)
 	routes.OrganizationRoutes(router)
+	routes.ProjectRoutes(router)
+	routes.ResourceRoutes(router)
+	routes.ResourceActionRoutes(router)
+	routes.ResourceRoleRoutes(router)
+	routes.CheckRoutes(router)
 	router.Run() // listen and serve on 0.0.0.0:8080
 }

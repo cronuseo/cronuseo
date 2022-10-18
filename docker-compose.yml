@@ -11,12 +11,28 @@ services:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+    networks:
+      - "api.network"  
   api:
     build: .
-    container_name: api
     ports:
-      - "8080:8080"
-
+      - "8080"
+    networks:
+      - "api.network"  
+    deploy:
+        replicas: 2
+  nginx:
+    build: "./nginx"
+    ports:
+      - "80:80"
+    depends_on:
+      - "api"
+    networks:
+      - "api.network"  
 
 volumes:
   data:
+
+networks:
+  api.network:
+    
