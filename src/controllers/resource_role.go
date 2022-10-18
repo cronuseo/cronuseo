@@ -304,18 +304,18 @@ func AddResourceActionToResourceRole(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action not exists"})
 		return
 	}
-	exists, err := repositories.CheckResourceActionAlreadyAdded(resrole_id, resact_id)
+	exists, err := repositories.CheckResourceActionAlreadyAdded(res_id, resrole_id, resact_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 		return
 	}
-	if !exists {
+	if exists {
 		config.Log.Info("Resource Action already added")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action already added"})
 		return
 	}
-	repositories.AddResourceActionToResourceRole(resrole_id, resact_id)
+	repositories.AddResourceActionToResourceRole(res_id, resrole_id, resact_id)
 	c.JSON(http.StatusOK, "")
 
 }

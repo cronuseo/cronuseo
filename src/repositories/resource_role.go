@@ -55,19 +55,32 @@ func AddGroupToResourceRole(resrole_id string, group_id string) {
 
 }
 
-func AddResourceActionToResourceRole(resrole_id string, resact_id string) {
+func AddResourceActionToResourceRole(res_id string, resrole_id string, resact_id string) {
 	roleaction := models.ResourceRoleToResourceAction{}
 	int_resrole_id, _ := strconv.Atoi(resrole_id)
 	int_resact_id, _ := strconv.Atoi(resact_id)
+	int_res_id, _ := strconv.Atoi(res_id)
 	roleaction.ResourceRoleID = int_resrole_id
 	roleaction.ResourceActionID = int_resact_id
+	roleaction.ResourceID = int_res_id
+	var resourceRole *models.ResourceRole
+	config.DB.Where("id = ?", resrole_id).First(&resourceRole)
+	var resourceAction *models.ResourceAction
+	config.DB.Where("id = ?", resrole_id).First(&resourceAction)
+	var resource *models.Resource
+	config.DB.Where("id = ?", res_id).First(&resource)
+	res_key := resource.Key
+	resrole_key := resourceRole.Key
+	resact_key := resourceAction.Key
+	roleactionkey := models.ResourceRoleToResourceActionKey{Resource: res_key, ResourceAction: resact_key, ResourceRole: resrole_key}
 	config.DB.Create(roleaction)
+	config.DB.Create(roleactionkey)
 
 }
 
-func CheckResourceActionAlreadyAdded(resrole_id string, resact_id string) (bool, error) {
+func CheckResourceActionAlreadyAdded(res_id string, resrole_id string, resact_id string) (bool, error) {
 	var exists bool
-	err := config.DB.Model(&models.ResourceRoleToResourceAction{}).Where("resource_role_id = ? AND resource_action_id = ?", resrole_id, resact_id).Find(&exists).Error
+	err := config.DB.Model(&models.ResourceRoleToResourceAction{}).Select("count(*) > 0").Where("resource_id = ? AND resource_role_id = ? AND resource_action_id = ?", res_id, resrole_id, resact_id).Find(&exists).Error
 	if err != nil {
 		return false, errors.New("not exists")
 	}
