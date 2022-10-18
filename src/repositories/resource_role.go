@@ -65,6 +65,45 @@ func AddResourceActionToResourceRole(resrole_id string, resact_id string) {
 
 }
 
+func CheckResourceActionAlreadyAdded(resrole_id string, resact_id string) (bool, error) {
+	var exists bool
+	err := config.DB.Model(&models.ResourceRoleToResourceAction{}).Where("resource_role_id = ? AND resource_action_id = ?", resrole_id, resact_id).Find(&exists).Error
+	if err != nil {
+		return false, errors.New("not exists")
+	}
+	if exists {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func CheckGroupAlreadyAdded(resrole_id string, group_id string) (bool, error) {
+	var exists bool
+	err := config.DB.Model(&models.ResourceRoleToGroup{}).Where("resource_role_id = ? AND group_id = ?", resrole_id, group_id).Find(&exists).Error
+	if err != nil {
+		return false, errors.New("not exists")
+	}
+	if exists {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func CheckUserAlreadyAdded(resrole_id string, user_id string) (bool, error) {
+	var exists bool
+	err := config.DB.Model(&models.ResourceRoleToUser{}).Where("resource_role_id = ? AND user_id = ?", resrole_id, user_id).Find(&exists).Error
+	if err != nil {
+		return false, errors.New("not exists")
+	}
+	if exists {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
 func GetUResourceRoleWithGroupsAndUsers(resrole_id string, resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers) {
 	resourceRoleToGroup := []models.ResourceRoleToGroup{}
 	resourceRoleToUser := []models.ResourceRoleToUser{}

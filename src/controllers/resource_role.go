@@ -198,6 +198,17 @@ func AddUserToResourceRole(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User not exists"})
 		return
 	}
+	exists, err := repositories.CheckUserAlreadyAdded(resrole_id, user_id)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !exists {
+		config.Log.Info("User already added")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User already added"})
+		return
+	}
 	repositories.AddUserToResourceRole(resrole_id, user_id)
 	c.JSON(http.StatusOK, "")
 
@@ -240,6 +251,17 @@ func AddGroupToResourceRole(c *gin.Context) {
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User not exists"})
 		return
 	}
+	exists, err := repositories.CheckGroupAlreadyAdded(resrole_id, group_id)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !exists {
+		config.Log.Info("Group already added")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Group already added"})
+		return
+	}
 	repositories.AddGroupToResourceRole(resrole_id, group_id)
 	c.JSON(http.StatusOK, "")
 
@@ -280,6 +302,17 @@ func AddResourceActionToResourceRole(c *gin.Context) {
 	if !resact_exists {
 		config.Log.Info("Resource Action not exists")
 		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action not exists"})
+		return
+	}
+	exists, err := repositories.CheckResourceActionAlreadyAdded(resrole_id, resact_id)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return
+	}
+	if !exists {
+		config.Log.Info("Resource Action already added")
+		c.AbortWithStatusJSON(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Resource Action already added"})
 		return
 	}
 	repositories.AddResourceActionToResourceRole(resrole_id, resact_id)
