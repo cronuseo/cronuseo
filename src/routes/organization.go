@@ -21,7 +21,10 @@ func OrganizationRoutes2(router *echo.Echo) {
 
 	orgRouter := router.Group("/organization")
 
-	orgRouter.GET("/", controllers.GetOrganizations2)
-	orgRouter.GET("/", controllers.GetOrganizations2)
+	orgRouter.GET("", controllers.GetOrganizations2)
+	orgRouter.GET("/:id", controllers.GetOrganization2)
+	orgRouter.POST("", controllers.CreateOrganization2)
+	orgRouter.DELETE("/:id", controllers.DeleteOrganization2)
+	orgRouter.PUT("/:id", controllers.UpdateOrganization2)
 
 }

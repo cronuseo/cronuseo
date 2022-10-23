@@ -43,6 +43,23 @@ func GetOrganization(c *gin.Context) {
 
 }
 
+func GetOrganization2(c echo.Context) error {
+	var org models.Organization
+	org_id := string(c.Param("id"))
+	exists, err := repositories.CheckOrganizationExistsById(org_id)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+	}
+	if !exists {
+		config.Log.Info("Organization not exists")
+		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+	}
+	repositories.GetOrganization(&org, org_id)
+	return c.JSON(http.StatusOK, &org)
+
+}
+
 func CreateOrganization(c *gin.Context) {
 	var org models.Organization
 	if err := c.ShouldBindJSON(&org); err != nil {
@@ -69,24 +86,24 @@ func CreateOrganization2(c echo.Context) error {
 	var org models.Organization
 	if err := c.Bind(&org); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest,
-			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
+			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
 
 	}
 	if err := c.Validate(&org); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest,
-			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
+			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
 	}
 	exists, err := repositories.CheckOrganizationExistsByKey(org.Key)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
 	}
 	if exists {
 		config.Log.Info("Organization already exists")
-		return echo.NewHTTPError(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
+		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Organization already exists"})
 	}
 	repositories.CreateOrganization(&org)
-	return c.JSON(http.StatusOK, &org)
+	return c.JSON(http.StatusCreated, &org)
 }
 
 func DeleteOrganization(c *gin.Context) {
@@ -105,6 +122,22 @@ func DeleteOrganization(c *gin.Context) {
 	}
 	repositories.DeleteOrganization(&org, org_id)
 	c.JSON(http.StatusOK, "")
+}
+
+func DeleteOrganization2(c echo.Context) error {
+	var org models.Organization
+	org_id := string(c.Param("id"))
+	exists, err := repositories.CheckOrganizationExistsById(org_id)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+	}
+	if !exists {
+		config.Log.Info("Organization not exists")
+		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+	}
+	repositories.DeleteOrganization(&org, org_id)
+	return c.JSON(http.StatusNoContent, "")
 }
 
 func UpdateOrganization(c *gin.Context) {
@@ -131,4 +164,31 @@ func UpdateOrganization(c *gin.Context) {
 	}
 	repositories.UpdateOrganization(&org, &reqOrg, org_id)
 	c.JSON(http.StatusOK, &org)
+}
+
+func UpdateOrganization2(c echo.Context) error {
+	var org models.Organization
+	org_id := string(c.Param("id"))
+	var reqOrg models.Organization
+	if err := c.Bind(&reqOrg); err != nil {
+		if reqOrg.Name == "" || len(reqOrg.Name) < 4 {
+			return echo.NewHTTPError(http.StatusBadRequest,
+				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
+		}
+	}
+	if err := c.Validate(&org); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest,
+			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
+	}
+	exists, err := repositories.CheckOrganizationExistsById(org_id)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+	}
+	if !exists {
+		config.Log.Info("Organization not exists")
+		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+	}
+	repositories.UpdateOrganization(&org, &reqOrg, org_id)
+	return c.JSON(http.StatusOK, &org)
 }
