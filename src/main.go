@@ -9,7 +9,7 @@ import (
 	"github.com/shashimalcse/Cronuseo/routes"
 )
 
-func main() {
+func main2() {
 	err := godotenv.Load("../.env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")

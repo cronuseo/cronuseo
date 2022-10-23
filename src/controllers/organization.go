@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/exceptions"
 	"github.com/shashimalcse/Cronuseo/models"
@@ -14,7 +15,13 @@ import (
 func GetOrganizations(c *gin.Context) {
 	orgs := []models.Organization{}
 	repositories.GetOrganizations(&orgs)
-	c.JSON(http.StatusOK, &orgs)
+	c.JSON(http.StatusOK, "ji")
+}
+
+func GetOrganizations2(c echo.Context) error {
+	orgs := []models.Organization{}
+	repositories.GetOrganizations(&orgs)
+	return c.JSON(http.StatusOK, &orgs)
 }
 
 func GetOrganization(c *gin.Context) {
@@ -56,6 +63,30 @@ func CreateOrganization(c *gin.Context) {
 	}
 	repositories.CreateOrganization(&org)
 	c.JSON(http.StatusOK, &org)
+}
+
+func CreateOrganization2(c echo.Context) error {
+	var org models.Organization
+	if err := c.Bind(&org); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest,
+			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
+
+	}
+	if err := c.Validate(&org); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest,
+			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Invalid inputs. Please check your inputs"})
+	}
+	exists, err := repositories.CheckOrganizationExistsByKey(org.Key)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return echo.NewHTTPError(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+	}
+	if exists {
+		config.Log.Info("Organization already exists")
+		return echo.NewHTTPError(http.StatusBadRequest, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization already exists"})
+	}
+	repositories.CreateOrganization(&org)
+	return c.JSON(http.StatusOK, &org)
 }
 
 func DeleteOrganization(c *gin.Context) {
