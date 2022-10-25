@@ -22,6 +22,7 @@ func main() {
 	e.Validator = &utils.CustomValidator{Validator: validator.New()}
 	routes.OrganizationRoutes2(e)
 	routes.ProjectRoutes2(e)
+	routes.ResourceRoutes2(e)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

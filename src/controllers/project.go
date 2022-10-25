@@ -89,7 +89,7 @@ func GetProject2(c echo.Context) error {
 	}
 	if !org_exists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Organization not exists"})
+		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
 	}
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
@@ -175,7 +175,7 @@ func CreateProject2(c echo.Context) error {
 	}
 	if exists {
 		config.Log.Info("Project already exists")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project already exists"})
+		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Project already exists"})
 	}
 	repositories.CreateProject(&project)
 	return c.JSON(http.StatusCreated, &project)
@@ -299,5 +299,5 @@ func UpdateProject2(c echo.Context) error {
 		}
 	}
 	repositories.UpdateProject(&project, &reqProject, proj_id)
-	return c.JSON(http.StatusOK, &project)
+	return c.JSON(http.StatusCreated, &project)
 }

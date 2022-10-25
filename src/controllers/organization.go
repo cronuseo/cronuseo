@@ -190,5 +190,5 @@ func UpdateOrganization2(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
 	}
 	repositories.UpdateOrganization(&org, &reqOrg, org_id)
-	return c.JSON(http.StatusOK, &org)
+	return c.JSON(http.StatusCreated, &org)
 }
