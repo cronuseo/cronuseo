@@ -23,6 +23,11 @@ func main() {
 	routes.OrganizationRoutes2(e)
 	routes.ProjectRoutes2(e)
 	routes.ResourceRoutes2(e)
+	routes.ResourceActionRoutes2(e)
+	routes.ResourceRoutes2(e)
+	routes.GroupRoutes2(e)
+	routes.UserRoutes2(e)
+	routes.CheckRoutes2(e)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }
