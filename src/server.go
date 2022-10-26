@@ -20,14 +20,14 @@ func main() {
 	config.InitLogger()
 	e := echo.New()
 	e.Validator = &utils.CustomValidator{Validator: validator.New()}
-	routes.OrganizationRoutes2(e)
-	routes.ProjectRoutes2(e)
-	routes.ResourceRoutes2(e)
-	routes.ResourceActionRoutes2(e)
-	routes.ResourceRoutes2(e)
-	routes.GroupRoutes2(e)
-	routes.UserRoutes2(e)
-	routes.CheckRoutes2(e)
+	routes.OrganizationRoutes(e)
+	routes.ProjectRoutes(e)
+	routes.ResourceRoutes(e)
+	routes.ResourceActionRoutes(e)
+	routes.ResourceRoutes(e)
+	routes.GroupRoutes(e)
+	routes.UserRoutes(e)
+	routes.CheckRoutes(e)
 
 	e.Logger.Fatal(e.Start(":8080"))
 }

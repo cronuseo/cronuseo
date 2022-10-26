@@ -1,11 +1,11 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func OAuth2Routes(router *gin.Engine) {
+func OAuth2Routes(router *echo.Echo) {
 
 	router.GET("/authorize", controllers.HandleAuthentication)
 	router.GET("/callback", controllers.HandleCallback)
