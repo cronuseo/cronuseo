@@ -1,11 +1,11 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func ResourceRoutes(router *gin.Engine) {
+func ResourceRoutes(router *echo.Echo) {
 
 	resourceRouter := router.Group("/resources")
 

@@ -1,29 +1,27 @@
 package controllers
 
 import (
+	"github.com/labstack/echo/v4"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
 	"github.com/shashimalcse/Cronuseo/utils"
 	"golang.org/x/oauth2"
 )
 
-func HandleAuthentication(c *gin.Context) {
+func HandleAuthentication(c echo.Context) error {
 	url := utils.GithubOauthConfig.AuthCodeURL(utils.GetRandomState())
-	c.Redirect(http.StatusTemporaryRedirect, url)
+	return c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
-func HandleCallback(c *gin.Context) {
-	if c.Request.FormValue("stage") != utils.RandomState {
-		c.Redirect(http.StatusTemporaryRedirect, "/")
-		return
+func HandleCallback(c echo.Context) error {
+	if c.FormValue("stage") != utils.RandomState {
+		return c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
-	token, err := utils.GithubOauthConfig.Exchange(oauth2.NoContext, c.Request.FormValue("code"))
+	token, err := utils.GithubOauthConfig.Exchange(oauth2.NoContext, c.FormValue("code"))
 
 	if err != nil {
-		c.Redirect(http.StatusTemporaryRedirect, "/")
-		return
+		return c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
 
-	c.JSON(http.StatusOK, token)
+	return c.JSON(http.StatusOK, token)
 }

@@ -1,11 +1,11 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func ResourceRoleRoutes(router *gin.Engine) {
+func ResourceRoleRoutes(router *echo.Echo) {
 
 	resourceActionRouter := router.Group("/resource_roles")
 

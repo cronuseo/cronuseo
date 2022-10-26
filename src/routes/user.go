@@ -1,11 +1,11 @@
 package routes
 
 import (
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func UserRoutes(router *gin.Engine) {
+func UserRoutes(router *echo.Echo) {
 
 	userRouter := router.Group("/users")
 
