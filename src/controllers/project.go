@@ -223,7 +223,7 @@ func DeleteProject2(c echo.Context) error {
 	}
 	if !org_exists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
 	}
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
@@ -232,7 +232,7 @@ func DeleteProject2(c echo.Context) error {
 	}
 	if !proj_exists {
 		config.Log.Info("Project not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Project not exists"})
+		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Project not exists"})
 	}
 	repositories.DeleteProject(&project, proj_id)
 	return c.JSON(http.StatusNoContent, "")
