@@ -162,6 +162,10 @@ func CreateResource2(c echo.Context) error {
 				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: err.Error()})
 		}
 	}
+	if err := c.Validate(&resource); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest,
+			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
+	}
 	int_proj_id, _ := strconv.Atoi(proj_id)
 	resource.ProjectID = int_proj_id
 	exists, err := repositories.CheckResourceExistsByKey(resource.Key, proj_id)
