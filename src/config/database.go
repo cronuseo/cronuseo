@@ -23,18 +23,16 @@ func ConnectDB() {
 	if err != nil {
 		panic(err)
 	}
-
-	db.AutoMigrate(&models.User{})
-	db.AutoMigrate(&models.Group{})
-	db.AutoMigrate(&models.Organization{})
-	db.AutoMigrate(&models.Project{})
-	db.AutoMigrate(&models.Resource{})
-	db.AutoMigrate(&models.ResourceAction{})
-	db.AutoMigrate(&models.ResourceRole{})
-	db.AutoMigrate(&models.GroupUser{})
-	db.AutoMigrate(&models.ResourceRoleToGroup{})
-	db.AutoMigrate(&models.ResourceRoleToUser{})
-	db.AutoMigrate(&models.ResourceRoleToResourceAction{})
-	db.AutoMigrate(&models.ResourceRoleToResourceActionKey{})
+	migrateDB(db)
 	DB = db
+}
+
+func migrateDB(db *gorm.DB) {
+	err := db.AutoMigrate(&models.User{}, &models.Group{}, &models.Organization{}, &models.Project{}, &models.Resource{},
+		&models.ResourceAction{}, &models.ResourceRole{}, &models.GroupUser{}, &models.GroupUser{},
+		&models.ResourceRoleToGroup{}, &models.ResourceRoleToUser{}, &models.ResourceRoleToResourceAction{},
+		&models.ResourceRoleToResourceActionKey{})
+	if err != nil {
+		return
+	}
 }

@@ -1,11 +1,11 @@
 package controllers
 
 import (
+	"context"
 	"github.com/labstack/echo/v4"
 	"net/http"
 
 	"github.com/shashimalcse/Cronuseo/utils"
-	"golang.org/x/oauth2"
 )
 
 func HandleAuthentication(c echo.Context) error {
@@ -17,7 +17,7 @@ func HandleCallback(c echo.Context) error {
 	if c.FormValue("stage") != utils.RandomState {
 		return c.Redirect(http.StatusTemporaryRedirect, "/")
 	}
-	token, err := utils.GithubOauthConfig.Exchange(oauth2.NoContext, c.FormValue("code"))
+	token, err := utils.GithubOauthConfig.Exchange(context.Background(), c.FormValue("code"))
 
 	if err != nil {
 		return c.Redirect(http.StatusTemporaryRedirect, "/")

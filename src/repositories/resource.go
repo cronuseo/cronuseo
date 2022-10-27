@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/models"
@@ -37,8 +38,8 @@ func DeleteAllResources(proj_id string) {
 	GetResources(&resources, proj_id)
 	for _, resource := range resources {
 		res_id := resource.ID
-		DeleteAllResourceActions(string(res_id))
-		DeleteAllResourceRoles(string(res_id))
+		DeleteAllResourceActions(fmt.Sprint(res_id))
+		DeleteAllResourceRoles(fmt.Sprint(res_id))
 	}
 	config.DB.Where("project_id = ?", proj_id).Delete(&models.Resource{})
 }
