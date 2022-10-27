@@ -2,8 +2,8 @@ package models
 
 type User struct {
 	ID             int    `json:"id" gorm:"primary_key"`
-	Username       string `json:"username"`
-	Name           string `json:"name"`
+	Username       string `json:"username" validate:"required,min=4"`
+	Name           string `json:"name" validate:"required,min=4"`
 	OrganizationID int    `json:"-" gorm:"foreignKey:ID"`
 }
 
