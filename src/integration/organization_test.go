@@ -12,7 +12,7 @@ import (
 
 var (
 	orgJson = `{
-    "keys" : "shsashimal1",
+    "key" : "shsashimal1",
     "name" : "shashimal senarath"}`
 )
 
