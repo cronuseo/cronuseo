@@ -23,15 +23,15 @@ func DeleteUser(user *models.User, userId string) {
 	config.DB.Where("id = ?", userId).Delete(&user)
 }
 
-func GetUsersWithGroups(user_id string, resUser *models.UserWithGroup) {
-	groupusers := []models.GroupUser{}
-	int_user_id, _ := strconv.Atoi(user_id)
-	config.DB.Model(&models.User{}).Select("id", "username", "name", "organization_id").Where("id = ?", user_id).Find(&resUser)
-	config.DB.Model(&models.GroupUser{}).Where("user_id = ?", int_user_id).Find(&groupusers)
+func GetUsersWithGroups(userId string, resUser *models.UserWithGroup) {
+	var groupusers []models.GroupUser
+	intUserId, _ := strconv.Atoi(userId)
+	config.DB.Model(&models.User{}).Select("id", "username", "name", "organization_id").Where("id = ?", userId).Find(&resUser)
+	config.DB.Model(&models.GroupUser{}).Where("user_id = ?", intUserId).Find(&groupusers)
 	if len(groupusers) > 0 {
 		for _, groupuser := range groupusers {
-			group_id := groupuser.UserID
-			user := models.GroupOnlyWithID{GroupID: group_id}
+			groupId := groupuser.UserID
+			user := models.GroupOnlyWithID{GroupID: groupId}
 			resUser.Groups = append(resUser.Groups, user)
 		}
 	}
