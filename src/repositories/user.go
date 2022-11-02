@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"errors"
 	"strconv"
 
 	"github.com/shashimalcse/Cronuseo/config"
@@ -12,17 +11,16 @@ func GetUsers(users *[]models.User, org_id string) {
 	config.DB.Model(&models.User{}).Where("organization_id = ?", org_id).Find(&users)
 }
 
-func GetUser(user *models.User, user_id string) {
-	config.DB.Where("id = ?", user_id).First(&user)
+func GetUser(user *models.User, userId string) {
+	config.DB.Where("id = ?", userId).First(&user)
 }
 
 func CreateUser(user *models.User) {
 	config.DB.Create(&user)
 }
 
-func DeleteUser(user *models.User, user_id string) {
-	DeleteAllResources(user_id)
-	config.DB.Where("id = ?", user_id).Delete(&user)
+func DeleteUser(user *models.User, userId string) {
+	config.DB.Where("id = ?", userId).Delete(&user)
 }
 
 func GetUsersWithGroups(user_id string, resUser *models.UserWithGroup) {
@@ -40,35 +38,14 @@ func GetUsersWithGroups(user_id string, resUser *models.UserWithGroup) {
 
 }
 
-func UpdateUser(user *models.User, reqUser *models.User, user_id string) {
-	config.DB.Where("id = ?", user_id).First(&user)
-	user.FirstName = reqUser.FirstName
-	user.LastName = reqUser.LastName
+func UpdateUser(user *models.User) {
 	config.DB.Save(&user)
 }
 
-func CheckUserExistsById(user_id string) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.User{}).Select("count(*) > 0").Where("id = ?", user_id).Find(&exists).Error
-	if err != nil {
-		return false, errors.New("user not exists")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+func CheckUserExistsById(userId string, exists bool) error {
+	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("id = ?", userId).Find(&exists).Error
 }
 
-func CheckUserExistsByUsername(username string, org_id string) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.User{}).Select("count(*) > 0").Where("username = ? AND organization_id = ?", username, org_id).Find(&exists).Error
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+func CheckUserExistsByUsername(username string, orgId string, exists bool) error {
+	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("username = ? AND organization_id = ?", username, orgId).Find(&exists).Error
 }

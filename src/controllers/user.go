@@ -2,16 +2,13 @@ package controllers
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/handlers"
+	"github.com/shashimalcse/Cronuseo/models"
+	"github.com/shashimalcse/Cronuseo/repositories"
 	"github.com/shashimalcse/Cronuseo/utils"
 	"net/http"
 	"strconv"
-	"time"
-
-	"github.com/shashimalcse/Cronuseo/config"
-	"github.com/shashimalcse/Cronuseo/exceptions"
-	"github.com/shashimalcse/Cronuseo/models"
-	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
 func GetUsers(c echo.Context) error {
@@ -37,20 +34,20 @@ func GetUser(c echo.Context) error {
 	orgExists, orgErr := repositories.CheckOrganizationExistsById(orgId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
-	userExists, userErr := repositories.CheckUserExistsById(userId)
+	userExists, userErr := handlers.CheckUserExistsById(userId)
 	if userErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !userExists {
 		config.Log.Info("User not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Group not exists"})
+		return utils.NotFoundErrorResponse("User")
 	}
 	handlers.GetUser(&user, userId)
 	return c.JSON(http.StatusOK, &user)
@@ -62,32 +59,30 @@ func CreateUser(c echo.Context) error {
 	orgExists, orgErr := repositories.CheckOrganizationExistsById(orgId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
 	if err := c.Bind(&user); err != nil {
 		if user.Username == "" || len(user.Username) < 4 || user.FirstName == "" || len(user.FirstName) < 4 || user.LastName == "" || len(user.LastName) < 4 {
-			return echo.NewHTTPError(http.StatusBadRequest,
-				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: err.Error()})
+			return utils.InvalidErrorResponse()
 		}
 	}
 	if err := c.Validate(&user); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest,
-			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
+		return utils.InvalidErrorResponse()
 	}
 	int_org_id, _ := strconv.Atoi(orgId)
 	user.OrganizationID = int_org_id
-	exists, err := repositories.CheckUserExistsByUsername(user.Username, orgId)
+	exists, err := handlers.CheckUserExistsByUsername(user.Username, orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("User already exists")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "User already exists"})
+		return utils.AlreadyExistsErrorResponse("User")
 	}
 	handlers.CreateUser(&user)
 	return c.JSON(http.StatusCreated, &user)
@@ -95,53 +90,53 @@ func CreateUser(c echo.Context) error {
 
 func DeleteUser(c echo.Context) error {
 	var user models.User
-	user_id := string(c.Param("id"))
-	org_id := string(c.Param("org_id"))
-	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
-	if org_err != nil {
+	userId := string(c.Param("id"))
+	orgId := string(c.Param("org_id"))
+	orgExists, orgErr := repositories.CheckOrganizationExistsById(orgId)
+	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !org_exists {
+	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
-	user_exists, user_err := repositories.CheckUserExistsById(user_id)
-	if user_err != nil {
+	userExists, userErr := handlers.CheckUserExistsById(userId)
+	if userErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !user_exists {
+	if !userExists {
 		config.Log.Info("User not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "User not exists"})
+		return utils.NotFoundErrorResponse("User")
 	}
-	repositories.DeleteUser(&user, user_id)
+	handlers.DeleteUser(&user, userId)
 	return c.JSON(http.StatusNoContent, "")
 }
 
 func UpdateUser(c echo.Context) error {
 	var user models.User
 	var reqUser models.User
-	user_id := string(c.Param("id"))
-	org_id := string(c.Param("org_id"))
-	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
-	if org_err != nil {
+	userId := string(c.Param("id"))
+	orgId := string(c.Param("org_id"))
+	orgExists, orgErr := repositories.CheckOrganizationExistsById(orgId)
+	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !org_exists {
+	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
-	user_exists, user_err := repositories.CheckUserExistsById(user_id)
-	if user_err != nil {
+	userExists, userErr := handlers.CheckUserExistsById(userId)
+	if userErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !user_exists {
+	if !userExists {
 		config.Log.Info("User not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "User not exists"})
+		return utils.NotFoundErrorResponse("User")
 	}
-	repositories.UpdateUser(&user, &reqUser, user_id)
+	handlers.UpdateUser(&user, &reqUser, userId)
 	return c.JSON(http.StatusCreated, &user)
 }
