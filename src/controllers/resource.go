@@ -18,7 +18,7 @@ func GetResources(c echo.Context) error {
 	exists, err := repositories.CheckProjectExistsById(proj_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Project not exists")
@@ -35,7 +35,7 @@ func GetResource(c echo.Context) error {
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !proj_exists {
 		config.Log.Info("Project not exists")
@@ -44,7 +44,7 @@ func GetResource(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 
 	}
 	if !res_exists {
@@ -61,7 +61,7 @@ func CreateResource(c echo.Context) error {
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !proj_exists {
 		config.Log.Info("Project not exists")
@@ -82,7 +82,7 @@ func CreateResource(c echo.Context) error {
 	exists, err := repositories.CheckResourceExistsByKey(resource.Key, proj_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Resource already exists")
@@ -99,7 +99,7 @@ func DeleteResource(c echo.Context) error {
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !proj_exists {
 		config.Log.Info("Project not exists")
@@ -108,7 +108,7 @@ func DeleteResource(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -126,7 +126,7 @@ func UpdateResource(c echo.Context) error {
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !proj_exists {
 		config.Log.Info("Project not exists")
@@ -135,7 +135,7 @@ func UpdateResource(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")

@@ -5,7 +5,6 @@ import (
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/handlers"
 	"github.com/shashimalcse/Cronuseo/models"
-	"github.com/shashimalcse/Cronuseo/repositories"
 	"github.com/shashimalcse/Cronuseo/utils"
 	"net/http"
 	"strconv"
@@ -14,7 +13,7 @@ import (
 func GetUsers(c echo.Context) error {
 	users := []models.User{}
 	orgId := string(c.Param("org_id"))
-	exists, err := repositories.CheckOrganizationExistsById(orgId)
+	exists, err := handlers.CheckOrganizationExistsById(orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -31,7 +30,7 @@ func GetUser(c echo.Context) error {
 	var user models.UserWithGroup
 	orgId := string(c.Param("org_id"))
 	userId := string(c.Param("id"))
-	orgExists, orgErr := repositories.CheckOrganizationExistsById(orgId)
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -56,7 +55,7 @@ func GetUser(c echo.Context) error {
 func CreateUser(c echo.Context) error {
 	var user models.User
 	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := repositories.CheckOrganizationExistsById(orgId)
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -92,7 +91,7 @@ func DeleteUser(c echo.Context) error {
 	var user models.User
 	userId := string(c.Param("id"))
 	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := repositories.CheckOrganizationExistsById(orgId)
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -119,7 +118,7 @@ func UpdateUser(c echo.Context) error {
 	var reqUser models.User
 	userId := string(c.Param("id"))
 	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := repositories.CheckOrganizationExistsById(orgId)
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()

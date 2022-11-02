@@ -18,7 +18,7 @@ func GetProjects(c echo.Context) error {
 	exists, err := repositories.CheckOrganizationExistsById(org_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Organization not exists")
@@ -35,7 +35,7 @@ func GetProject(c echo.Context) error {
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !org_exists {
 		config.Log.Info("Organization not exists")
@@ -44,7 +44,7 @@ func GetProject(c echo.Context) error {
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !proj_exists {
 		config.Log.Info("Project not exists")
@@ -61,7 +61,7 @@ func CreateProject(c echo.Context) error {
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !org_exists {
 		config.Log.Info("Organization not exists")
@@ -82,7 +82,7 @@ func CreateProject(c echo.Context) error {
 	exists, err := repositories.CheckProjectExistsByKey(project.Key, org_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Project already exists")
@@ -100,7 +100,7 @@ func DeleteProject(c echo.Context) error {
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !org_exists {
 		config.Log.Info("Organization not exists")
@@ -109,7 +109,7 @@ func DeleteProject(c echo.Context) error {
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !proj_exists {
 		config.Log.Info("Project not exists")
@@ -127,7 +127,7 @@ func UpdateProject(c echo.Context) error {
 	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
 	if org_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !org_exists {
 		config.Log.Info("Organization not exists")
@@ -136,7 +136,7 @@ func UpdateProject(c echo.Context) error {
 	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
 	if proj_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !proj_exists {
 		config.Log.Info("Project not exists")

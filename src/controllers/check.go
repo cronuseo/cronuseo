@@ -25,7 +25,7 @@ func Check(c echo.Context) error {
 	allow, err := repositories.Check(keys.Resource, keys.ResourceRole, keys.ResourceAction)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if allow {
 		return c.JSON(http.StatusOK, "allowed")

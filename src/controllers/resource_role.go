@@ -18,7 +18,7 @@ func GetResourceRoles(c echo.Context) error {
 	exists, err := repositories.CheckResourceExistsById(res_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Resource not exists")
@@ -35,7 +35,7 @@ func GetResourceRole(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -44,7 +44,7 @@ func GetResourceRole(c echo.Context) error {
 	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
 	if resrole_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resrole_exists {
 		config.Log.Info("Resource Action not exists")
@@ -61,7 +61,7 @@ func CreateResourceRole(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -82,7 +82,7 @@ func CreateResourceRole(c echo.Context) error {
 	exists, err := repositories.CheckResourceRoleExistsByKey(resourceRole.Key, res_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Resource Role already exists")
@@ -100,7 +100,7 @@ func DeleteResourceRole(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -109,7 +109,7 @@ func DeleteResourceRole(c echo.Context) error {
 	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
 	if resrole_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resrole_exists {
 		config.Log.Info("Resource Role not exists")
@@ -127,7 +127,7 @@ func UpdateResourceRole(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -136,7 +136,7 @@ func UpdateResourceRole(c echo.Context) error {
 	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
 	if resrole_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resrole_exists {
 		config.Log.Info("Resource Role not exists")
@@ -153,7 +153,7 @@ func AddUserToResourceRole(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -162,7 +162,7 @@ func AddUserToResourceRole(c echo.Context) error {
 	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
 	if resrole_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resrole_exists {
 		config.Log.Info("Resource Role not exists")
@@ -171,7 +171,7 @@ func AddUserToResourceRole(c echo.Context) error {
 	user_exists, user_err := repositories.CheckUserExistsById(user_id)
 	if user_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !user_exists {
 		config.Log.Info("User not exists")
@@ -180,7 +180,7 @@ func AddUserToResourceRole(c echo.Context) error {
 	exists, err := repositories.CheckUserAlreadyAdded(resrole_id, user_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("User already added")
@@ -198,7 +198,7 @@ func AddGroupToResourceRole(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -207,7 +207,7 @@ func AddGroupToResourceRole(c echo.Context) error {
 	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
 	if resrole_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resrole_exists {
 		config.Log.Info("Resource Role not exists")
@@ -216,7 +216,7 @@ func AddGroupToResourceRole(c echo.Context) error {
 	group_exists, group_err := repositories.CheckUserExistsById(group_id)
 	if group_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !group_exists {
 		config.Log.Info("User not exists")
@@ -225,7 +225,7 @@ func AddGroupToResourceRole(c echo.Context) error {
 	exists, err := repositories.CheckGroupAlreadyAdded(resrole_id, group_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Group already added")
@@ -243,7 +243,7 @@ func AddResourceActionToResourceRole(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -252,7 +252,7 @@ func AddResourceActionToResourceRole(c echo.Context) error {
 	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
 	if resrole_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resrole_exists {
 		config.Log.Info("Resource Role not exists")
@@ -261,7 +261,7 @@ func AddResourceActionToResourceRole(c echo.Context) error {
 	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
 	if resact_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resact_exists {
 		config.Log.Info("Resource Action not exists")
@@ -270,7 +270,7 @@ func AddResourceActionToResourceRole(c echo.Context) error {
 	exists, err := repositories.CheckResourceActionAlreadyAdded(res_id, resrole_id, resact_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Resource Action already added")

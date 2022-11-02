@@ -18,7 +18,7 @@ func GetResourceActions(c echo.Context) error {
 	exists, err := repositories.CheckResourceExistsById(res_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Resource not exists")
@@ -35,7 +35,7 @@ func GetResourceAction(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -44,7 +44,7 @@ func GetResourceAction(c echo.Context) error {
 	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
 	if resact_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resact_exists {
 		config.Log.Info("Resource Action not exists")
@@ -61,7 +61,7 @@ func CreateResourceAction(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -82,7 +82,7 @@ func CreateResourceAction(c echo.Context) error {
 	exists, err := repositories.CheckResourceActionExistsByKey(resourceAction.Key, res_id)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Resource Action already exists")
@@ -99,7 +99,7 @@ func DeleteResourceAction(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -108,7 +108,7 @@ func DeleteResourceAction(c echo.Context) error {
 	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
 	if resact_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resact_exists {
 		config.Log.Info("Resource Action not exists")
@@ -126,7 +126,7 @@ func UpdateResourceAction(c echo.Context) error {
 	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
 	if res_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !res_exists {
 		config.Log.Info("Resource not exists")
@@ -135,7 +135,7 @@ func UpdateResourceAction(c echo.Context) error {
 	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
 	if resact_err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !resact_exists {
 		config.Log.Info("Resource Action not exists")
