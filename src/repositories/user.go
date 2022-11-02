@@ -42,7 +42,8 @@ func GetUsersWithGroups(user_id string, resUser *models.UserWithGroup) {
 
 func UpdateUser(user *models.User, reqUser *models.User, user_id string) {
 	config.DB.Where("id = ?", user_id).First(&user)
-	user.Name = reqUser.Name
+	user.FirstName = reqUser.FirstName
+	user.LastName = reqUser.LastName
 	config.DB.Save(&user)
 }
 
