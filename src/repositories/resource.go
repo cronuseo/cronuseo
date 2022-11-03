@@ -1,7 +1,6 @@
 package repositories
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/shashimalcse/Cronuseo/config"
@@ -21,15 +20,10 @@ func CreateResource(resource *models.Resource) {
 }
 
 func DeleteResource(resource *models.Resource, res_id string) {
-	DeleteAllResourceActions(string(res_id))
-	DeleteAllResourceRoles(string(res_id))
 	config.DB.Where("id = ?", res_id).Delete(&resource)
 }
 
-func UpdateResource(resource *models.Resource, reqResource *models.Resource, res_id string) {
-	config.DB.Where("id = ?", res_id).First(&resource)
-	resource.Name = reqResource.Name
-	resource.Description = reqResource.Description
+func UpdateResource(resource *models.Resource) {
 	config.DB.Save(&resource)
 }
 
@@ -44,28 +38,10 @@ func DeleteAllResources(proj_id string) {
 	config.DB.Where("project_id = ?", proj_id).Delete(&models.Resource{})
 }
 
-func CheckResourceExistsById(res_id string) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("id = ?", res_id).Find(&exists).Error
-	if err != nil {
-		return false, errors.New("resource not exists")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+func CheckResourceExistsById(resId string, exists bool) error {
+	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("id = ?", resId).Find(&exists).Error
 }
 
-func CheckResourceExistsByKey(key string, proj_id string) (bool, error) {
-	var exists bool
-	err := config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("key = ? AND project_id = ?", key, proj_id).Find(&exists).Error
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+func CheckResourceExistsByKey(key string, proj_id string, exists bool) error {
+	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("key = ? AND project_id = ?", key, proj_id).Find(&exists).Error
 }

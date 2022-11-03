@@ -1,146 +1,142 @@
 package controllers
 
 import (
-	"net/http"
-	"strconv"
-	"time"
-
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
-	"github.com/shashimalcse/Cronuseo/exceptions"
+	"github.com/shashimalcse/Cronuseo/handlers"
 	"github.com/shashimalcse/Cronuseo/models"
-	"github.com/shashimalcse/Cronuseo/repositories"
+	"github.com/shashimalcse/Cronuseo/utils"
+	"net/http"
+	"strconv"
 )
 
 func GetResources(c echo.Context) error {
 	resources := []models.Resource{}
-	proj_id := string(c.Param("proj_id"))
-	exists, err := repositories.CheckProjectExistsById(proj_id)
+	projId := string(c.Param("proj_id"))
+	exists, err := handlers.CheckProjectExistsById(projId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Project not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Project not exists"})
+		return utils.NotFoundErrorResponse("Project")
 	}
-	repositories.GetResources(&resources, proj_id)
+	handlers.GetResources(&resources, projId)
 	return c.JSON(http.StatusOK, &resources)
 }
 
 func GetResource(c echo.Context) error {
 	var resource models.Resource
-	res_id := string(c.Param("id"))
-	proj_id := string(c.Param("proj_id"))
-	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
-	if proj_err != nil {
+	resId := string(c.Param("id"))
+	projId := string(c.Param("proj_id"))
+	projExists, projErr := handlers.CheckProjectExistsById(projId)
+	if projErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !proj_exists {
+	if !projExists {
 		config.Log.Info("Project not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Project not exists"})
+		return utils.NotFoundErrorResponse("Project")
 	}
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	repositories.GetResource(&resource, res_id)
+	handlers.GetResource(&resource, resId)
 	return c.JSON(http.StatusOK, &resource)
 }
 
 func CreateResource(c echo.Context) error {
 	var resource models.Resource
-	proj_id := string(c.Param("proj_id"))
-	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
-	if proj_err != nil {
+	projId := string(c.Param("proj_id"))
+	projExists, projErr := handlers.CheckProjectExistsById(projId)
+	if projErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !proj_exists {
+	if !projExists {
 		config.Log.Info("Project not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Project not exists"})
+		return utils.NotFoundErrorResponse("Project")
 	}
 	if err := c.Bind(&resource); err != nil {
 		if resource.Key == "" || len(resource.Key) < 4 || resource.Name == "" || len(resource.Name) < 4 {
-			return echo.NewHTTPError(http.StatusBadRequest,
-				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: err.Error()})
+			return utils.InvalidErrorResponse()
 		}
 	}
 	if err := c.Validate(&resource); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest,
-			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
+		return utils.InvalidErrorResponse()
 	}
-	int_proj_id, _ := strconv.Atoi(proj_id)
-	resource.ProjectID = int_proj_id
-	exists, err := repositories.CheckResourceExistsByKey(resource.Key, proj_id)
+	intProjId, _ := strconv.Atoi(projId)
+	resource.ProjectID = intProjId
+	exists, err := handlers.CheckResourceExistsByKey(resource.Key, projId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Resource already exists")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Resource already exists"})
+		utils.AlreadyExistsErrorResponse("Resource")
 	}
-	repositories.CreateResource(&resource)
+	handlers.CreateResource(&resource)
 	return c.JSON(http.StatusOK, &resource)
 }
 
 func DeleteResource(c echo.Context) error {
 	var resource models.Resource
-	proj_id := string(c.Param("proj_id"))
-	res_id := string(c.Param("id"))
-	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
-	if proj_err != nil {
+	projId := string(c.Param("proj_id"))
+	resId := string(c.Param("id"))
+	projExists, projErr := handlers.CheckProjectExistsById(projId)
+	if projErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !proj_exists {
+	if !projExists {
 		config.Log.Info("Project not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Project not exists"})
+		return utils.NotFoundErrorResponse("Project")
 	}
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	repositories.DeleteResource(&resource, res_id)
+	handlers.DeleteResource(&resource, resId)
 	return c.JSON(http.StatusNoContent, "")
 }
 
 func UpdateResource(c echo.Context) error {
 	var resource models.Resource
 	var reqResource models.Resource
-	proj_id := string(c.Param("proj_id"))
-	res_id := string(c.Param("id"))
-	proj_exists, proj_err := repositories.CheckProjectExistsById(proj_id)
-	if proj_err != nil {
+	projId := string(c.Param("proj_id"))
+	resId := string(c.Param("id"))
+	projExists, projErr := handlers.CheckProjectExistsById(projId)
+	if projErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !proj_exists {
+	if !projExists {
 		config.Log.Info("Project not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Project not exists"})
+		return utils.NotFoundErrorResponse("Project")
 	}
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	repositories.UpdateResource(&resource, &reqResource, res_id)
+	handlers.UpdateResource(&resource, &reqResource, resId)
 	return c.JSON(http.StatusCreated, &resource)
 }
