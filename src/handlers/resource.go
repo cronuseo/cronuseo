@@ -19,7 +19,7 @@ func CreateResource(resource *models.Resource) {
 }
 
 func DeleteResource(resource *models.Resource, resId string) {
-	repositories.DeleteAllResourceActions(string(resId))
+	DeleteAllResourceActions(string(resId))
 	repositories.DeleteAllResourceRoles(string(resId))
 	repositories.DeleteResource(resource, resId)
 }
