@@ -1,7 +1,6 @@
 package integration
 
 import (
-	"context"
 	"fmt"
 	"github.com/go-playground/validator/v10"
 	"github.com/joho/godotenv"
@@ -14,9 +13,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"os"
-	"os/signal"
 	"testing"
-	"time"
 )
 
 func connectDB() {
@@ -67,15 +64,4 @@ func StartServer(e *echo.Echo) {
 	routes.GroupRoutes(e)
 	routes.UserRoutes(e)
 	routes.CheckRoutes(e)
-}
-
-func StopServer(e *echo.Echo) {
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
-	}
 }
