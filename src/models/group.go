@@ -2,8 +2,8 @@ package models
 
 type Group struct {
 	ID             int    `json:"id" gorm:"primary_key"`
-	Key            string `json:"key" binding:"required,min=4"`
-	Name           string `json:"name" binding:"required,min=4"`
+	Key            string `json:"key" validate:"required,min=4"`
+	Name           string `json:"name" validate:"required,min=4"`
 	OrganizationID int    `json:"-" gorm:"foreignKey:ID"`
 }
 

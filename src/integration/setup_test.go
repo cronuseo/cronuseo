@@ -1,22 +1,27 @@
-package config
+package integration
 
 import (
 	"fmt"
-	"os"
-
+	"github.com/go-playground/validator/v10"
+	"github.com/joho/godotenv"
+	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/models"
+	"github.com/shashimalcse/Cronuseo/routes"
+	"github.com/shashimalcse/Cronuseo/utils"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"log"
+	"os"
+	"testing"
 )
 
-var DB *gorm.DB
-
-func ConnectDB() {
+func connectDB() {
 	dbHost := os.Getenv("DB_HOST")
 	dbPort := os.Getenv("DB_PORT")
 	dbUsername := os.Getenv("DB_USERNAME")
 	dbPass := os.Getenv("DB_PASSWORD")
-	dbName := os.Getenv("DB_NAME")
+	dbName := os.Getenv("DB_NAME_TEST")
 	db_link := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", dbUsername, dbPass, dbHost, dbPort, dbName)
 	db, err := gorm.Open(postgres.Open(db_link), &gorm.Config{})
 
@@ -24,7 +29,7 @@ func ConnectDB() {
 		panic(err)
 	}
 	migrateDB(db)
-	DB = db
+	config.DB = db
 }
 
 func migrateDB(db *gorm.DB) {
@@ -35,4 +40,28 @@ func migrateDB(db *gorm.DB) {
 	if err != nil {
 		return
 	}
+}
+
+func TestMain(m *testing.M) {
+	err := godotenv.Load(os.ExpandEnv("./../../.env"))
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+	connectDB()
+	config.InitLogger()
+	exitVal := m.Run()
+	os.Exit(exitVal)
+
+}
+
+func StartServer(e *echo.Echo) {
+	e.Validator = &utils.CustomValidator{Validator: validator.New()}
+	routes.OrganizationRoutes(e)
+	routes.ProjectRoutes(e)
+	routes.ResourceRoutes(e)
+	routes.ResourceActionRoutes(e)
+	routes.ResourceRoutes(e)
+	routes.GroupRoutes(e)
+	routes.UserRoutes(e)
+	routes.CheckRoutes(e)
 }

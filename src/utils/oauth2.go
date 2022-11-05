@@ -30,6 +30,9 @@ func GetRandomState() string {
 
 func randToken() string {
 	b := make([]byte, 32)
-	rand.Read(b)
+	_, err := rand.Read(b)
+	if err != nil {
+		return ""
+	}
 	return base64.StdEncoding.EncodeToString(b)
 }

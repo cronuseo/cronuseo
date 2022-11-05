@@ -2,120 +2,116 @@ package controllers
 
 import (
 	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/Cronuseo/config"
+	"github.com/shashimalcse/Cronuseo/handlers"
+	"github.com/shashimalcse/Cronuseo/models"
+	"github.com/shashimalcse/Cronuseo/utils"
 	"net/http"
 	"strconv"
-	"time"
-
-	"github.com/shashimalcse/Cronuseo/config"
-	"github.com/shashimalcse/Cronuseo/exceptions"
-	"github.com/shashimalcse/Cronuseo/models"
-	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
 func GetGroups(c echo.Context) error {
 	groups := []models.Group{}
-	org_id := string(c.Param("org_id"))
-	exists, err := repositories.CheckOrganizationExistsById(org_id)
+	orgId := string(c.Param("org_id"))
+	exists, err := handlers.CheckOrganizationExistsById(orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
-	repositories.GetGroups(&groups, org_id)
+	handlers.GetGroups(&groups, orgId)
 	return c.JSON(http.StatusOK, &groups)
 }
 
 func GetGroup(c echo.Context) error {
 	var group models.GroupUsers
-	org_id := string(c.Param("org_id"))
-	group_id := string(c.Param("id"))
-	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
-	if org_err != nil {
+	orgId := string(c.Param("org_id"))
+	groupId := string(c.Param("id"))
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !org_exists {
+	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
-	group_exists, group_err := repositories.CheckGroupExistsById(group_id)
-	if group_err != nil {
+	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
+	if groupErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !group_exists {
+	if !groupExists {
 		config.Log.Info("Group not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Group not exists"})
+		return utils.NotFoundErrorResponse("Group")
 	}
-	repositories.GetUsersFromGroup(group_id, &group)
+	handlers.GetUsersFromGroup(groupId, &group)
 	return c.JSON(http.StatusOK, &group)
 
 }
 
 func CreateGroup(c echo.Context) error {
 	var group models.Group
-	org_id := string(c.Param("org_id"))
-	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
-	if org_err != nil {
+	orgId := string(c.Param("org_id"))
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !org_exists {
+	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
 	if err := c.Bind(&group); err != nil {
 		if group.Key == "" || len(group.Key) < 4 || group.Name == "" || len(group.Name) < 4 {
-			return echo.NewHTTPError(http.StatusBadRequest,
-				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: err.Error()})
+			return utils.InvalidErrorResponse()
 		}
 	}
 	if err := c.Validate(&group); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest,
-			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
+		return utils.InvalidErrorResponse()
 	}
-	int_org_id, _ := strconv.Atoi(org_id)
-	group.OrganizationID = int_org_id
-	exists, err := repositories.CheckGroupExistsByKey(group.Key, org_id)
+	intOrgId, _ := strconv.Atoi(orgId)
+	group.OrganizationID = intOrgId
+	exists, err := handlers.CheckGroupExistsByKey(group.Key, orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Group already exists")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Group already exists"})
+		return utils.AlreadyExistsErrorResponse("Group")
 	}
-	repositories.CreateGroup(&group)
+	handlers.CreateGroup(&group)
 	return c.JSON(http.StatusCreated, &group)
 
 }
 
 func DeleteGroup(c echo.Context) error {
 	var group models.Group
-	group_id := string(c.Param("id"))
-	org_id := string(c.Param("org_id"))
-	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
-	if org_err != nil {
+	groupId := string(c.Param("id"))
+	orgId := string(c.Param("org_id"))
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !org_exists {
+	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
-	group_exists, group_err := repositories.CheckGroupExistsById(group_id)
-	if group_err != nil {
+	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
+	if groupErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !group_exists {
+	if !groupExists {
 		config.Log.Info("Group not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Group not exists"})
+		return utils.NotFoundErrorResponse("Group")
 	}
-	repositories.DeleteGroup(&group, group_id)
+	handlers.DeleteGroup(&group, groupId)
 	return c.JSON(http.StatusNoContent, "")
 
 }
@@ -123,61 +119,61 @@ func DeleteGroup(c echo.Context) error {
 func UpdateGroup(c echo.Context) error {
 	var group models.Group
 	var reqGroup models.Group
-	group_id := string(c.Param("id"))
-	org_id := string(c.Param("org_id"))
-	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
-	if org_err != nil {
+	groupId := string(c.Param("id"))
+	orgId := string(c.Param("org_id"))
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !org_exists {
+	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
-	group_exists, group_err := repositories.CheckGroupExistsById(group_id)
-	if group_err != nil {
+	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
+	if groupErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !group_exists {
+	if !groupExists {
 		config.Log.Info("Group not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Group not exists"})
+		return utils.NotFoundErrorResponse("Group")
 	}
-	repositories.UpdateGroup(&group, &reqGroup, group_id)
+	handlers.UpdateGroup(&group, &reqGroup, groupId)
 	return c.JSON(http.StatusOK, &group)
 }
 
 func AddUserToGroup(c echo.Context) error {
-	org_id := string(c.Param("org_id"))
-	group_id := string(c.Param("id"))
-	user_id := string(c.Param("user_id"))
-	org_exists, org_err := repositories.CheckOrganizationExistsById(org_id)
-	if org_err != nil {
+	orgId := string(c.Param("org_id"))
+	groupId := string(c.Param("id"))
+	userId := string(c.Param("user_id"))
+	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	if orgErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !org_exists {
+	if !orgExists {
 		config.Log.Info("Organization not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Organization not exists"})
+		return utils.NotFoundErrorResponse("Organization")
 	}
-	group_exists, group_err := repositories.CheckGroupExistsById(group_id)
-	if group_err != nil {
+	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
+	if groupErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !group_exists {
+	if !groupExists {
 		config.Log.Info("Group not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Group not exists"})
+		return utils.NotFoundErrorResponse("Group")
 	}
-	user_exists, user_err := repositories.CheckUserExistsById(user_id)
-	if user_err != nil {
+	userExists, userErr := handlers.CheckUserExistsById(userId)
+	if userErr != nil {
 		config.Log.Panic("Server Error!")
-		return echo.NewHTTPError(http.StatusInternalServerError, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "Server Error!"})
+		return utils.ServerErrorResponse()
 	}
-	if !user_exists {
+	if !userExists {
 		config.Log.Info("User not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 500, Message: "User not exists"})
+		return utils.NotFoundErrorResponse("User")
 	}
-	repositories.AddUserToGroup(group_id, user_id)
+	handlers.AddUserToGroup(groupId, userId)
 	return c.JSON(http.StatusOK, "")
 }

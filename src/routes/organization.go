@@ -11,7 +11,7 @@ func OrganizationRoutes(router *echo.Echo) {
 
 	orgRouter.GET("", controllers.GetOrganizations)
 	orgRouter.GET("/:id", controllers.GetOrganization)
-	orgRouter.POST("/", controllers.CreateOrganization)
+	orgRouter.POST("", controllers.CreateOrganization)
 	orgRouter.DELETE("/:id", controllers.DeleteOrganization)
 	orgRouter.PUT("/:id", controllers.UpdateOrganization)
 }
