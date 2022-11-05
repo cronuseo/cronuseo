@@ -88,7 +88,7 @@ func UpdateOrganization(c echo.Context) error {
 	}
 	if !exists {
 		config.Log.Info("Organization not exists")
-		utils.NotFoundErrorResponse("Organization")
+		return utils.NotFoundErrorResponse("Organization")
 	}
 	handlers.UpdateOrganization(&org, &reqOrg, orgId)
 	return c.JSON(http.StatusCreated, &org)

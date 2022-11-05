@@ -46,8 +46,7 @@ func migrateDB(db *gorm.DB) {
 }
 
 func TestMain(m *testing.M) {
-	var err error
-	err = godotenv.Load(os.ExpandEnv("./../../.env"))
+	err := godotenv.Load(os.ExpandEnv("./../../.env"))
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}

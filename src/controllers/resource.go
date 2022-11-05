@@ -82,7 +82,7 @@ func CreateResource(c echo.Context) error {
 	}
 	if exists {
 		config.Log.Info("Resource already exists")
-		utils.AlreadyExistsErrorResponse("Resource")
+		return utils.AlreadyExistsErrorResponse("Resource")
 	}
 	handlers.CreateResource(&resource)
 	return c.JSON(http.StatusOK, &resource)

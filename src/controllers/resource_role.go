@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"github.com/shashimalcse/Cronuseo/utils"
 	"net/http"
 	"strconv"
 	"time"
@@ -8,274 +9,272 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/exceptions"
+	"github.com/shashimalcse/Cronuseo/handlers"
 	"github.com/shashimalcse/Cronuseo/models"
-	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
 func GetResourceRoles(c echo.Context) error {
-	resourceRoles := []models.ResourceRole{}
-	res_id := string(c.Param("res_id"))
-	exists, err := repositories.CheckResourceExistsById(res_id)
+	var resourceRoles []models.ResourceRole
+	resId := string(c.Param("res_id"))
+	exists, err := handlers.CheckResourceExistsById(resId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	repositories.GetResourceRoles(&resourceRoles, res_id)
+	handlers.GetResourceRoles(&resourceRoles, resId)
 	return c.JSON(http.StatusOK, &resourceRoles)
 }
 
 func GetResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRoleWithGroupsUsers
-	res_id := string(c.Param("res_id"))
-	resrole_id := string(c.Param("id"))
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resId := string(c.Param("res_id"))
+	resroleId := string(c.Param("id"))
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
-	if resrole_err != nil {
+	resroleExists, resroleErr := handlers.CheckResourceRoleExistsById(resroleId)
+	if resroleErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !resrole_exists {
-		config.Log.Info("Resource Action not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource Action not exists"})
+	if !resroleExists {
+		config.Log.Info("Resource Role not exists")
+		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	repositories.GetUResourceRoleWithGroupsAndUsers(resrole_id, &resourceRole)
+	handlers.GetUResourceRoleWithGroupsAndUsers(resroleId, &resourceRole)
 	return c.JSON(http.StatusOK, &resourceRole)
 
 }
 
 func CreateResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRole
-	res_id := string(c.Param("res_id"))
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resId := string(c.Param("res_id"))
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
 	if err := c.Bind(&resourceRole); err != nil {
 		if resourceRole.Key == "" || len(resourceRole.Key) < 4 || resourceRole.Name == "" || len(resourceRole.Name) < 4 {
-			return echo.NewHTTPError(http.StatusBadRequest,
-				exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: err.Error()})
+			return utils.InvalidErrorResponse()
 		}
 	}
 	if err := c.Validate(&resourceRole); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest,
-			exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 400, Message: "Invalid inputs. Please check your inputs"})
+		return utils.InvalidErrorResponse()
 	}
-	int_res_id, _ := strconv.Atoi(res_id)
-	resourceRole.ResourceID = int_res_id
-	exists, err := repositories.CheckResourceRoleExistsByKey(resourceRole.Key, res_id)
+	intResId, _ := strconv.Atoi(resId)
+	resourceRole.ResourceID = intResId
+	exists, err := handlers.CheckResourceRoleExistsByKey(resourceRole.Key, resId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Resource Role already exists")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Resource Role already exists"})
+		return utils.AlreadyExistsErrorResponse("Resource Role")
 	}
-	repositories.CreateResourceRoleAction(&resourceRole)
+	handlers.CreateResourceRoleAction(&resourceRole)
 	return c.JSON(http.StatusOK, &resourceRole)
 
 }
 
 func DeleteResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRole
-	res_id := string(c.Param("res_id"))
-	resrole_id := string(c.Param("id"))
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resId := string(c.Param("res_id"))
+	resRoleId := string(c.Param("id"))
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
-	if resrole_err != nil {
+	resroleExists, resroleErr := handlers.CheckResourceRoleExistsById(resRoleId)
+	if resroleErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !resrole_exists {
+	if !resroleExists {
 		config.Log.Info("Resource Role not exists")
 		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource Role not exists"})
 	}
-	repositories.DeleteResourceRole(&resourceRole, resrole_id)
+	handlers.DeleteResourceRole(&resourceRole, resRoleId)
 	return c.JSON(http.StatusNoContent, "")
 }
 
 func UpdateResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRole
 	var reqResourceRole models.ResourceRole
-	res_id := string(c.Param("res_id"))
-	resrole_id := string(c.Param("id"))
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resId := string(c.Param("res_id"))
+	resroleId := string(c.Param("id"))
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
-	if resrole_err != nil {
+	resroleExists, resroleErr := handlers.CheckResourceRoleExistsById(resroleId)
+	if resroleErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !resrole_exists {
+	if !resroleExists {
 		config.Log.Info("Resource Role not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource Role not exists"})
+		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	repositories.UpdateResourceRole(&resourceRole, &reqResourceRole, resrole_id)
+	handlers.UpdateResourceRole(&resourceRole, &reqResourceRole, resroleId)
 	return c.JSON(http.StatusOK, &resourceRole)
 }
 
 func AddUserToResourceRole(c echo.Context) error {
-	res_id := string(c.Param("res_id"))
-	resrole_id := string(c.Param("id"))
-	user_id := string(c.Param("user_id"))
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resId := string(c.Param("res_id"))
+	resroleId := string(c.Param("id"))
+	userId := string(c.Param("user_id"))
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
+	resrole_exists, resrole_err := handlers.CheckResourceRoleExistsById(resroleId)
 	if resrole_err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !resrole_exists {
 		config.Log.Info("Resource Role not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource Role not exists"})
+		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	user_exists, user_err := repositories.CheckUserExistsById(user_id)
+	user_exists, user_err := handlers.CheckUserExistsById(userId)
 	if user_err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !user_exists {
 		config.Log.Info("User not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "User not exists"})
+		return utils.NotFoundErrorResponse("User")
 	}
-	exists, err := repositories.CheckUserAlreadyAdded(resrole_id, user_id)
+	exists, err := handlers.CheckUserAlreadyAdded(resroleId, userId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("User already added")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "User already exists"})
+		return utils.AlreadyExistsErrorResponse("User")
 	}
-	repositories.AddUserToResourceRole(resrole_id, user_id)
+	handlers.AddUserToResourceRole(resroleId, userId)
 	return c.JSON(http.StatusOK, "")
 
 }
 
 func AddGroupToResourceRole(c echo.Context) error {
-	res_id := string(c.Param("res_id"))
-	resrole_id := string(c.Param("id"))
-	group_id := string(c.Param("group_id"))
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resId := string(c.Param("res_id"))
+	resroleId := string(c.Param("id"))
+	groupId := string(c.Param("group_id"))
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
-	if resrole_err != nil {
+	resroleExists, resroleErr := handlers.CheckResourceRoleExistsById(resroleId)
+	if resroleErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !resrole_exists {
+	if !resroleExists {
 		config.Log.Info("Resource Role not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource Role not exists"})
+		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	group_exists, group_err := repositories.CheckUserExistsById(group_id)
-	if group_err != nil {
+	groupExists, groupErr := handlers.CheckUserExistsById(groupId)
+	if groupErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !group_exists {
+	if !groupExists {
 		config.Log.Info("User not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Group not exists"})
+		return utils.NotFoundErrorResponse("User")
 	}
-	exists, err := repositories.CheckGroupAlreadyAdded(resrole_id, group_id)
+	exists, err := handlers.CheckGroupAlreadyAdded(resroleId, groupId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !exists {
 		config.Log.Info("Group already added")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Group already exists"})
+		return utils.AlreadyExistsErrorResponse("Group")
 	}
-	repositories.AddGroupToResourceRole(resrole_id, group_id)
+	handlers.AddGroupToResourceRole(resroleId, groupId)
 	return c.JSON(http.StatusOK, "")
 
 }
 
 func AddResourceActionToResourceRole(c echo.Context) error {
-	res_id := string(c.Param("res_id"))
-	resrole_id := string(c.Param("id"))
-	resact_id := string(c.Param("resact_id"))
-	res_exists, res_err := repositories.CheckResourceExistsById(res_id)
-	if res_err != nil {
+	resId := string(c.Param("res_id"))
+	resroleId := string(c.Param("id"))
+	resactId := string(c.Param("resact_id"))
+	resExists, resErr := handlers.CheckResourceExistsById(resId)
+	if resErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !res_exists {
+	if !resExists {
 		config.Log.Info("Resource not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource not exists"})
+		return utils.NotFoundErrorResponse("Resource")
 	}
-	resrole_exists, resrole_err := repositories.CheckResourceRoleExistsById(resrole_id)
-	if resrole_err != nil {
+	resroleExists, resroleErr := handlers.CheckResourceRoleExistsById(resroleId)
+	if resroleErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !resrole_exists {
+	if !resroleExists {
 		config.Log.Info("Resource Role not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource Role not exists"})
+		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	resact_exists, resact_err := repositories.CheckResourceActionExistsById(resact_id)
-	if resact_err != nil {
+	resactExists, resactErr := handlers.CheckResourceActionExistsById(resactId)
+	if resactErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !resact_exists {
+	if !resactExists {
 		config.Log.Info("Resource Action not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource Role not exists"})
+		return utils.NotFoundErrorResponse("Resource Action")
 	}
-	exists, err := repositories.CheckResourceActionAlreadyAdded(res_id, resrole_id, resact_id)
+	exists, err := handlers.CheckResourceActionAlreadyAdded(resId, resroleId, resactId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if exists {
 		config.Log.Info("Resource Action already added")
-		return echo.NewHTTPError(http.StatusForbidden, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 403, Message: "Resource Action already exists"})
+		return utils.AlreadyExistsErrorResponse("Resource Action")
 	}
-	repositories.AddResourceActionToResourceRole(res_id, resrole_id, resact_id)
+	handlers.AddResourceActionToResourceRole(resId, resroleId, resactId)
 	return c.JSON(http.StatusOK, "")
 }
