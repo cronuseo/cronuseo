@@ -45,30 +45,30 @@ func AddResourceActionToResourceRole(roleaction *models.ResourceRoleToResourceAc
 
 }
 
-func CheckResourceActionAlreadyAdded(resId string, resRoleId string, resActId string, exists bool) error {
-	return config.DB.Model(&models.ResourceRoleToResourceAction{}).Select("count(*) > 0").Where("resource_id = ? AND resource_role_id = ? AND resource_action_id = ?", resId, resRoleId, resActId).Find(&exists).Error
+func CheckResourceActionAlreadyAdded(resId string, resRoleId string, resActId string, exists *bool) error {
+	return config.DB.Model(&models.ResourceRoleToResourceAction{}).Select("count(*) > 0").Where("resource_id = ? AND resource_role_id = ? AND resource_action_id = ?", resId, resRoleId, resActId).Find(exists).Error
 }
 
-func CheckGroupAlreadyAdded(resRoleId string, groupId string, exists bool) error {
-	return config.DB.Model(&models.ResourceRoleToGroup{}).Where("resource_role_id = ? AND group_id = ?", resRoleId, groupId).Find(&exists).Error
+func CheckGroupAlreadyAdded(resRoleId string, groupId string, exists *bool) error {
+	return config.DB.Model(&models.ResourceRoleToGroup{}).Select("count(*) > 0").Where("resource_role_id = ? AND group_id = ?", resRoleId, groupId).Find(exists).Error
 
 }
 
-func CheckUserAlreadyAdded(resRoleId string, userId string, exists bool) error {
-	return config.DB.Model(&models.ResourceRoleToUser{}).Where("resource_role_id = ? AND user_id = ?", resRoleId, userId).Find(&exists).Error
+func CheckUserAlreadyAdded(resRoleId string, userId string, exists *bool) error {
+	return config.DB.Model(&models.ResourceRoleToUser{}).Select("count(*) > 0").Where("resource_role_id = ? AND user_id = ?", resRoleId, userId).Find(exists).Error
 }
 
-func GetUResourceRoleWithGroupsAndUsers(resroleId string, resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers, resourceRoleToGroup *[]models.ResourceRoleToGroup, resourceRoleToUser *[]models.ResourceRoleToUser, resourceRoleToAction *[]models.ResourceRoleToResourceAction) {
-	config.DB.Model(&models.ResourceRole{}).Select("id", "key", "name", "resource_id").Where("id = ?", resroleId).Find(&resourceRoleWithGroupsUsers)
-	config.DB.Model(&models.ResourceRoleToGroup{}).Where("resource_role_id = ?", resroleId).Find(&resourceRoleToGroup)
-	config.DB.Model(&models.ResourceRoleToUser{}).Where("resource_role_id = ?", resroleId).Find(&resourceRoleToUser)
-	config.DB.Model(&models.ResourceRoleToResourceAction{}).Where("resource_role_id = ?", resroleId).Find(&resourceRoleToAction)
+func GetUResourceRoleWithGroupsAndUsers(resRoleId string, resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers, resourceRoleToGroup *[]models.ResourceRoleToGroup, resourceRoleToUser *[]models.ResourceRoleToUser, resourceRoleToAction *[]models.ResourceRoleToResourceAction) {
+	config.DB.Model(&models.ResourceRole{}).Select("id", "key", "name", "resource_id").Where("id = ?", resRoleId).Find(&resourceRoleWithGroupsUsers)
+	config.DB.Model(&models.ResourceRoleToGroup{}).Where("resource_role_id = ?", resRoleId).Find(&resourceRoleToGroup)
+	config.DB.Model(&models.ResourceRoleToUser{}).Where("resource_role_id = ?", resRoleId).Find(&resourceRoleToUser)
+	config.DB.Model(&models.ResourceRoleToResourceAction{}).Where("resource_role_id = ?", resRoleId).Find(&resourceRoleToAction)
 }
 
-func CheckResourceRoleExistsById(resRoleId string, exists bool) error {
-	return config.DB.Model(&models.ResourceRole{}).Select("count(*) > 0").Where("id = ?", resRoleId).Find(&exists).Error
+func CheckResourceRoleExistsById(resRoleId string, exists *bool) error {
+	return config.DB.Model(&models.ResourceRole{}).Select("count(*) > 0").Where("id = ?", resRoleId).Find(exists).Error
 }
 
-func CheckResourceRoleExistsByKey(key string, resId string, exists bool) error {
-	return config.DB.Model(&models.ResourceRole{}).Select("count(*) > 0").Where("key = ? AND resource_id = ?", key, resId).Find(&exists).Error
+func CheckResourceRoleExistsByKey(key string, resId string, exists *bool) error {
+	return config.DB.Model(&models.ResourceRole{}).Select("count(*) > 0").Where("key = ? AND resource_id = ?", key, resId).Find(exists).Error
 }

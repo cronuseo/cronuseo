@@ -26,6 +26,7 @@ func main() {
 	routes.ProjectRoutes(e)
 	routes.ResourceRoutes(e)
 	routes.ResourceActionRoutes(e)
+	routes.ResourceRoleRoutes(e)
 	routes.ResourceRoutes(e)
 	routes.GroupRoutes(e)
 	routes.UserRoutes(e)

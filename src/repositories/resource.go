@@ -38,10 +38,10 @@ func DeleteAllResources(proj_id string) {
 	config.DB.Where("project_id = ?", proj_id).Delete(&models.Resource{})
 }
 
-func CheckResourceExistsById(resId string, exists bool) error {
-	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("id = ?", resId).Find(&exists).Error
+func CheckResourceExistsById(resId string, exists *bool) error {
+	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("id = ?", resId).Find(exists).Error
 }
 
-func CheckResourceExistsByKey(key string, proj_id string, exists bool) error {
-	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("key = ? AND project_id = ?", key, proj_id).Find(&exists).Error
+func CheckResourceExistsByKey(key string, projId string, exists *bool) error {
+	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("key = ? AND project_id = ?", key, projId).Find(exists).Error
 }

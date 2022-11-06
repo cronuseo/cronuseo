@@ -158,21 +158,21 @@ func AddUserToResourceRole(c echo.Context) error {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	resrole_exists, resrole_err := handlers.CheckResourceRoleExistsById(resroleId)
-	if resrole_err != nil {
+	resroleExists, resroleErr := handlers.CheckResourceRoleExistsById(resroleId)
+	if resroleErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !resrole_exists {
+	if !resroleExists {
 		config.Log.Info("Resource Role not exists")
 		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	user_exists, user_err := handlers.CheckUserExistsById(userId)
-	if user_err != nil {
+	userExists, userErr := handlers.CheckUserExistsById(userId)
+	if userErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !user_exists {
+	if !userExists {
 		config.Log.Info("User not exists")
 		return utils.NotFoundErrorResponse("User")
 	}
@@ -181,7 +181,7 @@ func AddUserToResourceRole(c echo.Context) error {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !exists {
+	if exists {
 		config.Log.Info("User already added")
 		return utils.AlreadyExistsErrorResponse("User")
 	}
@@ -226,7 +226,7 @@ func AddGroupToResourceRole(c echo.Context) error {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
-	if !exists {
+	if exists {
 		config.Log.Info("Group already added")
 		return utils.AlreadyExistsErrorResponse("Group")
 	}

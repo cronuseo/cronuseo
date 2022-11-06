@@ -32,7 +32,7 @@ func UpdateUser(user *models.User, reqUser *models.User, userId string) {
 
 func CheckUserExistsById(userId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckUserExistsById(userId, exists)
+	err := repositories.CheckUserExistsById(userId, &exists)
 	if err != nil {
 		return false, errors.New("user not exists")
 	}
@@ -45,7 +45,7 @@ func CheckUserExistsById(userId string) (bool, error) {
 
 func CheckUserExistsByUsername(username string, orgId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckUserExistsByUsername(username, orgId, exists)
+	err := repositories.CheckUserExistsByUsername(username, orgId, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

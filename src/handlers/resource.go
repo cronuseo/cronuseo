@@ -33,7 +33,7 @@ func UpdateResource(resource *models.Resource, reqResource *models.Resource, res
 
 func CheckResourceExistsById(resId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceExistsById(resId, exists)
+	err := repositories.CheckResourceExistsById(resId, &exists)
 	if err != nil {
 		return false, errors.New("resource not exists")
 	}
@@ -46,7 +46,7 @@ func CheckResourceExistsById(resId string) (bool, error) {
 
 func CheckResourceExistsByKey(key string, projId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceExistsByKey(key, projId, exists)
+	err := repositories.CheckResourceExistsByKey(key, projId, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

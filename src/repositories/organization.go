@@ -25,10 +25,10 @@ func UpdateOrganization(org *models.Organization) {
 	config.DB.Save(&org)
 }
 
-func CheckOrganizationExistsById(id string, exists bool) error {
-	return config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("id = ?", id).Find(&exists).Error
+func CheckOrganizationExistsById(id string, exists *bool) error {
+	return config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("id = ?", id).Find(exists).Error
 }
 
-func CheckOrganizationExistsByKey(key string, exists bool) error {
-	return config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("key = ?", key).Find(&exists).Error
+func CheckOrganizationExistsByKey(key string, exists *bool) error {
+	return config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("key = ?", key).Find(exists).Error
 }

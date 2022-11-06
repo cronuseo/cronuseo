@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
@@ -30,7 +31,7 @@ func UpdateOrganization(org *models.Organization, reqOrg *models.Organization, i
 
 func CheckOrganizationExistsById(id string) (bool, error) {
 	var exists bool
-	err := repositories.CheckOrganizationExistsById(id, exists)
+	err := repositories.CheckOrganizationExistsById(id, &exists)
 	if err != nil {
 		return false, errors.New("organization not exists")
 	}
@@ -43,7 +44,7 @@ func CheckOrganizationExistsById(id string) (bool, error) {
 
 func CheckOrganizationExistsByKey(key string) (bool, error) {
 	var exists bool
-	err := repositories.CheckOrganizationExistsByKey(key, exists)
+	err := repositories.CheckOrganizationExistsByKey(key, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

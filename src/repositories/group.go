@@ -36,10 +36,10 @@ func GetUsersFromGroup(groupId int, resGroupUsers *models.GroupUsers, groupusers
 
 }
 
-func CheckGroupExistsById(groupId string, exists bool) error {
-	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("id = ?", groupId).Find(&exists).Error
+func CheckGroupExistsById(groupId string, exists *bool) error {
+	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("id = ?", groupId).Find(exists).Error
 }
 
-func CheckGroupExistsByKey(key string, org_id string, exists bool) error {
-	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?", key, org_id).Find(&exists).Error
+func CheckGroupExistsByKey(key string, orgId string, exists *bool) error {
+	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?", key, orgId).Find(exists).Error
 }

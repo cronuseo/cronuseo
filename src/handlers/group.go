@@ -57,7 +57,7 @@ func GetUsersFromGroup(groupId string, resGroupusers *models.GroupUsers) {
 
 func CheckGroupExistsById(groupId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckGroupExistsById(groupId, exists)
+	err := repositories.CheckGroupExistsById(groupId, &exists)
 	if err != nil {
 		return false, errors.New("group not exists")
 	}
@@ -70,7 +70,7 @@ func CheckGroupExistsById(groupId string) (bool, error) {
 
 func CheckGroupExistsByKey(key string, orgId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckGroupExistsByKey(key, orgId, exists)
+	err := repositories.CheckGroupExistsByKey(key, orgId, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

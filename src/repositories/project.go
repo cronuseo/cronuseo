@@ -25,10 +25,10 @@ func UpdateProject(project *models.Project) {
 	config.DB.Save(&project)
 }
 
-func CheckProjectExistsById(projId string, exists bool) error {
-	return config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("id = ?", projId).Find(&exists).Error
+func CheckProjectExistsById(projId string, exists *bool) error {
+	return config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("id = ?", projId).Find(exists).Error
 }
 
-func CheckProjectExistsByKey(key string, orgId string, exists bool) error {
-	return config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?", key, orgId).Find(&exists).Error
+func CheckProjectExistsByKey(key string, orgId string, exists *bool) error {
+	return config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?", key, orgId).Find(exists).Error
 }

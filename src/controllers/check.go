@@ -9,7 +9,7 @@ import (
 	"net/http"
 )
 
-func Check(c echo.Context) error {
+func CheckAllowed(c echo.Context) error {
 	var keys models.ResourceRoleToResourceActionKey
 	if err := c.Bind(&keys); err != nil {
 		return utils.InvalidErrorResponse()
@@ -17,7 +17,7 @@ func Check(c echo.Context) error {
 	if err := c.Validate(&keys); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	allow, err := handlers.Check(keys.Resource, keys.ResourceRole, keys.ResourceAction)
+	allow, err := handlers.CheckAllowed(keys.Resource, keys.ResourceRole, keys.ResourceAction)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -27,5 +27,19 @@ func Check(c echo.Context) error {
 	} else {
 		return c.JSON(http.StatusOK, "not allowed")
 	}
+
+}
+
+func Check(c echo.Context) error {
+	var keys models.ResourceRoleToResourceActionKey
+	if err := c.Bind(&keys); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+	if err := c.Validate(&keys); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+	allowedActions := handlers.Check(keys.Resource, keys.ResourceRole, keys.ResourceAction)
+
+	return c.JSON(http.StatusOK, allowedActions)
 
 }

@@ -79,7 +79,7 @@ func AddResourceActionToResourceRole(resId string, resRoleId string, resActId st
 
 func CheckResourceActionAlreadyAdded(resId string, resRoleId string, resActId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceActionAlreadyAdded(resId, resRoleId, resActId, exists)
+	err := repositories.CheckResourceActionAlreadyAdded(resId, resRoleId, resActId, &exists)
 	if err != nil {
 		return false, errors.New("not exists")
 	}
@@ -92,7 +92,7 @@ func CheckResourceActionAlreadyAdded(resId string, resRoleId string, resActId st
 
 func CheckGroupAlreadyAdded(resRoleId string, groupId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckGroupAlreadyAdded(resRoleId, groupId, exists)
+	err := repositories.CheckGroupAlreadyAdded(resRoleId, groupId, &exists)
 	if err != nil {
 		return false, errors.New("not exists")
 	}
@@ -105,7 +105,7 @@ func CheckGroupAlreadyAdded(resRoleId string, groupId string) (bool, error) {
 
 func CheckUserAlreadyAdded(resRoleId string, userId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckUserAlreadyAdded(resRoleId, userId, exists)
+	err := repositories.CheckUserAlreadyAdded(resRoleId, userId, &exists)
 	if err != nil {
 		return false, errors.New("not exists")
 	}
@@ -147,7 +147,7 @@ func GetUResourceRoleWithGroupsAndUsers(resrole_id string, resourceRoleWithGroup
 
 func CheckResourceRoleExistsById(resRoleId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceRoleExistsById(resRoleId, exists)
+	err := repositories.CheckResourceRoleExistsById(resRoleId, &exists)
 	if err != nil {
 		return false, errors.New("resource role not exists")
 	}
@@ -160,7 +160,7 @@ func CheckResourceRoleExistsById(resRoleId string) (bool, error) {
 
 func CheckResourceRoleExistsByKey(key string, resId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceRoleExistsByKey(key, resId, exists)
+	err := repositories.CheckResourceRoleExistsByKey(key, resId, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

@@ -7,7 +7,8 @@ import (
 
 func CheckRoutes(router *echo.Echo) {
 
-	userRouter := router.Group("/check")
+	checkRouter := router.Group("/check")
 
-	userRouter.POST("", controllers.Check)
+	checkRouter.POST("", controllers.CheckAllowed)
+	checkRouter.POST("/list", controllers.Check)
 }

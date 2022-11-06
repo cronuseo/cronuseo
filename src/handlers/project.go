@@ -32,7 +32,7 @@ func UpdateProject(project *models.Project, reqProject *models.Project, projId s
 
 func CheckProjectExistsById(projId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckProjectExistsById(projId, exists)
+	err := repositories.CheckProjectExistsById(projId, &exists)
 	if err != nil {
 		return false, errors.New("project not exists")
 	}
@@ -45,7 +45,7 @@ func CheckProjectExistsById(projId string) (bool, error) {
 
 func CheckProjectExistsByKey(key string, orgId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckProjectExistsByKey(key, orgId, exists)
+	err := repositories.CheckProjectExistsByKey(key, orgId, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

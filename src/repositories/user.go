@@ -42,10 +42,10 @@ func UpdateUser(user *models.User) {
 	config.DB.Save(&user)
 }
 
-func CheckUserExistsById(userId string, exists bool) error {
-	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("id = ?", userId).Find(&exists).Error
+func CheckUserExistsById(userId string, exists *bool) error {
+	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("id = ?", userId).Find(exists).Error
 }
 
-func CheckUserExistsByUsername(username string, orgId string, exists bool) error {
-	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("username = ? AND organization_id = ?", username, orgId).Find(&exists).Error
+func CheckUserExistsByUsername(username string, orgId string, exists *bool) error {
+	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("username = ? AND organization_id = ?", username, orgId).Find(exists).Error
 }

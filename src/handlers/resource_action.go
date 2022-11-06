@@ -36,7 +36,7 @@ func DeleteAllResourceActions(resId string) {
 
 func CheckResourceActionExistsById(resactId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceActionExistsById(resactId, exists)
+	err := repositories.CheckResourceActionExistsById(resactId, &exists)
 	if err != nil {
 		return false, errors.New("resource action not exists")
 	}
@@ -49,7 +49,7 @@ func CheckResourceActionExistsById(resactId string) (bool, error) {
 
 func CheckResourceActionExistsByKey(key string, resId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceActionExistsByKey(key, resId, exists)
+	err := repositories.CheckResourceActionExistsByKey(key, resId, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}
