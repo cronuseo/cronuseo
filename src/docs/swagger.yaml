@@ -1,0 +1,35 @@
+basePath: /api/v1
+definitions:
+  models.Organization:
+    properties:
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+      org_id:
+        type: integer
+    required:
+    - key
+    - name
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+paths:
+  /api/v1/organization:
+    get:
+      consumes:
+      - '*/*'
+      description: get all organizations.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Organization'
+            type: array
+swagger: "2.0"

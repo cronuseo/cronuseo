@@ -5,14 +5,14 @@ import (
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func GroupRoutes(router *echo.Echo) {
+func GroupRoutes(router *echo.Group) {
 
-	userRouter := router.Group("/groups")
+	userRouter := router.Group("/:org_id/groups")
 
-	userRouter.GET("/:org_id", controllers.GetGroups)
-	userRouter.GET("/:org_id/:id", controllers.GetGroup)
-	userRouter.POST("/:org_id", controllers.CreateGroup)
-	userRouter.POST("/:org_id/:id/:user_id", controllers.AddUserToGroup)
-	userRouter.DELETE("/:org_id/:id", controllers.DeleteGroup)
-	userRouter.PUT("/:org_id/:id", controllers.UpdateGroup)
+	userRouter.GET("", controllers.GetGroups)
+	userRouter.GET("/:id", controllers.GetGroup)
+	userRouter.POST("", controllers.CreateGroup)
+	userRouter.POST("/:id/:user_id", controllers.AddUserToGroup)
+	userRouter.DELETE("/:id", controllers.DeleteGroup)
+	userRouter.PUT("/:id", controllers.UpdateGroup)
 }

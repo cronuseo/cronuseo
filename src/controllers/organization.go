@@ -10,6 +10,12 @@ import (
 	"github.com/shashimalcse/Cronuseo/utils"
 )
 
+// GetOrganizations godoc
+// @Description get all organizations.
+// @Accept */*
+// @Produce json
+// @Success 200 {array} models.Organization
+// @Router /api/v1/organization [get]
 func GetOrganizations(c echo.Context) error {
 	orgs := []models.Organization{}
 	handlers.GetOrganizations(&orgs)

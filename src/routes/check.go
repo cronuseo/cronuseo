@@ -5,7 +5,7 @@ import (
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func CheckRoutes(router *echo.Echo) {
+func CheckRoutes(router *echo.Group) {
 
 	checkRouter := router.Group("/check")
 

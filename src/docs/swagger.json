@@ -1,0 +1,54 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "host": "localhost:8080",
+    "basePath": "/api/v1",
+    "paths": {
+        "/api/v1/organization": {
+            "get": {
+                "description": "get all organizations.",
+                "consumes": [
+                    "*/*"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Organization"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.Organization": {
+            "type": "object",
+            "required": [
+                "key",
+                "name"
+            ],
+            "properties": {
+                "key": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "org_id": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

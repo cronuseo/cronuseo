@@ -5,7 +5,7 @@ import (
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func OAuth2Routes(router *echo.Echo) {
+func OAuth2Routes(router *echo.Group) {
 
 	router.GET("/authorize", controllers.HandleAuthentication)
 	router.GET("/callback", controllers.HandleCallback)
