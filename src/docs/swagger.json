@@ -1,12 +1,24 @@
 {
     "swagger": "2.0",
     "info": {
-        "contact": {}
+        "description": "This is a sample server celler server.",
+        "title": "Cronuseo API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
     },
     "host": "localhost:8080",
     "basePath": "/api/v1",
     "paths": {
-        "/api/v1/organization": {
+        "/organization": {
             "get": {
                 "description": "get all organizations.",
                 "consumes": [
@@ -24,6 +36,18 @@
                                 "$ref": "#/definitions/models.Organization"
                             }
                         }
+                    },
+                    "404": {
+                        "description": "error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server Error!",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
@@ -31,6 +55,7 @@
     },
     "definitions": {
         "models.Organization": {
+            "description": "Organization information",
             "type": "object",
             "required": [
                 "key",

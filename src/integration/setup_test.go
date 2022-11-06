@@ -2,18 +2,15 @@ package integration
 
 import (
 	"fmt"
-	"github.com/go-playground/validator/v10"
-	"github.com/joho/godotenv"
-	"github.com/labstack/echo/v4"
-	"github.com/shashimalcse/Cronuseo/config"
-	"github.com/shashimalcse/Cronuseo/models"
-	"github.com/shashimalcse/Cronuseo/routes"
-	"github.com/shashimalcse/Cronuseo/utils"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/joho/godotenv"
+	"github.com/shashimalcse/Cronuseo/config"
+	"github.com/shashimalcse/Cronuseo/models"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func connectDB() {
@@ -54,14 +51,14 @@ func TestMain(m *testing.M) {
 
 }
 
-func StartServer(e *echo.Echo) {
-	e.Validator = &utils.CustomValidator{Validator: validator.New()}
-	routes.OrganizationRoutes(e)
-	routes.ProjectRoutes(e)
-	routes.ResourceRoutes(e)
-	routes.ResourceActionRoutes(e)
-	routes.ResourceRoutes(e)
-	routes.GroupRoutes(e)
-	routes.UserRoutes(e)
-	routes.CheckRoutes(e)
-}
+// func StartServer(e *echo.Echo) {
+// 	e.Validator = &utils.CustomValidator{Validator: validator.New()}
+// 	routes.OrganizationRoutes(e)
+// 	routes.ProjectRoutes(e)
+// 	routes.ResourceRoutes(e)
+// 	routes.ResourceActionRoutes(e)
+// 	routes.ResourceRoutes(e)
+// 	routes.GroupRoutes(e)
+// 	routes.UserRoutes(e)
+// 	routes.CheckRoutes(e)
+// }

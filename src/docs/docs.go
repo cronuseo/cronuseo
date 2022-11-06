@@ -10,13 +10,22 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "contact": {},
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/organization": {
+        "/organization": {
             "get": {
                 "description": "get all organizations.",
                 "consumes": [
@@ -34,6 +43,18 @@ const docTemplate = `{
                                 "$ref": "#/definitions/models.Organization"
                             }
                         }
+                    },
+                    "404": {
+                        "description": "error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Server Error!",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
@@ -41,6 +62,7 @@ const docTemplate = `{
     },
     "definitions": {
         "models.Organization": {
+            "description": "Organization information",
             "type": "object",
             "required": [
                 "key",
@@ -65,12 +87,12 @@ const docTemplate = `{
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "",
+	Version:          "1.0",
 	Host:             "localhost:8080",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "",
-	Description:      "",
+	Title:            "Cronuseo API",
+	Description:      "This is a sample server celler server.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

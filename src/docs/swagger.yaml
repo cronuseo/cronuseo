@@ -1,6 +1,7 @@
 basePath: /api/v1
 definitions:
   models.Organization:
+    description: Organization information
     properties:
       key:
         minLength: 4
@@ -16,9 +17,19 @@ definitions:
     type: object
 host: localhost:8080
 info:
-  contact: {}
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Cronuseo API
+  version: "1.0"
 paths:
-  /api/v1/organization:
+  /organization:
     get:
       consumes:
       - '*/*'
@@ -32,4 +43,12 @@ paths:
             items:
               $ref: '#/definitions/models.Organization'
             type: array
+        "404":
+          description: error
+          schema:
+            type: string
+        "500":
+          description: Server Error!
+          schema:
+            type: string
 swagger: "2.0"

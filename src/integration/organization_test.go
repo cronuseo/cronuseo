@@ -1,13 +1,14 @@
 package integration
 
 import (
-	"github.com/labstack/echo/v4"
-	"github.com/shashimalcse/Cronuseo/controllers"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/Cronuseo/controllers"
+	"github.com/stretchr/testify/assert"
 )
 
 var (
@@ -21,7 +22,7 @@ func TestCreateOrganization(t *testing.T) {
 	println("rocket")
 	connectDB()
 	e := echo.New()
-	StartServer(e)
+	// StartServer(e)
 	req := httptest.NewRequest(http.MethodPost, "/organization", strings.NewReader(orgJson))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
