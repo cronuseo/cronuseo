@@ -26,7 +26,8 @@ func DeleteUser(user *models.User, userId string) {
 func GetUsersWithGroups(userId string, resUser *models.UserWithGroup) {
 	var groupusers []models.GroupUser
 	intUserId, _ := strconv.Atoi(userId)
-	config.DB.Model(&models.User{}).Select("id", "username", "name", "organization_id").Where("id = ?", userId).Find(&resUser)
+	config.DB.Model(&models.User{}).Select("id", "username", "name", "organization_id").Where(
+		"id = ?", userId).Find(&resUser)
 	config.DB.Model(&models.GroupUser{}).Where("user_id = ?", intUserId).Find(&groupusers)
 	if len(groupusers) > 0 {
 		for _, groupuser := range groupusers {
@@ -43,9 +44,11 @@ func UpdateUser(user *models.User) {
 }
 
 func CheckUserExistsById(userId string, exists *bool) error {
-	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("id = ?", userId).Find(exists).Error
+	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("id = ?",
+		userId).Find(exists).Error
 }
 
 func CheckUserExistsByUsername(username string, orgId string, exists *bool) error {
-	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("username = ? AND organization_id = ?", username, orgId).Find(exists).Error
+	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where(
+		"username = ? AND organization_id = ?", username, orgId).Find(exists).Error
 }

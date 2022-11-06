@@ -31,7 +31,8 @@ func AddUserToGroup(groupuser models.GroupUser) {
 }
 
 func GetUsersFromGroup(groupId int, resGroupUsers *models.GroupUsers, groupusers []models.GroupUser) {
-	config.DB.Model(&models.Group{}).Select("id", "key", "name", "organization_id").Where("id = ?", groupId).Find(&resGroupUsers)
+	config.DB.Model(&models.Group{}).Select("id", "key", "name", "organization_id").Where("id = ?",
+		groupId).Find(&resGroupUsers)
 	config.DB.Model(&models.GroupUser{}).Where("group_id = ?", groupId).Find(&groupusers)
 
 }
@@ -41,5 +42,6 @@ func CheckGroupExistsById(groupId string, exists *bool) error {
 }
 
 func CheckGroupExistsByKey(key string, orgId string, exists *bool) error {
-	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?", key, orgId).Find(exists).Error
+	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?",
+		key, orgId).Find(exists).Error
 }

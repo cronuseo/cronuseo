@@ -25,7 +25,6 @@ func Check(resource string, role string, action string) []string {
 	actions := strings.Fields(action)
 	for _, action := range actions {
 		action = strings.TrimSpace(action)
-		fmt.Println(resource, role, action)
 		var exists bool
 		err := repositories.Check(resource, role, action, &exists)
 		fmt.Println(exists)

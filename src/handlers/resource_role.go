@@ -72,7 +72,8 @@ func AddResourceActionToResourceRole(resId string, resRoleId string, resActId st
 	resKey := resource.Key
 	resRoleKey := resourceRole.Key
 	resActKey := resourceAction.Key
-	roleActionKey := models.ResourceRoleToResourceActionKey{Resource: resKey, ResourceAction: resActKey, ResourceRole: resRoleKey}
+	roleActionKey := models.ResourceRoleToResourceActionKey{Resource: resKey, ResourceAction: resActKey,
+		ResourceRole: resRoleKey}
 	repositories.AddResourceActionToResourceRole(&roleAction, &roleActionKey)
 
 }
@@ -116,11 +117,13 @@ func CheckUserAlreadyAdded(resRoleId string, userId string) (bool, error) {
 	}
 }
 
-func GetUResourceRoleWithGroupsAndUsers(resrole_id string, resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers) {
+func GetUResourceRoleWithGroupsAndUsers(resrole_id string,
+	resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers) {
 	resourceRoleToGroup := []models.ResourceRoleToGroup{}
 	resourceRoleToUser := []models.ResourceRoleToUser{}
 	resourceRoleToAction := []models.ResourceRoleToResourceAction{}
-	repositories.GetUResourceRoleWithGroupsAndUsers(resrole_id, resourceRoleWithGroupsUsers, &resourceRoleToGroup, &resourceRoleToUser, &resourceRoleToAction)
+	repositories.GetUResourceRoleWithGroupsAndUsers(resrole_id, resourceRoleWithGroupsUsers,
+		&resourceRoleToGroup, &resourceRoleToUser, &resourceRoleToAction)
 	if len(resourceRoleToUser) > 0 {
 		for _, user := range resourceRoleToUser {
 			userId := user.UserID

@@ -23,7 +23,8 @@ func DeleteResourceAction(resourceAction *models.ResourceAction, resactId string
 	repositories.DeleteResourceAction(resourceAction, resactId)
 }
 
-func UpdateResourceAction(resourceAction *models.ResourceAction, reqResourceAction *models.ResourceAction, resactId string) {
+func UpdateResourceAction(resourceAction *models.ResourceAction, reqResourceAction *models.ResourceAction,
+	resactId string) {
 	repositories.GetResourceAction(resourceAction, resactId)
 	resourceAction.Name = reqResourceAction.Name
 	resourceAction.Description = reqResourceAction.Description

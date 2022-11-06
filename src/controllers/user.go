@@ -65,15 +65,16 @@ func CreateUser(c echo.Context) error {
 		return utils.NotFoundErrorResponse("Organization")
 	}
 	if err := c.Bind(&user); err != nil {
-		if user.Username == "" || len(user.Username) < 4 || user.FirstName == "" || len(user.FirstName) < 4 || user.LastName == "" || len(user.LastName) < 4 {
+		if user.Username == "" || len(user.Username) < 4 || user.FirstName == "" ||
+			len(user.FirstName) < 4 || user.LastName == "" || len(user.LastName) < 4 {
 			return utils.InvalidErrorResponse()
 		}
 	}
 	if err := c.Validate(&user); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	int_org_id, _ := strconv.Atoi(orgId)
-	user.OrganizationID = int_org_id
+	intOrgId, _ := strconv.Atoi(orgId)
+	user.OrganizationID = intOrgId
 	exists, err := handlers.CheckUserExistsByUsername(user.Username, orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")

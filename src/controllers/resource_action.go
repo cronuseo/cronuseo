@@ -66,7 +66,8 @@ func CreateResourceAction(c echo.Context) error {
 		return utils.NotFoundErrorResponse("Resource")
 	}
 	if err := c.Bind(&resourceAction); err != nil {
-		if resourceAction.Key == "" || len(resourceAction.Key) < 4 || resourceAction.Name == "" || len(resourceAction.Name) < 4 {
+		if resourceAction.Key == "" || len(resourceAction.Key) < 4 ||
+			resourceAction.Name == "" || len(resourceAction.Name) < 4 {
 			return utils.InvalidErrorResponse()
 		}
 	}
@@ -138,7 +139,8 @@ func UpdateResourceAction(c echo.Context) error {
 		return utils.NotFoundErrorResponse("Resource Action")
 	}
 	if err := c.Bind(&resourceAction); err != nil {
-		if resourceAction.Key == "" || len(resourceAction.Key) < 4 || resourceAction.Name == "" || len(resourceAction.Name) < 4 {
+		if resourceAction.Key == "" || len(resourceAction.Key) < 4 ||
+			resourceAction.Name == "" || len(resourceAction.Name) < 4 {
 			return utils.InvalidErrorResponse()
 		}
 	}

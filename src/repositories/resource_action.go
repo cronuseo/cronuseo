@@ -30,9 +30,11 @@ func DeleteAllResourceActions(res_id string) {
 }
 
 func CheckResourceActionExistsById(resactId string, exists *bool) error {
-	return config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where("id = ?", resactId).Find(exists).Error
+	return config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where("id = ?",
+		resactId).Find(exists).Error
 }
 
 func CheckResourceActionExistsByKey(key string, resId string, exists *bool) error {
-	return config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where("key = ? AND resource_id = ?", key, resId).Find(exists).Error
+	return config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where(
+		"key = ? AND resource_id = ?", key, resId).Find(exists).Error
 }

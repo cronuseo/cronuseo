@@ -1,16 +1,13 @@
 package controllers
 
 import (
+	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/Cronuseo/config"
+	"github.com/shashimalcse/Cronuseo/handlers"
+	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/utils"
 	"net/http"
 	"strconv"
-	"time"
-
-	"github.com/labstack/echo/v4"
-	"github.com/shashimalcse/Cronuseo/config"
-	"github.com/shashimalcse/Cronuseo/exceptions"
-	"github.com/shashimalcse/Cronuseo/handlers"
-	"github.com/shashimalcse/Cronuseo/models"
 )
 
 func GetResourceRoles(c echo.Context) error {
@@ -112,7 +109,7 @@ func DeleteResourceRole(c echo.Context) error {
 	}
 	if !resroleExists {
 		config.Log.Info("Resource Role not exists")
-		return echo.NewHTTPError(http.StatusNotFound, exceptions.Exception{Timestamp: time.Now().Format(time.RFC3339Nano), Status: 404, Message: "Resource Role not exists"})
+		return utils.NotFoundErrorResponse("Resource Role")
 	}
 	handlers.DeleteResourceRole(&resourceRole, resRoleId)
 	return c.JSON(http.StatusNoContent, "")

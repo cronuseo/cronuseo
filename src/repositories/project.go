@@ -30,5 +30,6 @@ func CheckProjectExistsById(projId string, exists *bool) error {
 }
 
 func CheckProjectExistsByKey(key string, orgId string, exists *bool) error {
-	return config.DB.Model(&models.Project{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?", key, orgId).Find(exists).Error
+	return config.DB.Model(&models.Project{}).Select("count(*) > 0").Where(
+		"key = ? AND organization_id = ?", key, orgId).Find(exists).Error
 }

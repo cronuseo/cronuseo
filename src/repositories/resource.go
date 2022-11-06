@@ -43,5 +43,6 @@ func CheckResourceExistsById(resId string, exists *bool) error {
 }
 
 func CheckResourceExistsByKey(key string, projId string, exists *bool) error {
-	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("key = ? AND project_id = ?", key, projId).Find(exists).Error
+	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("key = ? AND project_id = ?",
+		key, projId).Find(exists).Error
 }
