@@ -15,6 +15,26 @@ definitions:
     - key
     - name
     type: object
+  models.OrganizationRequest:
+    properties:
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.OrganizationUpdateRequest:
+    properties:
+      name:
+        minLength: 4
+        type: string
+    required:
+    - name
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -31,9 +51,7 @@ info:
 paths:
   /organization:
     get:
-      consumes:
-      - '*/*'
-      description: get all organizations.
+      description: Get all organizations.
       produces:
       - application/json
       responses:
@@ -43,12 +61,106 @@ paths:
             items:
               $ref: '#/definitions/models.Organization'
             type: array
-        "404":
-          description: error
-          schema:
-            type: string
         "500":
-          description: Server Error!
+          description: Internal Server Error
+      tags:
+      - Organization
+    post:
+      consumes:
+      - application/json
+      description: Create organization.
+      parameters:
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.OrganizationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
           schema:
-            type: string
+            $ref: '#/definitions/models.Organization'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Organization
+  /organization/{org_id}:
+    delete:
+      description: Delete organization.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Organization
+    get:
+      description: Get organization by ID.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Organization'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Organization
+    put:
+      consumes:
+      - application/json
+      description: Update organization.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.OrganizationUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Organization'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Organization
 swagger: "2.0"

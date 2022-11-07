@@ -6,3 +6,12 @@ type Organization struct {
 	Key  string `json:"key" validate:"required,min=4"`
 	Name string `json:"name" validate:"required,min=4"`
 }
+
+type OrganizationRequest struct {
+	Key  string `json:"key" validate:"required,min=4"`
+	Name string `json:"name" validate:"required,min=4"`
+}
+
+type OrganizationUpdateRequest struct {
+	Name string `json:"name" validate:"required,min=4"`
+}
