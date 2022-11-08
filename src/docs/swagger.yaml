@@ -93,6 +93,52 @@ definitions:
     - key
     - name
     type: object
+  models.ResourceAction:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+      permission_name:
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.ResourceActionCreateRequest:
+    properties:
+      description:
+        type: string
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+      permission_name:
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.ResourceActionUpdateRequest:
+    properties:
+      description:
+        type: string
+      name:
+        minLength: 4
+        type: string
+      permission_name:
+        type: string
+    required:
+    - name
+    type: object
   models.ResourceActionWithID:
     properties:
       resact_id:
@@ -488,6 +534,43 @@ paths:
           description: Internal Server Error
       tags:
       - Resource
+  /{proj_id}/resource_action/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update resource action.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: Resource Action ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceActionUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ResourceAction'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Action
   /{proj_id}/resource_role/{id}:
     put:
       consumes:
@@ -525,7 +608,110 @@ paths:
           description: Internal Server Error
       tags:
       - Resource Role
-      - Resource Role
+  /{res_id}/resource_action:
+    get:
+      description: Get all resource actions.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Resource'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Action
+    post:
+      consumes:
+      - application/json
+      description: Create resource action.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceActionCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ResourceAction'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Action
+  /{res_id}/resource_action/{id}:
+    delete:
+      description: Delete resource action.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: Resource Action ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Action
+    get:
+      description: Get resource action by ID.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: Resource Action ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResourceAction'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Action
   /{res_id}/resource_role:
     get:
       description: Get all resource roles.
@@ -542,7 +728,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Resource'
+              $ref: '#/definitions/models.ResourceRole'
             type: array
         "500":
           description: Internal Server Error

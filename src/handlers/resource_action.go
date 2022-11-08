@@ -35,10 +35,6 @@ func UpdateResourceAction(resourceAction *models.ResourceAction, reqResourceActi
 	return repositories.UpdateResourceAction(resourceAction)
 }
 
-func DeleteAllResourceActions(resId string) {
-	repositories.DeleteAllResourceActions(resId)
-}
-
 func CheckResourceActionExistsById(resactId string) (bool, error) {
 	var exists bool
 	err := repositories.CheckResourceActionExistsById(resactId, &exists)
