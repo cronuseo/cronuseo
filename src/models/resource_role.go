@@ -8,6 +8,17 @@ type ResourceRole struct {
 	ResourceID  int    `json:"-" gorm:"foreignKey:ID"`
 }
 
+type ResourceRoleCreateRequest struct {
+	Key         string `json:"key" validate:"required,min=4"`
+	Name        string `json:"name" validate:"required,min=4"`
+	Description string `json:"description"`
+}
+
+type ResourceRoleUpdateRequest struct {
+	Name        string `json:"name" validate:"required,min=4"`
+	Description string `json:"description"`
+}
+
 type ResourceRoleToGroup struct {
 	GroupID        int `gorm:"foreignKey:ID"`
 	ResourceRoleID int `gorm:"foreignKey:ID"`

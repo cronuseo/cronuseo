@@ -90,7 +90,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/organization/{org_id}": {
+        "/organization/{id}": {
             "get": {
                 "description": "Get organization by ID.",
                 "produces": [
@@ -103,7 +103,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Organization ID",
-                        "name": "org_id",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -138,7 +138,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Organization ID",
-                        "name": "org_id",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -182,7 +182,431 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "description": "Organization ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{org_id}/project": {
+            "get": {
+                "description": "Get all projects.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
                         "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Project"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "post": {
+                "description": "Create project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{org_id}/project/{id}": {
+            "get": {
+                "description": "Get project by ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "put": {
+                "description": "Update project.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ProjectUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Project"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete project.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Project"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{proj_id}/resource": {
+            "get": {
+                "description": "Get all resources.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resource"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "proj_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Resource"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "post": {
+                "description": "Create resource.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resource"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "proj_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Resource"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{proj_id}/resource/{id}": {
+            "get": {
+                "description": "Get resource by ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resource"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "proj_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Resource"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "put": {
+                "description": "Update resource.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resource"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "proj_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Resource ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Resource"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete resource.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resource"
+                ],
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Project ID",
+                        "name": "proj_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Resource ID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     }
@@ -246,6 +670,124 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                }
+            }
+        },
+        "models.Project": {
+            "type": "object",
+            "required": [
+                "key",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ProjectCreateRequest": {
+            "type": "object",
+            "required": [
+                "key",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ProjectUpdateRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Resource": {
+            "type": "object",
+            "required": [
+                "key",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "key": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                }
+            }
+        },
+        "models.ResourceCreateRequest": {
+            "type": "object",
+            "required": [
+                "key",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "name": {
+                    "type": "string",
+                    "minLength": 4
+                }
+            }
+        },
+        "models.ResourceUpdateRequest": {
+            "type": "object",
+            "required": [
+                "key",
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string",
+                    "minLength": 4
+                },
                 "name": {
                     "type": "string",
                     "minLength": 4

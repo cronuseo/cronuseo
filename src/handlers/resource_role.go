@@ -2,30 +2,34 @@ package handlers
 
 import (
 	"errors"
-	"github.com/shashimalcse/Cronuseo/repositories"
 	"strconv"
+
+	"github.com/shashimalcse/Cronuseo/repositories"
 
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetResourceRoles(resourceRoles *[]models.ResourceRole, resId string) {
-	repositories.GetResourceRoles(resourceRoles, resId)
+func GetResourceRoles(resourceRoles *[]models.ResourceRole, resId string) error {
+	return repositories.GetResourceRoles(resourceRoles, resId)
 }
 
-func GetResourceRole(resourceRole *models.ResourceRole, resRoleId string) {
-	repositories.GetResourceRole(resourceRole, resRoleId)
+func GetResourceRole(resourceRole *models.ResourceRole, resRoleId string) error {
+	return repositories.GetResourceRole(resourceRole, resRoleId)
 }
 
-func CreateResourceRoleAction(resourceRole *models.ResourceRole) {
-	repositories.CreateResourceRole(resourceRole)
+func CreateResourceRoleAction(resourceRole *models.ResourceRole) error {
+	return repositories.CreateResourceRole(resourceRole)
 }
 
-func DeleteResourceRole(resourceRole *models.ResourceRole, resRoleId string) {
-	repositories.DeleteResourceRole(resourceRole, resRoleId)
+func DeleteResourceRole(resourceRole *models.ResourceRole, resRoleId string) error {
+	return repositories.DeleteResourceRole(resourceRole, resRoleId)
 }
 
-func UpdateResourceRole(resourceRole *models.ResourceRole, reqResourceRole *models.ResourceRole, resroleId string) {
-	repositories.GetResourceRole(resourceRole, resroleId)
+func UpdateResourceRole(resourceRole *models.ResourceRole, reqResourceRole *models.ResourceRole, resroleId string) error {
+	err := repositories.GetResourceRole(resourceRole, resroleId)
+	if err != nil {
+		return err
+	}
 	resourceRole.Name = reqResourceRole.Name
 	resourceRole.Description = reqResourceRole.Description
 	repositories.UpdateResourceRole(resourceRole)
@@ -118,12 +122,15 @@ func CheckUserAlreadyAdded(resRoleId string, userId string) (bool, error) {
 }
 
 func GetUResourceRoleWithGroupsAndUsers(resrole_id string,
-	resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers) {
+	resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers) error {
 	resourceRoleToGroup := []models.ResourceRoleToGroup{}
 	resourceRoleToUser := []models.ResourceRoleToUser{}
 	resourceRoleToAction := []models.ResourceRoleToResourceAction{}
-	repositories.GetUResourceRoleWithGroupsAndUsers(resrole_id, resourceRoleWithGroupsUsers,
+	err := repositories.GetUResourceRoleWithGroupsAndUsers(resrole_id, resourceRoleWithGroupsUsers,
 		&resourceRoleToGroup, &resourceRoleToUser, &resourceRoleToAction)
+	if err != nil {
+		return err
+	}
 	if len(resourceRoleToUser) > 0 {
 		for _, user := range resourceRoleToUser {
 			userId := user.UserID
@@ -145,6 +152,7 @@ func GetUResourceRoleWithGroupsAndUsers(resrole_id string,
 			resourceRoleWithGroupsUsers.ResourceActions = append(resourceRoleWithGroupsUsers.ResourceActions, action)
 		}
 	}
+	return nil
 
 }
 

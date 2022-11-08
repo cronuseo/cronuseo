@@ -35,6 +35,87 @@ definitions:
     required:
     - name
     type: object
+  models.Project:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      key:
+        minLength: 4
+        type: string
+      name:
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.ProjectCreateRequest:
+    properties:
+      description:
+        type: string
+      key:
+        minLength: 4
+        type: string
+      name:
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.ProjectUpdateRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  models.Resource:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.ResourceCreateRequest:
+    properties:
+      description:
+        type: string
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.ResourceUpdateRequest:
+    properties:
+      description:
+        type: string
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - key
+    - name
+    type: object
 host: localhost:8080
 info:
   contact:
@@ -49,6 +130,286 @@ info:
   title: Cronuseo API
   version: "1.0"
 paths:
+  /{org_id}/project:
+    get:
+      description: Get all projects.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Project'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Project
+    post:
+      consumes:
+      - application/json
+      description: Create project.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Project
+  /{org_id}/project/{id}:
+    delete:
+      description: Delete project.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Project
+    get:
+      description: Get project by ID.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Project'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Project
+    put:
+      consumes:
+      - application/json
+      description: Update project.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: Project ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ProjectUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Project'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Project
+  /{proj_id}/resource:
+    get:
+      description: Get all resources.
+      parameters:
+      - description: Project ID
+        in: path
+        name: proj_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Resource'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource
+    post:
+      consumes:
+      - application/json
+      description: Create resource.
+      parameters:
+      - description: Project ID
+        in: path
+        name: proj_id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Resource'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource
+  /{proj_id}/resource/{id}:
+    delete:
+      description: Delete resource.
+      parameters:
+      - description: Project ID
+        in: path
+        name: proj_id
+        required: true
+        type: integer
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource
+    get:
+      description: Get resource by ID.
+      parameters:
+      - description: Project ID
+        in: path
+        name: proj_id
+        required: true
+        type: integer
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Resource'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource
+    put:
+      consumes:
+      - application/json
+      description: Update resource.
+      parameters:
+      - description: Project ID
+        in: path
+        name: proj_id
+        required: true
+        type: integer
+      - description: Resource ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Resource'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource
   /organization:
     get:
       description: Get all organizations.
@@ -91,13 +452,13 @@ paths:
           description: Internal Server Error
       tags:
       - Organization
-  /organization/{org_id}:
+  /organization/{id}:
     delete:
       description: Delete organization.
       parameters:
       - description: Organization ID
         in: path
-        name: org_id
+        name: id
         required: true
         type: integer
       produces:
@@ -116,7 +477,7 @@ paths:
       parameters:
       - description: Organization ID
         in: path
-        name: org_id
+        name: id
         required: true
         type: integer
       produces:
@@ -139,7 +500,7 @@ paths:
       parameters:
       - description: Organization ID
         in: path
-        name: org_id
+        name: id
         required: true
         type: integer
       - description: body

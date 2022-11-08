@@ -2,33 +2,43 @@ package handlers
 
 import (
 	"errors"
+
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetResources(resources *[]models.Resource, projId string) {
-	repositories.GetResources(resources, projId)
+func GetResources(resources *[]models.Resource, projId string) error {
+	return repositories.GetResources(resources, projId)
 }
 
-func GetResource(resource *models.Resource, resId string) {
-	repositories.GetResource(resource, resId)
+func GetResource(resource *models.Resource, resId string) error {
+	return repositories.GetResource(resource, resId)
 }
 
-func CreateResource(resource *models.Resource) {
-	repositories.CreateResource(resource)
+func CreateResource(resource *models.Resource) error {
+	return repositories.CreateResource(resource)
 }
 
-func DeleteResource(resource *models.Resource, resId string) {
-	DeleteAllResourceActions(string(resId))
-	repositories.DeleteAllResourceRoles(string(resId))
-	repositories.DeleteResource(resource, resId)
+func DeleteResource(resource *models.Resource, resId string) error {
+	err := repositories.DeleteAllResourceActions(string(resId))
+	if err != nil {
+		return err
+	}
+	err = repositories.DeleteAllResourceRoles(string(resId))
+	if err != nil {
+		return err
+	}
+	return repositories.DeleteResource(resource, resId)
 }
 
-func UpdateResource(resource *models.Resource, reqResource *models.Resource, resId string) {
-	repositories.GetResource(resource, resId)
+func UpdateResource(resource *models.Resource, reqResource *models.Resource, resId string) error {
+	err := repositories.GetResource(resource, resId)
+	if err != nil {
+		return err
+	}
 	resource.Name = reqResource.Name
 	resource.Description = reqResource.Description
-	repositories.UpdateResource(resource)
+	return repositories.UpdateResource(resource)
 }
 
 func CheckResourceExistsById(resId string) (bool, error) {

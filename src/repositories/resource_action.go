@@ -25,8 +25,8 @@ func UpdateResourceAction(resourceAction *models.ResourceAction) {
 	config.DB.Save(&resourceAction)
 }
 
-func DeleteAllResourceActions(res_id string) {
-	config.DB.Where("resource_id = ?", res_id).Delete(&models.ResourceAction{})
+func DeleteAllResourceActions(res_id string) error {
+	return config.DB.Where("resource_id = ?", res_id).Delete(&models.ResourceAction{}).Error
 }
 
 func CheckResourceActionExistsById(resactId string, exists *bool) error {

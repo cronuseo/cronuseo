@@ -1,15 +1,23 @@
 package controllers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/handlers"
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/utils"
-	"net/http"
-	"strconv"
 )
 
+// @Description Get all resource roles.
+// @Tags        Resource Role
+// @Param res_id path int true "Resource ID"
+// @Produce     json
+// @Success     200 {array}  models.Resource
+// @failure     500
+// @Router      /{res_id}/resource_role [get]
 func GetResourceRoles(c echo.Context) error {
 	var resourceRoles []models.ResourceRole
 	resId := string(c.Param("res_id"))
@@ -22,10 +30,22 @@ func GetResourceRoles(c echo.Context) error {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	handlers.GetResourceRoles(&resourceRoles, resId)
+	err = handlers.GetResourceRoles(&resourceRoles, resId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &resourceRoles)
 }
 
+// @Description Get resource roles by ID.
+// @Tags        Resource Role
+// @Param res_id path int true "Resource ID"
+// @Param id path int true "Resource Role ID"
+// @Produce     json
+// @Success     200 {object}  models.ResourceRoleWithGroupsUsers
+// @failure     404,500
+// @Router      /{res_id}/resource_role/{id} [get]
 func GetResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRoleWithGroupsUsers
 	resId := string(c.Param("res_id"))
@@ -48,11 +68,24 @@ func GetResourceRole(c echo.Context) error {
 		config.Log.Info("Resource Role not exists")
 		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	handlers.GetUResourceRoleWithGroupsAndUsers(resroleId, &resourceRole)
+	err := handlers.GetUResourceRoleWithGroupsAndUsers(resroleId, &resourceRole)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &resourceRole)
 
 }
 
+// @Description Create resource role.
+// @Tags        Resource Role
+// @Accept      json
+// @Param res_id path int true "Resource ID"
+// @Param request body models.ResourceRoleCreateRequest true "body"
+// @Produce     json
+// @Success     201 {object}  models.ResourceRole
+// @failure     400,403,500
+// @Router      /{res_id}/resource [post]
 func CreateResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRole
 	resId := string(c.Param("res_id"))
@@ -84,11 +117,23 @@ func CreateResourceRole(c echo.Context) error {
 		config.Log.Info("Resource Role already exists")
 		return utils.AlreadyExistsErrorResponse("Resource Role")
 	}
-	handlers.CreateResourceRoleAction(&resourceRole)
+	err = handlers.CreateResourceRoleAction(&resourceRole)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &resourceRole)
 
 }
 
+// @Description Delete resource role.
+// @Tags        Resource Role
+// @Param res_id path int true "Resource ID"
+// @Param id path int true "Resource Role ID"
+// @Produce     json
+// @Success     204
+// @failure     404,500
+// @Router      /{res_id}/resource_role/{id} [delete]
 func DeleteResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRole
 	resId := string(c.Param("res_id"))
@@ -111,10 +156,25 @@ func DeleteResourceRole(c echo.Context) error {
 		config.Log.Info("Resource Role not exists")
 		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	handlers.DeleteResourceRole(&resourceRole, resRoleId)
+	err := handlers.DeleteResourceRole(&resourceRole, resRoleId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusNoContent, "")
 }
 
+// @Description Update resource role.
+// @Tags        Resource Role
+// @Accept      json
+// @Tags        Resource Role
+// @Param res_id path int true "Resource ID"
+// @Param id path int true "Resource Role ID"
+// @Param request body models.ResourceRoleUpdateRequest true "body"
+// @Produce     json
+// @Success     201 {object}  models.ResourceRole
+// @failure     400,403,500
+// @Router      /{proj_id}/resource/{id} [put]
 func UpdateResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRole
 	var reqResourceRole models.ResourceRole
@@ -138,7 +198,11 @@ func UpdateResourceRole(c echo.Context) error {
 		config.Log.Info("Resource Role not exists")
 		return utils.NotFoundErrorResponse("Resource Role")
 	}
-	handlers.UpdateResourceRole(&resourceRole, &reqResourceRole, resroleId)
+	err := handlers.UpdateResourceRole(&resourceRole, &reqResourceRole, resroleId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &resourceRole)
 }
 

@@ -5,28 +5,28 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetResourceRoles(resourceRoles *[]models.ResourceRole, resId string) {
-	config.DB.Model(&models.ResourceRole{}).Where("resource_id = ?", resId).Find(&resourceRoles)
+func GetResourceRoles(resourceRoles *[]models.ResourceRole, resId string) error {
+	return config.DB.Model(&models.ResourceRole{}).Where("resource_id = ?", resId).Find(&resourceRoles).Error
 }
 
-func GetResourceRole(resourceRole *models.ResourceRole, resroleId string) {
-	config.DB.Where("id = ?", resroleId).First(&resourceRole)
+func GetResourceRole(resourceRole *models.ResourceRole, resroleId string) error {
+	return config.DB.Where("id = ?", resroleId).First(&resourceRole).Error
 }
 
-func CreateResourceRole(resourceRole *models.ResourceRole) {
-	config.DB.Create(&resourceRole)
+func CreateResourceRole(resourceRole *models.ResourceRole) error {
+	return config.DB.Create(&resourceRole).Error
 }
 
-func DeleteResourceRole(resourceRole *models.ResourceRole, resroleId string) {
-	config.DB.Where("id = ?", resroleId).Delete(&resourceRole)
+func DeleteResourceRole(resourceRole *models.ResourceRole, resroleId string) error {
+	return config.DB.Where("id = ?", resroleId).Delete(&resourceRole).Error
 }
 
-func UpdateResourceRole(resourceRole *models.ResourceRole) {
-	config.DB.Save(&resourceRole)
+func UpdateResourceRole(resourceRole *models.ResourceRole) error {
+	return config.DB.Save(&resourceRole).Error
 }
 
-func DeleteAllResourceRoles(resId string) {
-	config.DB.Where("resource_id = ?", resId).Delete(&models.ResourceRole{})
+func DeleteAllResourceRoles(resId string) error {
+	return config.DB.Where("resource_id = ?", resId).Delete(&models.ResourceRole{}).Error
 }
 
 func AddUserToResourceRole(roleuser *models.ResourceRoleToUser) {
@@ -65,15 +65,24 @@ func CheckUserAlreadyAdded(resRoleId string, userId string, exists *bool) error 
 
 func GetUResourceRoleWithGroupsAndUsers(resRoleId string,
 	resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers, resourceRoleToGroup *[]models.ResourceRoleToGroup,
-	resourceRoleToUser *[]models.ResourceRoleToUser, resourceRoleToAction *[]models.ResourceRoleToResourceAction) {
-	config.DB.Model(&models.ResourceRole{}).Select("id", "key", "name", "resource_id").Where(
-		"id = ?", resRoleId).Find(&resourceRoleWithGroupsUsers)
-	config.DB.Model(&models.ResourceRoleToGroup{}).Where("resource_role_id = ?",
-		resRoleId).Find(&resourceRoleToGroup)
-	config.DB.Model(&models.ResourceRoleToUser{}).Where("resource_role_id = ?",
-		resRoleId).Find(&resourceRoleToUser)
-	config.DB.Model(&models.ResourceRoleToResourceAction{}).Where("resource_role_id = ?",
-		resRoleId).Find(&resourceRoleToAction)
+	resourceRoleToUser *[]models.ResourceRoleToUser, resourceRoleToAction *[]models.ResourceRoleToResourceAction) error {
+	err := config.DB.Model(&models.ResourceRole{}).Select("id", "key", "name", "resource_id").Where(
+		"id = ?", resRoleId).Find(&resourceRoleWithGroupsUsers).Error
+	if err != nil {
+		return err
+	}
+	err = config.DB.Model(&models.ResourceRoleToGroup{}).Where("resource_role_id = ?",
+		resRoleId).Find(&resourceRoleToGroup).Error
+	if err != nil {
+		return err
+	}
+	err = config.DB.Model(&models.ResourceRoleToUser{}).Where("resource_role_id = ?",
+		resRoleId).Find(&resourceRoleToUser).Error
+	if err != nil {
+		return err
+	}
+	return config.DB.Model(&models.ResourceRoleToResourceAction{}).Where("resource_role_id = ?",
+		resRoleId).Find(&resourceRoleToAction).Error
 }
 
 func CheckResourceRoleExistsById(resRoleId string, exists *bool) error {

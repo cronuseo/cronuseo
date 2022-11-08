@@ -7,3 +7,14 @@ type Project struct {
 	Description    string `json:"description"`
 	OrganizationID int    `json:"-" gorm:"foreignKey:ID"`
 }
+
+type ProjectCreateRequest struct {
+	Key         string `json:"key" validate:"required,min=4"`
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description"`
+}
+
+type ProjectUpdateRequest struct {
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description"`
+}

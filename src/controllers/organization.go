@@ -28,11 +28,11 @@ func GetOrganizations(c echo.Context) error {
 
 // @Description Get organization by ID.
 // @Tags        Organization
-// @Param org_id path int true "Organization ID"
+// @Param id path int true "Organization ID"
 // @Produce     json
 // @Success     200 {object}  models.Organization
 // @failure     404,500
-// @Router      /organization/{org_id} [get]
+// @Router      /organization/{id} [get]
 func GetOrganization(c echo.Context) error {
 	var org models.Organization
 	orgId := string(c.Param("id"))
@@ -89,11 +89,11 @@ func CreateOrganization(c echo.Context) error {
 
 // @Description Delete organization.
 // @Tags        Organization
-// @Param org_id path int true "Organization ID"
+// @Param id path int true "Organization ID"
 // @Produce     json
 // @Success     204
 // @failure     404,500
-// @Router      /organization/{org_id} [delete]
+// @Router      /organization/{id} [delete]
 func DeleteOrganization(c echo.Context) error {
 	var org models.Organization
 	orgId := string(c.Param("id"))
@@ -117,12 +117,12 @@ func DeleteOrganization(c echo.Context) error {
 // @Description Update organization.
 // @Tags        Organization
 // @Accept      json
-// @Param org_id path int true "Organization ID"
+// @Param id path int true "Organization ID"
 // @Param request body models.OrganizationUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Organization
 // @failure     400,403,500
-// @Router      /organization/{org_id} [put]
+// @Router      /organization/{id} [put]
 func UpdateOrganization(c echo.Context) error {
 	var org models.Organization
 	orgId := string(c.Param("id"))

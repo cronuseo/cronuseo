@@ -7,7 +7,7 @@ import (
 
 func ResourceRoleRoutes(router *echo.Group) {
 
-	resourceActionRouter := router.Group("/:res_id/resource_roles")
+	resourceActionRouter := router.Group("/:res_id/resource_role")
 
 	resourceActionRouter.GET("/:id", controllers.GetResourceRole)
 	resourceActionRouter.GET("", controllers.GetResourceRoles)
