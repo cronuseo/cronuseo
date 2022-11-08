@@ -15,7 +15,7 @@ import (
 // @Tags        Resource Role
 // @Param res_id path int true "Resource ID"
 // @Produce     json
-// @Success     200 {array}  models.Resource
+// @Success     200 {array}  models.ResourceRole
 // @failure     500
 // @Router      /{res_id}/resource_role [get]
 func GetResourceRoles(c echo.Context) error {
@@ -85,7 +85,7 @@ func GetResourceRole(c echo.Context) error {
 // @Produce     json
 // @Success     201 {object}  models.ResourceRole
 // @failure     400,403,500
-// @Router      /{res_id}/resource [post]
+// @Router      /{res_id}/resource_role [post]
 func CreateResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRole
 	resId := string(c.Param("res_id"))
@@ -167,14 +167,13 @@ func DeleteResourceRole(c echo.Context) error {
 // @Description Update resource role.
 // @Tags        Resource Role
 // @Accept      json
-// @Tags        Resource Role
 // @Param res_id path int true "Resource ID"
 // @Param id path int true "Resource Role ID"
 // @Param request body models.ResourceRoleUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.ResourceRole
 // @failure     400,403,500
-// @Router      /{proj_id}/resource/{id} [put]
+// @Router      /{proj_id}/resource_role/{id} [put]
 func UpdateResourceRole(c echo.Context) error {
 	var resourceRole models.ResourceRole
 	var reqResourceRole models.ResourceRole
@@ -206,6 +205,15 @@ func UpdateResourceRole(c echo.Context) error {
 	return c.JSON(http.StatusOK, &resourceRole)
 }
 
+// @Description Assign resource role to user.
+// @Tags        Resource Role
+// @Accept      json
+// @Param res_id path int true "Resource ID"
+// @Param user_id path int true "User ID"
+// @Produce     json
+// @Success     200
+// @failure     403,404,500
+// @Router      /{res_id}/resource_role/user/{user_id} [post]
 func AddUserToResourceRole(c echo.Context) error {
 	resId := string(c.Param("res_id"))
 	resroleId := string(c.Param("id"))
@@ -246,11 +254,24 @@ func AddUserToResourceRole(c echo.Context) error {
 		config.Log.Info("User already added")
 		return utils.AlreadyExistsErrorResponse("User")
 	}
-	handlers.AddUserToResourceRole(resroleId, userId)
+	err = handlers.AddUserToResourceRole(resroleId, userId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, "")
 
 }
 
+// @Description Assign resource role to group.
+// @Tags        Resource Role
+// @Accept      json
+// @Param res_id path int true "Resource ID"
+// @Param group_id path int true "Group ID"
+// @Produce     json
+// @Success     200
+// @failure     403,404,500
+// @Router      /{res_id}/resource_role/group/{group_id} [post]
 func AddGroupToResourceRole(c echo.Context) error {
 	resId := string(c.Param("res_id"))
 	resroleId := string(c.Param("id"))
@@ -291,11 +312,24 @@ func AddGroupToResourceRole(c echo.Context) error {
 		config.Log.Info("Group already added")
 		return utils.AlreadyExistsErrorResponse("Group")
 	}
-	handlers.AddGroupToResourceRole(resroleId, groupId)
+	err = handlers.AddGroupToResourceRole(resroleId, groupId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, "")
 
 }
 
+// @Description Assign resource role to group.
+// @Tags        Resource Role
+// @Accept      json
+// @Param res_id path int true "Resource ID"
+// @Param resact_id path int true "Resource Action ID"
+// @Produce     json
+// @Success     200
+// @failure     403,404,500
+// @Router      /{res_id}/resource_role/action/{resact_id} [post]
 func AddResourceActionToResourceRole(c echo.Context) error {
 	resId := string(c.Param("res_id"))
 	resroleId := string(c.Param("id"))
@@ -336,6 +370,10 @@ func AddResourceActionToResourceRole(c echo.Context) error {
 		config.Log.Info("Resource Action already added")
 		return utils.AlreadyExistsErrorResponse("Resource Action")
 	}
-	handlers.AddResourceActionToResourceRole(resId, resroleId, resactId)
+	err = handlers.AddResourceActionToResourceRole(resId, resroleId, resactId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, "")
 }

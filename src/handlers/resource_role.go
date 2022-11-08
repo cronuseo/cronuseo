@@ -25,41 +25,42 @@ func DeleteResourceRole(resourceRole *models.ResourceRole, resRoleId string) err
 	return repositories.DeleteResourceRole(resourceRole, resRoleId)
 }
 
-func UpdateResourceRole(resourceRole *models.ResourceRole, reqResourceRole *models.ResourceRole, resroleId string) error {
+func UpdateResourceRole(resourceRole *models.ResourceRole, reqResourceRole *models.ResourceRole,
+	resroleId string) error {
 	err := repositories.GetResourceRole(resourceRole, resroleId)
 	if err != nil {
 		return err
 	}
 	resourceRole.Name = reqResourceRole.Name
 	resourceRole.Description = reqResourceRole.Description
-	repositories.UpdateResourceRole(resourceRole)
+	return repositories.UpdateResourceRole(resourceRole)
 }
 
-func DeleteAllResourceRoles(resId string) {
-	repositories.DeleteAllResourceRoles(resId)
+func DeleteAllResourceRoles(resId string) error {
+	return repositories.DeleteAllResourceRoles(resId)
 }
 
-func AddUserToResourceRole(resRoleId string, userId string) {
+func AddUserToResourceRole(resRoleId string, userId string) error {
 	roleUser := models.ResourceRoleToUser{}
 	intResRoleId, _ := strconv.Atoi(resRoleId)
 	intUserId, _ := strconv.Atoi(userId)
 	roleUser.ResourceRoleID = intResRoleId
 	roleUser.UserID = intUserId
-	repositories.AddUserToResourceRole(&roleUser)
+	return repositories.AddUserToResourceRole(&roleUser)
 
 }
 
-func AddGroupToResourceRole(resRoleId string, groupId string) {
+func AddGroupToResourceRole(resRoleId string, groupId string) error {
 	roleGroup := models.ResourceRoleToGroup{}
 	intResRoleId, _ := strconv.Atoi(resRoleId)
 	intGroupId, _ := strconv.Atoi(groupId)
 	roleGroup.ResourceRoleID = intResRoleId
 	roleGroup.GroupID = intGroupId
-	repositories.AddGroupToResourceRole(&roleGroup)
+	return repositories.AddGroupToResourceRole(&roleGroup)
 
 }
 
-func AddResourceActionToResourceRole(resId string, resRoleId string, resActId string) {
+func AddResourceActionToResourceRole(resId string, resRoleId string, resActId string) error {
 	roleAction := models.ResourceRoleToResourceAction{}
 	intResRoleId, _ := strconv.Atoi(resRoleId)
 	intResActId, _ := strconv.Atoi(resActId)
@@ -68,17 +69,26 @@ func AddResourceActionToResourceRole(resId string, resRoleId string, resActId st
 	roleAction.ResourceActionID = intResActId
 	roleAction.ResourceID = intResId
 	var resourceRole *models.ResourceRole
-	repositories.GetResourceRole(resourceRole, resRoleId)
+	err := repositories.GetResourceRole(resourceRole, resRoleId)
+	if err != nil {
+		return err
+	}
 	var resourceAction *models.ResourceAction
-	repositories.GetResourceAction(resourceAction, resActId)
+	err = repositories.GetResourceAction(resourceAction, resActId)
+	if err != nil {
+		return err
+	}
 	var resource *models.Resource
-	repositories.GetResource(resource, resId)
+	err = repositories.GetResource(resource, resId)
+	if err != nil {
+		return err
+	}
 	resKey := resource.Key
 	resRoleKey := resourceRole.Key
 	resActKey := resourceAction.Key
 	roleActionKey := models.ResourceRoleToResourceActionKey{Resource: resKey, ResourceAction: resActKey,
 		ResourceRole: resRoleKey}
-	repositories.AddResourceActionToResourceRole(&roleAction, &roleActionKey)
+	return repositories.AddResourceActionToResourceRole(&roleAction, &roleActionKey)
 
 }
 

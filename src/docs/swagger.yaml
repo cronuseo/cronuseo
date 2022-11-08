@@ -1,5 +1,10 @@
 basePath: /api/v1
 definitions:
+  models.GroupOnlyWithID:
+    properties:
+      group_id:
+        type: integer
+    type: object
   models.Organization:
     description: Organization information
     properties:
@@ -88,6 +93,11 @@ definitions:
     - key
     - name
     type: object
+  models.ResourceActionWithID:
+    properties:
+      resact_id:
+        type: integer
+    type: object
   models.ResourceCreateRequest:
     properties:
       description:
@@ -102,6 +112,69 @@ definitions:
     - key
     - name
     type: object
+  models.ResourceRole:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.ResourceRoleCreateRequest:
+    properties:
+      description:
+        type: string
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.ResourceRoleUpdateRequest:
+    properties:
+      description:
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - name
+    type: object
+  models.ResourceRoleWithGroupsUsers:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/models.ResourceActionWithID'
+        type: array
+      groups:
+        items:
+          $ref: '#/definitions/models.GroupOnlyWithID'
+        type: array
+      id:
+        type: integer
+      key:
+        type: string
+      name:
+        type: string
+      res_id:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/models.UserOnlyWithID'
+        type: array
+    type: object
   models.ResourceUpdateRequest:
     properties:
       description:
@@ -115,6 +188,11 @@ definitions:
     required:
     - key
     - name
+    type: object
+  models.UserOnlyWithID:
+    properties:
+      user_id:
+        type: integer
     type: object
 host: localhost:8080
 info:
@@ -410,6 +488,235 @@ paths:
           description: Internal Server Error
       tags:
       - Resource
+  /{proj_id}/resource_role/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update resource role.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: Resource Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceRoleUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ResourceRole'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Role
+      - Resource Role
+  /{res_id}/resource_role:
+    get:
+      description: Get all resource roles.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Resource'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Role
+    post:
+      consumes:
+      - application/json
+      description: Create resource role.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceRoleCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ResourceRole'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Role
+  /{res_id}/resource_role/{id}:
+    delete:
+      description: Delete resource role.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: Resource Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Role
+    get:
+      description: Get resource roles by ID.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: Resource Role ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResourceRoleWithGroupsUsers'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Role
+  /{res_id}/resource_role/action/{resact_id}:
+    post:
+      consumes:
+      - application/json
+      description: Assign resource role to group.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: Resource Action ID
+        in: path
+        name: resact_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Role
+  /{res_id}/resource_role/group/{group_id}:
+    post:
+      consumes:
+      - application/json
+      description: Assign resource role to group.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: Group ID
+        in: path
+        name: group_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Role
+  /{res_id}/resource_role/user/{user_id}:
+    post:
+      consumes:
+      - application/json
+      description: Assign resource role to user.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Role
   /organization:
     get:
       description: Get all organizations.

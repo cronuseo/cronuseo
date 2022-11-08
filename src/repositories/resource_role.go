@@ -29,20 +29,23 @@ func DeleteAllResourceRoles(resId string) error {
 	return config.DB.Where("resource_id = ?", resId).Delete(&models.ResourceRole{}).Error
 }
 
-func AddUserToResourceRole(roleuser *models.ResourceRoleToUser) {
-	config.DB.Create(roleuser)
+func AddUserToResourceRole(roleuser *models.ResourceRoleToUser) error {
+	return config.DB.Create(roleuser).Error
 
 }
 
-func AddGroupToResourceRole(rolegroup *models.ResourceRoleToGroup) {
-	config.DB.Create(rolegroup)
+func AddGroupToResourceRole(rolegroup *models.ResourceRoleToGroup) error {
+	return config.DB.Create(rolegroup).Error
 
 }
 
 func AddResourceActionToResourceRole(roleaction *models.ResourceRoleToResourceAction,
-	roleActionKey *models.ResourceRoleToResourceActionKey) {
-	config.DB.Create(roleaction)
-	config.DB.Create(roleActionKey)
+	roleActionKey *models.ResourceRoleToResourceActionKey) error {
+	err := config.DB.Create(roleaction).Error
+	if err != nil {
+		return err
+	}
+	return config.DB.Create(roleActionKey).Error
 
 }
 
