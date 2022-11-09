@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"errors"
+
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetUsers(users *[]models.User, orgId string) {
-	repositories.GetUsers(users, orgId)
+func GetUsers(users *[]models.User, orgId string) error {
+	return repositories.GetUsers(users, orgId)
 }
 
 func GetUser(user *models.UserWithGroup, userId string) {

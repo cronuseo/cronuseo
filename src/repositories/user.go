@@ -7,8 +7,8 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetUsers(users *[]models.User, org_id string) {
-	config.DB.Model(&models.User{}).Where("organization_id = ?", org_id).Find(&users)
+func GetUsers(users *[]models.User, org_id string) error {
+	return config.DB.Model(&models.User{}).Where("organization_id = ?", org_id).Find(&users).Error
 }
 
 func GetUser(user *models.User, userId string) {

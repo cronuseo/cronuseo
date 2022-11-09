@@ -1,15 +1,23 @@
 package controllers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/handlers"
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/utils"
-	"net/http"
-	"strconv"
 )
 
+// @Description Get all users.
+// @Tags        User
+// @Param org_id path int true "Organization ID"
+// @Produce     json
+// @Success     200 {array}  models.User
+// @failure     500
+// @Router      /{org_id}/user [get]
 func GetUsers(c echo.Context) error {
 	users := []models.User{}
 	orgId := string(c.Param("org_id"))
@@ -22,7 +30,11 @@ func GetUsers(c echo.Context) error {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
 	}
-	handlers.GetUsers(&users, orgId)
+	err = handlers.GetUsers(&users, orgId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &users)
 }
 
