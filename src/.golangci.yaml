@@ -1,3 +1,7 @@
+run:
+  skip-files:
+    - config/logger.go
+
 linters:
   enable:
     - errcheck
