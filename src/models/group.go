@@ -7,6 +7,15 @@ type Group struct {
 	OrganizationID int    `json:"-" gorm:"foreignKey:ID"`
 }
 
+type GroupCreateRequest struct {
+	Key  string `json:"key" validate:"required,min=4"`
+	Name string `json:"name" validate:"required,min=4"`
+}
+
+type GroupUpdateRequest struct {
+	Name string `json:"name" validate:"required,min=4"`
+}
+
 type GroupUser struct {
 	GroupID int `gorm:"foreignKey:ID"`
 	UserID  int `gorm:"foreignKey:ID"`

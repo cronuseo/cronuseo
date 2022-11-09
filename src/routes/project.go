@@ -5,13 +5,13 @@ import (
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func ProjectRoutes(router *echo.Echo) {
+func ProjectRoutes(router *echo.Group) {
 
-	projectRouter := router.Group("/projects")
+	projectRouter := router.Group("/:org_id/project")
 
-	projectRouter.GET("/:org_id", controllers.GetProjects)
-	projectRouter.GET("/:org_id/:id", controllers.GetProject)
-	projectRouter.POST("/:org_id", controllers.CreateProject)
-	projectRouter.DELETE("/:org_id/:id", controllers.DeleteProject)
-	projectRouter.PUT("/:org_id/:id", controllers.UpdateProject)
+	projectRouter.GET("", controllers.GetProjects)
+	projectRouter.GET("/:id", controllers.GetProject)
+	projectRouter.POST("", controllers.CreateProject)
+	projectRouter.DELETE("/:id", controllers.DeleteProject)
+	projectRouter.PUT("/:id", controllers.UpdateProject)
 }

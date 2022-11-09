@@ -8,6 +8,18 @@ type User struct {
 	OrganizationID int    `json:"-" gorm:"foreignKey:ID"`
 }
 
+type UserCreateRequest struct {
+	ID        int    `json:"id"`
+	Username  string `json:"username" validate:"required,min=4"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+}
+
+type UserUpdateRequest struct {
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+}
+
 type UserWithGroup struct {
 	ID             int               `json:"id"`
 	Username       string            `json:"username"`

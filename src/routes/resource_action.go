@@ -5,12 +5,12 @@ import (
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func ResourceActionRoutes(router *echo.Echo) {
+func ResourceActionRoutes(router *echo.Group) {
 
-	resourceActionRouter := router.Group("/resource_actions")
-	resourceActionRouter.GET("/:res_id", controllers.GetResourceActions)
-	resourceActionRouter.GET("/:res_id/:id", controllers.GetResourceAction)
-	resourceActionRouter.POST("/:res_id", controllers.CreateResourceAction)
-	resourceActionRouter.DELETE("/:res_id/:id", controllers.DeleteResourceAction)
-	resourceActionRouter.PUT("/:res_id/:id", controllers.UpdateResourceAction)
+	resourceActionRouter := router.Group("/:res_id/resource_actions")
+	resourceActionRouter.GET("", controllers.GetResourceActions)
+	resourceActionRouter.GET("/:id", controllers.GetResourceAction)
+	resourceActionRouter.POST("", controllers.CreateResourceAction)
+	resourceActionRouter.DELETE("/:id", controllers.DeleteResourceAction)
+	resourceActionRouter.PUT("/:id", controllers.UpdateResourceAction)
 }

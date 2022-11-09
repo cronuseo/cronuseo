@@ -5,9 +5,10 @@ import (
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func CheckRoutes(router *echo.Echo) {
+func CheckRoutes(router *echo.Group) {
 
-	userRouter := router.Group("/check")
+	checkRouter := router.Group("/check")
 
-	userRouter.POST("", controllers.Check)
+	checkRouter.POST("", controllers.CheckAllowed)
+	checkRouter.POST("/list", controllers.Check)
 }

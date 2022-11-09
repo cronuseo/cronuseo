@@ -5,9 +5,9 @@ import (
 	"github.com/shashimalcse/Cronuseo/controllers"
 )
 
-func OrganizationRoutes(router *echo.Echo) {
+func OrganizationRoutes(router *echo.Group) {
 
-	orgRouter := router.Group("/orgs")
+	orgRouter := router.Group("/organization")
 
 	orgRouter.GET("", controllers.GetOrganizations)
 	orgRouter.GET("/:id", controllers.GetOrganization)

@@ -1,0 +1,15 @@
+run:
+  skip-files:
+    - config/logger.go
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - typecheck
+    - unused
+    - lll
+  fast: true

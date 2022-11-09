@@ -2,60 +2,65 @@ package handlers
 
 import (
 	"errors"
-	"github.com/shashimalcse/Cronuseo/repositories"
 	"strconv"
+
+	"github.com/shashimalcse/Cronuseo/repositories"
 
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetResourceRoles(resourceRoles *[]models.ResourceRole, resId string) {
-	repositories.GetResourceRoles(resourceRoles, resId)
+func GetResourceRoles(resourceRoles *[]models.ResourceRole, resId string) error {
+	return repositories.GetResourceRoles(resourceRoles, resId)
 }
 
-func GetResourceRole(resourceRole *models.ResourceRole, resRoleId string) {
-	repositories.GetResourceRole(resourceRole, resRoleId)
+func GetResourceRole(resourceRole *models.ResourceRole, resRoleId string) error {
+	return repositories.GetResourceRole(resourceRole, resRoleId)
 }
 
-func CreateResourceRoleAction(resourceRole *models.ResourceRole) {
-	repositories.CreateResourceRole(resourceRole)
+func CreateResourceRoleAction(resourceRole *models.ResourceRole) error {
+	return repositories.CreateResourceRole(resourceRole)
 }
 
-func DeleteResourceRole(resourceRole *models.ResourceRole, resRoleId string) {
-	repositories.DeleteResourceRole(resourceRole, resRoleId)
+func DeleteResourceRole(resourceRole *models.ResourceRole, resRoleId string) error {
+	return repositories.DeleteResourceRole(resourceRole, resRoleId)
 }
 
-func UpdateResourceRole(resourceRole *models.ResourceRole, reqResourceRole *models.ResourceRole, resroleId string) {
-	repositories.GetResourceRole(resourceRole, resroleId)
+func UpdateResourceRole(resourceRole *models.ResourceRole, reqResourceRole *models.ResourceRole,
+	resroleId string) error {
+	err := repositories.GetResourceRole(resourceRole, resroleId)
+	if err != nil {
+		return err
+	}
 	resourceRole.Name = reqResourceRole.Name
 	resourceRole.Description = reqResourceRole.Description
-	repositories.UpdateResourceRole(resourceRole)
+	return repositories.UpdateResourceRole(resourceRole)
 }
 
-func DeleteAllResourceRoles(resId string) {
-	repositories.DeleteAllResourceRoles(resId)
+func DeleteAllResourceRoles(resId string) error {
+	return repositories.DeleteAllResourceRoles(resId)
 }
 
-func AddUserToResourceRole(resRoleId string, userId string) {
+func AddUserToResourceRole(resRoleId string, userId string) error {
 	roleUser := models.ResourceRoleToUser{}
 	intResRoleId, _ := strconv.Atoi(resRoleId)
 	intUserId, _ := strconv.Atoi(userId)
 	roleUser.ResourceRoleID = intResRoleId
 	roleUser.UserID = intUserId
-	repositories.AddUserToResourceRole(&roleUser)
+	return repositories.AddUserToResourceRole(&roleUser)
 
 }
 
-func AddGroupToResourceRole(resRoleId string, groupId string) {
+func AddGroupToResourceRole(resRoleId string, groupId string) error {
 	roleGroup := models.ResourceRoleToGroup{}
 	intResRoleId, _ := strconv.Atoi(resRoleId)
 	intGroupId, _ := strconv.Atoi(groupId)
 	roleGroup.ResourceRoleID = intResRoleId
 	roleGroup.GroupID = intGroupId
-	repositories.AddGroupToResourceRole(&roleGroup)
+	return repositories.AddGroupToResourceRole(&roleGroup)
 
 }
 
-func AddResourceActionToResourceRole(resId string, resRoleId string, resActId string) {
+func AddResourceActionToResourceRole(resId string, resRoleId string, resActId string) error {
 	roleAction := models.ResourceRoleToResourceAction{}
 	intResRoleId, _ := strconv.Atoi(resRoleId)
 	intResActId, _ := strconv.Atoi(resActId)
@@ -64,22 +69,32 @@ func AddResourceActionToResourceRole(resId string, resRoleId string, resActId st
 	roleAction.ResourceActionID = intResActId
 	roleAction.ResourceID = intResId
 	var resourceRole *models.ResourceRole
-	repositories.GetResourceRole(resourceRole, resRoleId)
+	err := repositories.GetResourceRole(resourceRole, resRoleId)
+	if err != nil {
+		return err
+	}
 	var resourceAction *models.ResourceAction
-	repositories.GetResourceAction(resourceAction, resActId)
+	err = repositories.GetResourceAction(resourceAction, resActId)
+	if err != nil {
+		return err
+	}
 	var resource *models.Resource
-	repositories.GetResource(resource, resId)
+	err = repositories.GetResource(resource, resId)
+	if err != nil {
+		return err
+	}
 	resKey := resource.Key
 	resRoleKey := resourceRole.Key
 	resActKey := resourceAction.Key
-	roleActionKey := models.ResourceRoleToResourceActionKey{Resource: resKey, ResourceAction: resActKey, ResourceRole: resRoleKey}
-	repositories.AddResourceActionToResourceRole(&roleAction, &roleActionKey)
+	roleActionKey := models.ResourceRoleToResourceActionKey{Resource: resKey, ResourceAction: resActKey,
+		ResourceRole: resRoleKey}
+	return repositories.AddResourceActionToResourceRole(&roleAction, &roleActionKey)
 
 }
 
 func CheckResourceActionAlreadyAdded(resId string, resRoleId string, resActId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceActionAlreadyAdded(resId, resRoleId, resActId, exists)
+	err := repositories.CheckResourceActionAlreadyAdded(resId, resRoleId, resActId, &exists)
 	if err != nil {
 		return false, errors.New("not exists")
 	}
@@ -92,7 +107,7 @@ func CheckResourceActionAlreadyAdded(resId string, resRoleId string, resActId st
 
 func CheckGroupAlreadyAdded(resRoleId string, groupId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckGroupAlreadyAdded(resRoleId, groupId, exists)
+	err := repositories.CheckGroupAlreadyAdded(resRoleId, groupId, &exists)
 	if err != nil {
 		return false, errors.New("not exists")
 	}
@@ -105,7 +120,7 @@ func CheckGroupAlreadyAdded(resRoleId string, groupId string) (bool, error) {
 
 func CheckUserAlreadyAdded(resRoleId string, userId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckUserAlreadyAdded(resRoleId, userId, exists)
+	err := repositories.CheckUserAlreadyAdded(resRoleId, userId, &exists)
 	if err != nil {
 		return false, errors.New("not exists")
 	}
@@ -116,11 +131,16 @@ func CheckUserAlreadyAdded(resRoleId string, userId string) (bool, error) {
 	}
 }
 
-func GetUResourceRoleWithGroupsAndUsers(resrole_id string, resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers) {
+func GetUResourceRoleWithGroupsAndUsers(resrole_id string,
+	resourceRoleWithGroupsUsers *models.ResourceRoleWithGroupsUsers) error {
 	resourceRoleToGroup := []models.ResourceRoleToGroup{}
 	resourceRoleToUser := []models.ResourceRoleToUser{}
 	resourceRoleToAction := []models.ResourceRoleToResourceAction{}
-	repositories.GetUResourceRoleWithGroupsAndUsers(resrole_id, resourceRoleWithGroupsUsers, &resourceRoleToGroup, &resourceRoleToUser, &resourceRoleToAction)
+	err := repositories.GetUResourceRoleWithGroupsAndUsers(resrole_id, resourceRoleWithGroupsUsers,
+		&resourceRoleToGroup, &resourceRoleToUser, &resourceRoleToAction)
+	if err != nil {
+		return err
+	}
 	if len(resourceRoleToUser) > 0 {
 		for _, user := range resourceRoleToUser {
 			userId := user.UserID
@@ -142,12 +162,13 @@ func GetUResourceRoleWithGroupsAndUsers(resrole_id string, resourceRoleWithGroup
 			resourceRoleWithGroupsUsers.ResourceActions = append(resourceRoleWithGroupsUsers.ResourceActions, action)
 		}
 	}
+	return nil
 
 }
 
 func CheckResourceRoleExistsById(resRoleId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceRoleExistsById(resRoleId, exists)
+	err := repositories.CheckResourceRoleExistsById(resRoleId, &exists)
 	if err != nil {
 		return false, errors.New("resource role not exists")
 	}
@@ -160,7 +181,7 @@ func CheckResourceRoleExistsById(resRoleId string) (bool, error) {
 
 func CheckResourceRoleExistsByKey(key string, resId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceRoleExistsByKey(key, resId, exists)
+	err := repositories.CheckResourceRoleExistsByKey(key, resId, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

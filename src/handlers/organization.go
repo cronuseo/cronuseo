@@ -2,35 +2,39 @@ package handlers
 
 import (
 	"errors"
+
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetOrganizations(orgs *[]models.Organization) {
-	repositories.GetOrganizations(orgs)
+func GetOrganizations(orgs *[]models.Organization) error {
+	return repositories.GetOrganizations(orgs)
 }
 
-func GetOrganization(org *models.Organization, id string) {
-	repositories.GetOrganization(org, id)
+func GetOrganization(org *models.Organization, id string) error {
+	return repositories.GetOrganization(org, id)
 }
 
-func CreateOrganization(org *models.Organization) {
-	repositories.CreateOrganization(org)
+func CreateOrganization(org *models.Organization) error {
+	return repositories.CreateOrganization(org)
 }
 
-func DeleteOrganization(org *models.Organization, id string) {
-	repositories.DeleteOrganization(org, id)
+func DeleteOrganization(org *models.Organization, id string) error {
+	return repositories.DeleteOrganization(org, id)
 }
 
-func UpdateOrganization(org *models.Organization, reqOrg *models.Organization, id string) {
-	repositories.GetOrganization(org, id)
+func UpdateOrganization(org *models.Organization, reqOrg *models.Organization, id string) error {
+	err := repositories.GetOrganization(org, id)
+	if err != nil {
+		return err
+	}
 	org.Name = reqOrg.Name
-	repositories.UpdateOrganization(org)
+	return repositories.UpdateOrganization(org)
 }
 
 func CheckOrganizationExistsById(id string) (bool, error) {
 	var exists bool
-	err := repositories.CheckOrganizationExistsById(id, exists)
+	err := repositories.CheckOrganizationExistsById(id, &exists)
 	if err != nil {
 		return false, errors.New("organization not exists")
 	}
@@ -43,7 +47,7 @@ func CheckOrganizationExistsById(id string) (bool, error) {
 
 func CheckOrganizationExistsByKey(key string) (bool, error) {
 	var exists bool
-	err := repositories.CheckOrganizationExistsByKey(key, exists)
+	err := repositories.CheckOrganizationExistsByKey(key, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}
