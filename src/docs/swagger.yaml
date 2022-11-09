@@ -237,6 +237,15 @@ definitions:
     - key
     - name
     type: object
+  models.ResourceRoleToResourceActionKey:
+    properties:
+      resource:
+        type: string
+      resourceAction:
+        type: string
+      resourceRole:
+        type: string
+    type: object
   models.ResourceRoleUpdateRequest:
     properties:
       description:
@@ -1334,6 +1343,56 @@ paths:
           description: Internal Server Error
       tags:
       - Resource Role
+  /check:
+    post:
+      consumes:
+      - application/json
+      description: Check RBAC.
+      parameters:
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceRoleToResourceActionKey'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: status
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Check
+  /check/list:
+    post:
+      consumes:
+      - application/json
+      description: Check RBAC list.
+      parameters:
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceRoleToResourceActionKey'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: scopes
+          schema:
+            type: string
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Check
   /organization:
     get:
       description: Get all organizations.

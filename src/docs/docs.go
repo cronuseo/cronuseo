@@ -25,6 +25,84 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/check": {
+            "post": {
+                "description": "Check RBAC.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Check"
+                ],
+                "parameters": [
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceRoleToResourceActionKey"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "status",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/check/list": {
+            "post": {
+                "description": "Check RBAC list.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Check"
+                ],
+                "parameters": [
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceRoleToResourceActionKey"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "scopes",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/organization": {
             "get": {
                 "description": "Get all organizations.",
@@ -2031,6 +2109,20 @@ const docTemplate = `{
                 "name": {
                     "type": "string",
                     "minLength": 4
+                }
+            }
+        },
+        "models.ResourceRoleToResourceActionKey": {
+            "type": "object",
+            "properties": {
+                "resource": {
+                    "type": "string"
+                },
+                "resourceAction": {
+                    "type": "string"
+                },
+                "resourceRole": {
+                    "type": "string"
                 }
             }
         },

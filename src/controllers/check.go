@@ -1,14 +1,23 @@
 package controllers
 
 import (
+	"net/http"
+
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/handlers"
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/utils"
-	"net/http"
 )
 
+// @Description Check RBAC.
+// @Tags        Check
+// @Accept      json
+// @Param request body models.ResourceRoleToResourceActionKey true "body"
+// @Produce     json
+// @Success     200 {string}  allowed    "status"
+// @failure     403,500
+// @Router      /check [post]
 func CheckAllowed(c echo.Context) error {
 	var keys models.ResourceRoleToResourceActionKey
 	if err := c.Bind(&keys); err != nil {
@@ -30,6 +39,14 @@ func CheckAllowed(c echo.Context) error {
 
 }
 
+// @Description Check RBAC list.
+// @Tags        Check
+// @Accept      json
+// @Param request body models.ResourceRoleToResourceActionKey true "body"
+// @Produce     json
+// @Success     200 {string}  read,write    "scopes"
+// @failure     403,500
+// @Router      /check/list [post]
 func Check(c echo.Context) error {
 	var keys models.ResourceRoleToResourceActionKey
 	if err := c.Bind(&keys); err != nil {
