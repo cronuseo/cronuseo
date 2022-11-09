@@ -1,9 +1,58 @@
 basePath: /api/v1
 definitions:
+  models.Group:
+    properties:
+      id:
+        type: integer
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - key
+    - name
+    type: object
+  models.GroupCreateRequest:
+    properties:
+      key:
+        minLength: 4
+        type: string
+      name:
+        minLength: 4
+        type: string
+    required:
+    - key
+    - name
+    type: object
   models.GroupOnlyWithID:
     properties:
       group_id:
         type: integer
+    type: object
+  models.GroupUpdateRequest:
+    properties:
+      name:
+        minLength: 4
+        type: string
+    required:
+    - name
+    type: object
+  models.GroupUsers:
+    properties:
+      id:
+        type: integer
+      key:
+        type: string
+      name:
+        type: string
+      org_id:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/models.UserOnlyWithID'
+        type: array
     type: object
   models.Organization:
     description: Organization information
@@ -306,6 +355,186 @@ info:
   title: Cronuseo API
   version: "1.0"
 paths:
+  /{org_id}/group:
+    get:
+      description: Get all groups.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Group'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
+    post:
+      consumes:
+      - application/json
+      description: Create group.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.GroupCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Group'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
+  /{org_id}/group/{id}:
+    delete:
+      description: Delete group.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
+    get:
+      description: Get groups by ID.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GroupUsers'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
+    put:
+      consumes:
+      - application/json
+      description: Update group.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.GroupUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Group'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
+  /{org_id}/group/{id}/{user_id}:
+    post:
+      consumes:
+      - application/json
+      description: Add uset to group.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: user_id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.GroupCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
   /{org_id}/project:
     get:
       description: Get all projects.
@@ -442,6 +671,8 @@ paths:
           description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
@@ -582,6 +813,8 @@ paths:
           description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
@@ -722,6 +955,8 @@ paths:
           description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
@@ -759,6 +994,8 @@ paths:
           description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
@@ -796,6 +1033,8 @@ paths:
           description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
@@ -1205,6 +1444,8 @@ paths:
           description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:

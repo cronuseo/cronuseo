@@ -172,7 +172,7 @@ func DeleteProject(c echo.Context) error {
 // @Param request body models.ProjectUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Project
-// @failure     400,403,500
+// @failure     400,403,404,500
 // @Router      /{org_id}/project/{id} [put]
 func UpdateProject(c echo.Context) error {
 	var project models.Project

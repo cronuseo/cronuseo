@@ -171,7 +171,7 @@ func DeleteUser(c echo.Context) error {
 // @Param request body models.UserUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.User
-// @failure     400,403,500
+// @failure     400,403,404,500
 // @Router      /{org_id}/user/{id} [put]
 func UpdateUser(c echo.Context) error {
 	var user models.User

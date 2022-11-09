@@ -171,7 +171,7 @@ func DeleteResource(c echo.Context) error {
 // @Param request body models.ResourceUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Resource
-// @failure     400,403,500
+// @failure     400,403,404,500
 // @Router      /{proj_id}/resource/{id} [put]
 func UpdateResource(c echo.Context) error {
 	var resource models.Resource

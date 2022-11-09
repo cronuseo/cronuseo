@@ -1,15 +1,23 @@
 package controllers
 
 import (
+	"net/http"
+	"strconv"
+
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/handlers"
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/utils"
-	"net/http"
-	"strconv"
 )
 
+// @Description Get all groups.
+// @Tags        Group
+// @Param org_id path int true "Organization ID"
+// @Produce     json
+// @Success     200 {array}  models.Group
+// @failure     500
+// @Router      /{org_id}/group [get]
 func GetGroups(c echo.Context) error {
 	groups := []models.Group{}
 	orgId := string(c.Param("org_id"))
@@ -22,10 +30,22 @@ func GetGroups(c echo.Context) error {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
 	}
-	handlers.GetGroups(&groups, orgId)
+	err = handlers.GetGroups(&groups, orgId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &groups)
 }
 
+// @Description Get groups by ID.
+// @Tags        Group
+// @Param org_id path int true "Organization ID"
+// @Param id path int true "Group ID"
+// @Produce     json
+// @Success     200 {object}  models.GroupUsers
+// @failure     404,500
+// @Router      /{org_id}/group/{id} [get]
 func GetGroup(c echo.Context) error {
 	var group models.GroupUsers
 	orgId := string(c.Param("org_id"))
@@ -48,11 +68,24 @@ func GetGroup(c echo.Context) error {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
 	}
-	handlers.GetUsersFromGroup(groupId, &group)
+	err := handlers.GetUsersFromGroup(groupId, &group)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &group)
 
 }
 
+// @Description Create group.
+// @Tags        Group
+// @Accept      json
+// @Param org_id path int true "Organization ID"
+// @Param request body models.GroupCreateRequest true "body"
+// @Produce     json
+// @Success     201 {object}  models.Group
+// @failure     400,403,500
+// @Router      /{org_id}/group [post]
 func CreateGroup(c echo.Context) error {
 	var group models.Group
 	orgId := string(c.Param("org_id"))
@@ -84,11 +117,23 @@ func CreateGroup(c echo.Context) error {
 		config.Log.Info("Group already exists")
 		return utils.AlreadyExistsErrorResponse("Group")
 	}
-	handlers.CreateGroup(&group)
+	err = handlers.CreateGroup(&group)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusCreated, &group)
 
 }
 
+// @Description Delete group.
+// @Tags        Group
+// @Param org_id path int true "Organization ID"
+// @Param id path int true "Group ID"
+// @Produce     json
+// @Success     204
+// @failure     404,500
+// @Router      /{org_id}/group/{id} [delete]
 func DeleteGroup(c echo.Context) error {
 	var group models.Group
 	groupId := string(c.Param("id"))
@@ -111,11 +156,25 @@ func DeleteGroup(c echo.Context) error {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
 	}
-	handlers.DeleteGroup(&group, groupId)
+	err := handlers.DeleteGroup(&group, groupId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusNoContent, "")
 
 }
 
+// @Description Update group.
+// @Tags        Group
+// @Accept      json
+// @Param org_id path int true "Organization ID"
+// @Param id path int true "Group ID"
+// @Param request body models.GroupUpdateRequest true "body"
+// @Produce     json
+// @Success     201 {object}  models.Group
+// @failure     400,403,404,500
+// @Router      /{org_id}/group/{id} [put]
 func UpdateGroup(c echo.Context) error {
 	var group models.Group
 	var reqGroup models.Group
@@ -139,10 +198,25 @@ func UpdateGroup(c echo.Context) error {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
 	}
-	handlers.UpdateGroup(&group, &reqGroup, groupId)
+	err := handlers.UpdateGroup(&group, &reqGroup, groupId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &group)
 }
 
+// @Description Add uset to group.
+// @Tags        Group
+// @Accept      json
+// @Param org_id path int true "Organization ID"
+// @Param id path int true "Group ID"
+// @Param user_id path int true "User ID"
+// @Param request body models.GroupCreateRequest true "body"
+// @Produce     json
+// @Success     200
+// @failure     404,500
+// @Router      /{org_id}/group/{id}/{user_id} [post]
 func AddUserToGroup(c echo.Context) error {
 	orgId := string(c.Param("org_id"))
 	groupId := string(c.Param("id"))
@@ -174,6 +248,10 @@ func AddUserToGroup(c echo.Context) error {
 		config.Log.Info("User not exists")
 		return utils.NotFoundErrorResponse("User")
 	}
-	handlers.AddUserToGroup(groupId, userId)
+	err := handlers.AddUserToGroup(groupId, userId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, "")
 }

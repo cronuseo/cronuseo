@@ -2,49 +2,56 @@ package handlers
 
 import (
 	"errors"
+	"strconv"
+
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
-	"strconv"
 )
 
-func GetGroups(groups *[]models.Group, orgId string) {
-	repositories.GetGroups(groups, orgId)
+func GetGroups(groups *[]models.Group, orgId string) error {
+	return repositories.GetGroups(groups, orgId)
 }
 
-func GetGroup(group *models.Group, groupId string) {
-	repositories.GetGroup(group, groupId)
+func GetGroup(group *models.Group, groupId string) error {
+	return repositories.GetGroup(group, groupId)
 }
 
-func CreateGroup(group *models.Group) {
-	repositories.CreateGroup(group)
+func CreateGroup(group *models.Group) error {
+	return repositories.CreateGroup(group)
 }
 
-func DeleteGroup(group *models.Group, groupId string) {
-	repositories.DeleteAllResources(groupId)
-	repositories.DeleteGroup(group, groupId)
+func DeleteGroup(group *models.Group, groupId string) error {
+	//todo delete group from role group
+	return repositories.DeleteGroup(group, groupId)
 }
 
-func UpdateGroup(group *models.Group, reqGroup *models.Group, groupId string) {
-	repositories.GetGroup(group, groupId)
+func UpdateGroup(group *models.Group, reqGroup *models.Group, groupId string) error {
+	err := repositories.GetGroup(group, groupId)
+	if err != nil {
+		return err
+	}
 	group.Name = reqGroup.Name
 	group.Key = reqGroup.Key
-	repositories.UpdateGroup(group)
+	return repositories.UpdateGroup(group)
 }
 
-func AddUserToGroup(groupId string, userId string) {
+func AddUserToGroup(groupId string, userId string) error {
 	groupuser := models.GroupUser{}
 	intGroupId, _ := strconv.Atoi(groupId)
 	intUserId, _ := strconv.Atoi(userId)
 	groupuser.GroupID = intGroupId
 	groupuser.UserID = intUserId
-	repositories.AddUserToGroup(groupuser)
+	return repositories.AddUserToGroup(groupuser)
 
 }
 
-func GetUsersFromGroup(groupId string, resGroupusers *models.GroupUsers) {
+func GetUsersFromGroup(groupId string, resGroupusers *models.GroupUsers) error {
 	var groupusers []models.GroupUser
 	intGroupId, _ := strconv.Atoi(groupId)
-	repositories.GetUsersFromGroup(intGroupId, resGroupusers, groupusers)
+	err := repositories.GetUsersFromGroup(intGroupId, resGroupusers, groupusers)
+	if err != nil {
+		return err
+	}
 	if len(groupusers) > 0 {
 		for _, groupuser := range groupusers {
 			user_id := groupuser.UserID
@@ -52,7 +59,7 @@ func GetUsersFromGroup(groupId string, resGroupusers *models.GroupUsers) {
 			resGroupusers.Users = append(resGroupusers.Users, user)
 		}
 	}
-
+	return nil
 }
 
 func CheckGroupExistsById(groupId string) (bool, error) {
