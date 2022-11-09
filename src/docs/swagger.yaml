@@ -235,10 +235,62 @@ definitions:
     - key
     - name
     type: object
+  models.User:
+    properties:
+      firstname:
+        type: string
+      id:
+        type: integer
+      lastname:
+        type: string
+      username:
+        minLength: 4
+        type: string
+    required:
+    - username
+    type: object
+  models.UserCreateRequest:
+    properties:
+      firstname:
+        type: string
+      id:
+        type: integer
+      lastname:
+        type: string
+      username:
+        minLength: 4
+        type: string
+    required:
+    - username
+    type: object
   models.UserOnlyWithID:
     properties:
       user_id:
         type: integer
+    type: object
+  models.UserUpdateRequest:
+    properties:
+      firstname:
+        type: string
+      lastname:
+        type: string
+    type: object
+  models.UserWithGroup:
+    properties:
+      firstname:
+        type: string
+      groups:
+        items:
+          $ref: '#/definitions/models.GroupOnlyWithID'
+        type: array
+      id:
+        type: integer
+      lastname:
+        type: string
+      org_id:
+        type: integer
+      username:
+        type: string
     type: object
 host: localhost:8080
 info:
@@ -394,6 +446,146 @@ paths:
           description: Internal Server Error
       tags:
       - Project
+  /{org_id}/user:
+    get:
+      description: Get all users.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - User
+    post:
+      consumes:
+      - application/json
+      description: Create user.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - User
+  /{org_id}/user/{id}:
+    delete:
+      description: Delete user.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - User
+    get:
+      description: Get user by ID.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.UserWithGroup'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Update user.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.UserUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.User'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - User
   /{proj_id}/resource:
     get:
       description: Get all resources.

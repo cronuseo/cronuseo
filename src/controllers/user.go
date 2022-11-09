@@ -38,6 +38,14 @@ func GetUsers(c echo.Context) error {
 	return c.JSON(http.StatusOK, &users)
 }
 
+// @Description Get user by ID.
+// @Tags        User
+// @Param org_id path int true "Organization ID"
+// @Param id path int true "User ID"
+// @Produce     json
+// @Success     200 {object}  models.UserWithGroup
+// @failure     404,500
+// @Router      /{org_id}/user/{id} [get]
 func GetUser(c echo.Context) error {
 	var user models.UserWithGroup
 	orgId := string(c.Param("org_id"))
@@ -60,10 +68,23 @@ func GetUser(c echo.Context) error {
 		config.Log.Info("User not exists")
 		return utils.NotFoundErrorResponse("User")
 	}
-	handlers.GetUser(&user, userId)
+	err := handlers.GetUser(&user, userId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusOK, &user)
 }
 
+// @Description Create user.
+// @Tags        User
+// @Accept      json
+// @Param org_id path int true "Organization ID"
+// @Param request body models.UserCreateRequest true "body"
+// @Produce     json
+// @Success     201 {object}  models.User
+// @failure     400,403,500
+// @Router      /{org_id}/user [post]
 func CreateUser(c echo.Context) error {
 	var user models.User
 	orgId := string(c.Param("org_id"))
@@ -96,10 +117,22 @@ func CreateUser(c echo.Context) error {
 		config.Log.Info("User already exists")
 		return utils.AlreadyExistsErrorResponse("User")
 	}
-	handlers.CreateUser(&user)
+	err = handlers.CreateUser(&user)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusCreated, &user)
 }
 
+// @Description Delete user.
+// @Tags        User
+// @Param org_id path int true "Organization ID"
+// @Param id path int true "User ID"
+// @Produce     json
+// @Success     204
+// @failure     404,500
+// @Router      /{org_id}/user/{id} [delete]
 func DeleteUser(c echo.Context) error {
 	var user models.User
 	userId := string(c.Param("id"))
@@ -122,10 +155,24 @@ func DeleteUser(c echo.Context) error {
 		config.Log.Info("User not exists")
 		return utils.NotFoundErrorResponse("User")
 	}
-	handlers.DeleteUser(&user, userId)
+	err := handlers.DeleteUser(&user, userId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusNoContent, "")
 }
 
+// @Description Update user.
+// @Tags        User
+// @Accept      json
+// @Param org_id path int true "Organization ID"
+// @Param id path int true "User ID"
+// @Param request body models.UserUpdateRequest true "body"
+// @Produce     json
+// @Success     201 {object}  models.User
+// @failure     400,403,500
+// @Router      /{org_id}/user/{id} [put]
 func UpdateUser(c echo.Context) error {
 	var user models.User
 	var reqUser models.User
@@ -149,6 +196,10 @@ func UpdateUser(c echo.Context) error {
 		config.Log.Info("User not exists")
 		return utils.NotFoundErrorResponse("User")
 	}
-	handlers.UpdateUser(&user, &reqUser, userId)
+	err := handlers.UpdateUser(&user, &reqUser, userId)
+	if err != nil {
+		config.Log.Panic("Server Error!")
+		return utils.ServerErrorResponse()
+	}
 	return c.JSON(http.StatusCreated, &user)
 }
