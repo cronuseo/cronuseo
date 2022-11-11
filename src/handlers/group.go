@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/shashimalcse/Cronuseo/models"
@@ -48,7 +49,7 @@ func AddUserToGroup(groupId string, userId string) error {
 func GetUsersFromGroup(groupId string, resGroupusers *models.GroupUsers) error {
 	var groupusers []models.GroupUser
 	intGroupId, _ := strconv.Atoi(groupId)
-	err := repositories.GetUsersFromGroup(intGroupId, resGroupusers, groupusers)
+	err := repositories.GetUsersFromGroup(intGroupId, resGroupusers, &groupusers)
 	if err != nil {
 		return err
 	}
@@ -86,4 +87,22 @@ func CheckGroupExistsByKey(key string, orgId string) (bool, error) {
 	} else {
 		return false, nil
 	}
+}
+
+func AddUsesrToGroup(groupId string, users models.AddUsersToGroup) error {
+	for _, user := range users.Users {
+		userId := fmt.Sprint(user.UserID)
+		groupuser := models.GroupUser{}
+		intGroupId, _ := strconv.Atoi(groupId)
+		intUserId, _ := strconv.Atoi(userId)
+		groupuser.GroupID = intGroupId
+		groupuser.UserID = intUserId
+		err := repositories.AddUserToGroup(groupuser)
+		if err != nil {
+			return err
+		}
+
+	}
+	return nil
+
 }

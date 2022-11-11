@@ -32,3 +32,7 @@ type GroupUsers struct {
 type UserOnlyWithID struct {
 	UserID int `json:"user_id"`
 }
+
+type AddUsersToGroup struct {
+	Users []UserOnlyWithID `json:"users"`
+}

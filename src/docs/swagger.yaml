@@ -1,5 +1,12 @@
 basePath: /api/v1
 definitions:
+  models.AddUsersToGroup:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/models.UserOnlyWithID'
+        type: array
+    type: object
   models.Group:
     properties:
       id:
@@ -533,6 +540,39 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/models.GroupCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
+  /{org_id}/group/{id}/users:
+    post:
+      consumes:
+      - application/json
+      description: Add users to group.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: integer
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddUsersToGroup'
       produces:
       - application/json
       responses:

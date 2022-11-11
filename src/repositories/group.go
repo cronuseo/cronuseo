@@ -26,11 +26,12 @@ func UpdateGroup(group *models.Group) error {
 }
 
 func AddUserToGroup(groupuser models.GroupUser) error {
+
 	return config.DB.Create(groupuser).Error
 
 }
 
-func GetUsersFromGroup(groupId int, resGroupUsers *models.GroupUsers, groupusers []models.GroupUser) error {
+func GetUsersFromGroup(groupId int, resGroupUsers *models.GroupUsers, groupusers *[]models.GroupUser) error {
 	err := config.DB.Model(&models.Group{}).Select("id", "key", "name", "organization_id").Where("id = ?",
 		groupId).Find(&resGroupUsers).Error
 	if err != nil {
