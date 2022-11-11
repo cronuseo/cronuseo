@@ -513,44 +513,6 @@ paths:
           description: Internal Server Error
       tags:
       - Group
-  /{org_id}/group/{id}/{user_id}:
-    post:
-      consumes:
-      - application/json
-      description: Add uset to group.
-      parameters:
-      - description: Organization ID
-        in: path
-        name: org_id
-        required: true
-        type: integer
-      - description: Group ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.GroupCreateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Group
   /{org_id}/group/{id}/users:
     post:
       consumes:

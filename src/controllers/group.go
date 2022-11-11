@@ -214,56 +214,6 @@ func UpdateGroup(c echo.Context) error {
 	return c.JSON(http.StatusOK, &group)
 }
 
-// @Description Add uset to group.
-// @Tags        Group
-// @Accept      json
-// @Param org_id path int true "Organization ID"
-// @Param id path int true "Group ID"
-// @Param user_id path int true "User ID"
-// @Param request body models.GroupCreateRequest true "body"
-// @Produce     json
-// @Success     200
-// @failure     404,500
-// @Router      /{org_id}/group/{id}/{user_id} [post]
-func AddUserToGroup(c echo.Context) error {
-	orgId := string(c.Param("org_id"))
-	groupId := string(c.Param("id"))
-	userId := string(c.Param("user_id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
-	}
-	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
-	if groupErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !groupExists {
-		config.Log.Info("Group not exists")
-		return utils.NotFoundErrorResponse("Group")
-	}
-	userExists, userErr := handlers.CheckUserExistsById(userId)
-	if userErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !userExists {
-		config.Log.Info("User not exists")
-		return utils.NotFoundErrorResponse("User")
-	}
-	err := handlers.AddUserToGroup(groupId, userId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	return c.JSON(http.StatusOK, "")
-}
-
 // @Description Add users to group.
 // @Tags        Group
 // @Accept      json
@@ -273,7 +223,7 @@ func AddUserToGroup(c echo.Context) error {
 // @Produce     json
 // @Success     200
 // @failure     404,500
-// @Router      /{org_id}/group/{id}/users [post]
+// @Router      /{org_id}/group/{id}/user [post]
 func AddUsersToGroup(c echo.Context) error {
 	orgId := string(c.Param("org_id"))
 	groupId := string(c.Param("id"))
