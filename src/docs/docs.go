@@ -496,9 +496,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org_id}/group/{id}/{user_id}": {
+        "/{org_id}/group/{id}/users": {
             "post": {
-                "description": "Add uset to group.",
+                "description": "Add users to group.",
                 "consumes": [
                     "application/json"
                 ],
@@ -524,19 +524,12 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
                         "description": "body",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.GroupCreateRequest"
+                            "$ref": "#/definitions/models.AddUsersToGroup"
                         }
                     }
                 ],
@@ -1766,6 +1759,17 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.AddUsersToGroup": {
+            "type": "object",
+            "properties": {
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserOnlyWithID"
+                    }
+                }
+            }
+        },
         "models.Group": {
             "type": "object",
             "required": [

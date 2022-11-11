@@ -156,6 +156,14 @@ func DeleteGroup(c echo.Context) error {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
 	}
+	if err := c.Bind(&group); err != nil {
+		if group.Name == "" || len(group.Name) < 4 {
+			return utils.InvalidErrorResponse()
+		}
+	}
+	if err := c.Validate(&group); err != nil {
+		return utils.InvalidErrorResponse()
+	}
 	err := handlers.DeleteGroup(&group, groupId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
@@ -206,21 +214,20 @@ func UpdateGroup(c echo.Context) error {
 	return c.JSON(http.StatusOK, &group)
 }
 
-// @Description Add uset to group.
+// @Description Add users to group.
 // @Tags        Group
 // @Accept      json
 // @Param org_id path int true "Organization ID"
 // @Param id path int true "Group ID"
-// @Param user_id path int true "User ID"
-// @Param request body models.GroupCreateRequest true "body"
+// @Param request body models.AddUsersToGroup true "body"
 // @Produce     json
 // @Success     200
 // @failure     404,500
-// @Router      /{org_id}/group/{id}/{user_id} [post]
-func AddUserToGroup(c echo.Context) error {
+// @Router      /{org_id}/group/{id}/user [post]
+func AddUsersToGroup(c echo.Context) error {
 	orgId := string(c.Param("org_id"))
 	groupId := string(c.Param("id"))
-	userId := string(c.Param("user_id"))
+	users := models.AddUsersToGroup{}
 	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
@@ -239,16 +246,23 @@ func AddUserToGroup(c echo.Context) error {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
 	}
-	userExists, userErr := handlers.CheckUserExistsById(userId)
+	if err := c.Bind(&users); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+	if err := c.Validate(&users); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+	userExists, userErr := handlers.CheckAllUsersExistsById(users)
 	if userErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !userExists {
-		config.Log.Info("User not exists")
-		return utils.NotFoundErrorResponse("User")
+		config.Log.Info("Users not exists")
+		return utils.NotFoundErrorResponse("Users")
 	}
-	err := handlers.AddUserToGroup(groupId, userId)
+
+	err := handlers.AddUsersToGroup(groupId, users)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()

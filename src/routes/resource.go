@@ -7,7 +7,7 @@ import (
 
 func ResourceRoutes(router *echo.Group) {
 
-	resourceRouter := router.Group("/:proj_id/resources")
+	resourceRouter := router.Group("/:proj_id/resource")
 
 	resourceRouter.GET("", controllers.GetResources)
 	resourceRouter.GET("/:id", controllers.GetResource)

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 
 	"github.com/shashimalcse/Cronuseo/models"
@@ -48,7 +49,7 @@ func AddUserToGroup(groupId string, userId string) error {
 func GetUsersFromGroup(groupId string, resGroupusers *models.GroupUsers) error {
 	var groupusers []models.GroupUser
 	intGroupId, _ := strconv.Atoi(groupId)
-	err := repositories.GetUsersFromGroup(intGroupId, resGroupusers, groupusers)
+	err := repositories.GetUsersFromGroup(intGroupId, resGroupusers, &groupusers)
 	if err != nil {
 		return err
 	}
@@ -78,6 +79,44 @@ func CheckGroupExistsById(groupId string) (bool, error) {
 func CheckGroupExistsByKey(key string, orgId string) (bool, error) {
 	var exists bool
 	err := repositories.CheckGroupExistsByKey(key, orgId, &exists)
+	if err != nil {
+		return false, errors.New("")
+	}
+	if exists {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+func AddUsersToGroup(groupId string, users models.AddUsersToGroup) error {
+	for _, user := range users.Users {
+		userId := fmt.Sprint(user.UserID)
+		exists, err := CheckUserAlreadyInGroup(groupId, userId)
+		if err != nil {
+			return err
+		}
+		if exists {
+			continue
+		}
+		groupuser := models.GroupUser{}
+		intGroupId, _ := strconv.Atoi(groupId)
+		intUserId, _ := strconv.Atoi(userId)
+		groupuser.GroupID = intGroupId
+		groupuser.UserID = intUserId
+		err = repositories.AddUserToGroup(groupuser)
+		if err != nil {
+			return err
+		}
+
+	}
+	return nil
+
+}
+
+func CheckUserAlreadyInGroup(groupId string, userId string) (bool, error) {
+	var exists bool
+	err := repositories.CheckGroupAlreadyInGroup(groupId, userId, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

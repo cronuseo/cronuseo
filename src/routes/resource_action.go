@@ -7,7 +7,7 @@ import (
 
 func ResourceActionRoutes(router *echo.Group) {
 
-	resourceActionRouter := router.Group("/:res_id/resource_actions")
+	resourceActionRouter := router.Group("/:res_id/resource_action")
 	resourceActionRouter.GET("", controllers.GetResourceActions)
 	resourceActionRouter.GET("/:id", controllers.GetResourceAction)
 	resourceActionRouter.POST("", controllers.CreateResourceAction)

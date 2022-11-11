@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
@@ -69,4 +70,17 @@ func CheckUserExistsByUsername(username string, orgId string) (bool, error) {
 	} else {
 		return false, nil
 	}
+}
+
+func CheckAllUsersExistsById(users models.AddUsersToGroup) (bool, error) {
+	for _, user := range users.Users {
+		exists := false
+		userId := fmt.Sprint(user.UserID)
+		err := repositories.CheckUserExistsById(userId, &exists)
+		if err != nil || !exists {
+			return false, errors.New("user not exists")
+		}
+
+	}
+	return true, nil
 }

@@ -1,5 +1,12 @@
 basePath: /api/v1
 definitions:
+  models.AddUsersToGroup:
+    properties:
+      users:
+        items:
+          $ref: '#/definitions/models.UserOnlyWithID'
+        type: array
+    type: object
   models.Group:
     properties:
       id:
@@ -506,11 +513,11 @@ paths:
           description: Internal Server Error
       tags:
       - Group
-  /{org_id}/group/{id}/{user_id}:
+  /{org_id}/group/{id}/users:
     post:
       consumes:
       - application/json
-      description: Add uset to group.
+      description: Add users to group.
       parameters:
       - description: Organization ID
         in: path
@@ -522,17 +529,12 @@ paths:
         name: id
         required: true
         type: integer
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
       - description: body
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.GroupCreateRequest'
+          $ref: '#/definitions/models.AddUsersToGroup'
       produces:
       - application/json
       responses:
