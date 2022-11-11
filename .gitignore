@@ -2,4 +2,5 @@
 src/vendor/*
 .vscode
 src/.idea/*
+postgres-data
 
