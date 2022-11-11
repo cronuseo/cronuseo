@@ -89,15 +89,22 @@ func CheckGroupExistsByKey(key string, orgId string) (bool, error) {
 	}
 }
 
-func AddUsesrToGroup(groupId string, users models.AddUsersToGroup) error {
+func AddUsersToGroup(groupId string, users models.AddUsersToGroup) error {
 	for _, user := range users.Users {
 		userId := fmt.Sprint(user.UserID)
+		exists, err := CheckUserAlreadyInGroup(groupId, userId)
+		if err != nil {
+			return err
+		}
+		if exists {
+			continue
+		}
 		groupuser := models.GroupUser{}
 		intGroupId, _ := strconv.Atoi(groupId)
 		intUserId, _ := strconv.Atoi(userId)
 		groupuser.GroupID = intGroupId
 		groupuser.UserID = intUserId
-		err := repositories.AddUserToGroup(groupuser)
+		err = repositories.AddUserToGroup(groupuser)
 		if err != nil {
 			return err
 		}
@@ -105,4 +112,17 @@ func AddUsesrToGroup(groupId string, users models.AddUsersToGroup) error {
 	}
 	return nil
 
+}
+
+func CheckUserAlreadyInGroup(groupId string, userId string) (bool, error) {
+	var exists bool
+	err := repositories.CheckGroupAlreadyInGroup(groupId, userId, &exists)
+	if err != nil {
+		return false, errors.New("")
+	}
+	if exists {
+		return true, nil
+	} else {
+		return false, nil
+	}
 }

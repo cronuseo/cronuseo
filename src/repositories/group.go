@@ -49,3 +49,8 @@ func CheckGroupExistsByKey(key string, orgId string, exists *bool) error {
 	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?",
 		key, orgId).Find(exists).Error
 }
+
+func CheckGroupAlreadyInGroup(groupId string, userId string, exists *bool) error {
+	return config.DB.Model(&models.GroupUser{}).Select(
+		"count(*) > 0").Where("group_id = ? AND user_id = ?", groupId, userId).Find(exists).Error
+}

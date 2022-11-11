@@ -312,7 +312,7 @@ func AddUsersToGroup(c echo.Context) error {
 		return utils.NotFoundErrorResponse("Users")
 	}
 
-	err := handlers.AddUsesrToGroup(groupId, users)
+	err := handlers.AddUsersToGroup(groupId, users)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
