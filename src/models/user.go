@@ -1,18 +1,18 @@
 package models
 
 type User struct {
-	ID             int    `json:"id" gorm:"primary_key"`
-	Username       string `json:"username" validate:"required,min=4"`
-	FirstName      string `json:"firstname"`
-	LastName       string `json:"lastname"`
-	OrganizationID int    `json:"-" gorm:"foreignKey:ID"`
+	ID        string `json:"user_id" db:"user_id"`
+	Username  string `json:"username" validate:"required,min=4" db:"username"`
+	FirstName string `json:"first_name" db:"first_name"`
+	LastName  string `json:"last_name" db:"last_name"`
+	TenantID  string `json:"tenant_id" db:"tenant_id"`
 }
 
 type UserCreateRequest struct {
-	ID        int    `json:"id"`
+	ID        string `json:"user_id"`
 	Username  string `json:"username" validate:"required,min=4"`
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type UserUpdateRequest struct {

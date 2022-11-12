@@ -8,36 +8,45 @@ import (
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetUsers(users *[]models.User, orgId string) error {
-	return repositories.GetUsers(users, orgId)
+func GetUsers(tenantId string, users *[]models.User) error {
+	return repositories.GetUsers(tenantId, users)
 }
 
-func GetUser(resUser *models.UserWithGroup, userId string) error {
-	var groupusers []models.GroupUser
-	err := repositories.GetUsersWithGroups(userId, resUser, &groupusers)
+// func GetUser(resUser *models.UserWithGroup, userId string) error {
+// 	var groupusers []models.GroupUser
+// 	err := repositories.GetUsersWithGroups(userId, resUser, &groupusers)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	if len(groupusers) > 0 {
+// 		for _, groupuser := range groupusers {
+// 			groupId := groupuser.UserID
+// 			user := models.GroupOnlyWithID{GroupID: groupId}
+// 			resUser.Groups = append(resUser.Groups, user)
+// 		}
+// 	}
+// 	return nil
+// }
+
+func GetUser(tenantId string, userId string, user *models.User) error {
+
+	err := repositories.GetUser(tenantId, userId, user)
 	if err != nil {
 		return err
-	}
-	if len(groupusers) > 0 {
-		for _, groupuser := range groupusers {
-			groupId := groupuser.UserID
-			user := models.GroupOnlyWithID{GroupID: groupId}
-			resUser.Groups = append(resUser.Groups, user)
-		}
 	}
 	return nil
 }
 
-func CreateUser(user *models.User) error {
-	return repositories.CreateUser(user)
+func CreateUser(tenantId string, user *models.User) error {
+	return repositories.CreateUser(tenantId, user)
 }
 
-func DeleteUser(user *models.User, userId string) error {
-	return repositories.DeleteUser(user, userId)
+func DeleteUser(tenantId string, userId string) error {
+	return repositories.DeleteUser(tenantId, userId)
 }
 
-func UpdateUser(user *models.User, reqUser *models.User, userId string) error {
-	err := repositories.GetUser(user, userId)
+func UpdateUser(tenantId string, userId string, user *models.User, reqUser *models.User) error {
+	err := repositories.GetUser(tenantId, userId, user)
 	if err != nil {
 		return err
 	}
@@ -59,9 +68,9 @@ func CheckUserExistsById(userId string) (bool, error) {
 	}
 }
 
-func CheckUserExistsByUsername(username string, orgId string) (bool, error) {
+func CheckUserExistsByUsername(tenantId string, username string) (bool, error) {
 	var exists bool
-	err := repositories.CheckUserExistsByUsername(username, orgId, &exists)
+	err := repositories.CheckUserExistsByUsername(tenantId, username, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}

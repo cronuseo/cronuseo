@@ -1,50 +1,78 @@
 package repositories
 
 import (
-	"strconv"
-
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetUsers(users *[]models.User, org_id string) error {
-	return config.DB.Model(&models.User{}).Where("organization_id = ?", org_id).Find(&users).Error
-}
-
-func GetUser(user *models.User, userId string) error {
-	return config.DB.Where("id = ?", userId).First(&user).Error
-}
-
-func CreateUser(user *models.User) error {
-	return config.DB.Create(&user).Error
-}
-
-func DeleteUser(user *models.User, userId string) error {
-	return config.DB.Where("id = ?", userId).Delete(&user).Error
-}
-
-func GetUsersWithGroups(userId string, resUser *models.UserWithGroup,
-	groupusers *[]models.GroupUser) error {
-	intUserId, _ := strconv.Atoi(userId)
-	err := config.DB.Model(&models.User{}).Select("id", "username", "name", "organization_id").Where(
-		"id = ?", userId).Find(&resUser).Error
+func GetUsers(tenant_id string, users *[]models.User) error {
+	err := config.DB.Select(users, "SELECT * FROM tenant_user WHERE tenant_id = $1", tenant_id)
 	if err != nil {
 		return err
 	}
-	return config.DB.Model(&models.GroupUser{}).Where("user_id = ?", intUserId).Find(&groupusers).Error
+	return nil
+}
 
+func GetUser(tenant_id string, id string, user *models.User) error {
+	err := config.DB.Get(user, "SELECT * FROM tenant_user WHERE tenant_id = $1 AND user_id = $2", tenant_id, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CreateUser(tenant_id string, user *models.User) error {
+	stmt, err := config.DB.Prepare(
+		"INSERT INTO tenant_user(username,first_name,last_name,tenant_id) VALUES($1, $2, $3, $4)")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(user.Username, user.FirstName, user.LastName, tenant_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func DeleteUser(tenant_id string, id string) error {
+	stmt, err := config.DB.Prepare("DELETE FROM tenant_user WHERE tenant_id = $1 AND user_id = $2")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(tenant_id, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func UpdateUser(user *models.User) error {
-	return config.DB.Save(&user).Error
+	stmt, err := config.DB.Prepare(
+		"UPDATE tenant_user SET first_name = $1, last_name = $2, tenant_id = $3 WHERE user_id = $4")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(user.Username, user.FirstName, user.LastName, user.TenantID, user.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func CheckUserExistsById(userId string, exists *bool) error {
-	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where("id = ?",
-		userId).Find(exists).Error
+func CheckUserExistsById(id string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT user_id FROM tenant_user WHERE user_id = $1)", id).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func CheckUserExistsByUsername(username string, orgId string, exists *bool) error {
-	return config.DB.Model(&models.User{}).Select("count(*) > 0").Where(
-		"username = ? AND organization_id = ?", username, orgId).Find(exists).Error
+func CheckUserExistsByUsername(tenant_id string, username string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT user_key FROM tenant_user WHERE tenant_id = $1 AND username = $2)",
+		tenant_id, username).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
 }
