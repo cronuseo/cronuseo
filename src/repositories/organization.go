@@ -5,30 +5,70 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetOrganizations(orgs *[]models.Organization) error {
-	return config.DB.Find(&orgs).Error
+func GetOrganizations(orgnizations *[]models.Organization) error {
+	err := config.DB.Select(orgnizations, "SELECT * FROM organization")
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func GetOrganization(org *models.Organization, id string) error {
-	return config.DB.Where("id = ?", id).First(&org).Error
+	err := config.DB.Get(org, "SELECT * FROM organization WHERE org_id = $1", id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func CreateOrganization(org *models.Organization) error {
-	return config.DB.Create(&org).Error
+	stmt, err := config.DB.Prepare("INSERT INTO organization(org_key,name) VALUES($1, $2)")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(org.Key, org.Name)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func DeleteOrganization(org *models.Organization, id string) error {
-	return config.DB.Where("id = ?", id).Delete(&org).Error
+func DeleteOrganization(id string) error {
+	stmt, err := config.DB.Prepare("DELETE FROM organization WHERE org_id = $1")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func UpdateOrganization(org *models.Organization) error {
-	return config.DB.Save(&org).Error
+	stmt, err := config.DB.Prepare("UPDATE organization SET name = $1 WHERE org_id = $2")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(org.Name, org.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func CheckOrganizationExistsById(id string, exists *bool) error {
-	return config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("id = ?", id).Find(exists).Error
+	err := config.DB.QueryRow("SELECT exists (SELECT org_id FROM organization WHERE org_id = $1)", id).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func CheckOrganizationExistsByKey(key string, exists *bool) error {
-	return config.DB.Model(&models.Organization{}).Select("count(*) > 0").Where("key = ?", key).Find(exists).Error
+	err := config.DB.QueryRow("SELECT exists (SELECT org_id FROM organization WHERE org_key = $1)", key).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
 }

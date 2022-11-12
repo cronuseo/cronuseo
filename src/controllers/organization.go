@@ -28,7 +28,7 @@ func GetOrganizations(c echo.Context) error {
 
 // @Description Get organization by ID.
 // @Tags        Organization
-// @Param id path int true "Organization ID"
+// @Param id path string true "Organization ID"
 // @Produce     json
 // @Success     200 {object}  models.Organization
 // @failure     404,500
@@ -89,13 +89,13 @@ func CreateOrganization(c echo.Context) error {
 
 // @Description Delete organization.
 // @Tags        Organization
-// @Param id path int true "Organization ID"
+// @Param id path string true "Organization ID"
 // @Produce     json
 // @Success     204
 // @failure     404,500
 // @Router      /organization/{id} [delete]
 func DeleteOrganization(c echo.Context) error {
-	var org models.Organization
+
 	orgId := string(c.Param("id"))
 	exists, err := handlers.CheckOrganizationExistsById(orgId)
 	if err != nil {
@@ -106,7 +106,7 @@ func DeleteOrganization(c echo.Context) error {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
 	}
-	err = handlers.DeleteOrganization(&org, orgId)
+	err = handlers.DeleteOrganization(orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -117,7 +117,7 @@ func DeleteOrganization(c echo.Context) error {
 // @Description Update organization.
 // @Tags        Organization
 // @Accept      json
-// @Param id path int true "Organization ID"
+// @Param id path string true "Organization ID"
 // @Param request body models.OrganizationUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Organization
@@ -131,9 +131,6 @@ func UpdateOrganization(c echo.Context) error {
 		if reqOrg.Name == "" || len(reqOrg.Name) < 4 {
 			return utils.InvalidErrorResponse()
 		}
-	}
-	if err := c.Validate(&org); err != nil {
-		return utils.InvalidErrorResponse()
 	}
 	exists, err := handlers.CheckOrganizationExistsById(orgId)
 	if err != nil {

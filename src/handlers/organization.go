@@ -19,8 +19,8 @@ func CreateOrganization(org *models.Organization) error {
 	return repositories.CreateOrganization(org)
 }
 
-func DeleteOrganization(org *models.Organization, id string) error {
-	return repositories.DeleteOrganization(org, id)
+func DeleteOrganization(id string) error {
+	return repositories.DeleteOrganization(id)
 }
 
 func UpdateOrganization(org *models.Organization, reqOrg *models.Organization, id string) error {
