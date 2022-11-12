@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
@@ -13,24 +12,24 @@ import (
 
 // @Description Get all projects.
 // @Tags        Project
-// @Param org_id path int true "Organization ID"
+// @Param tenant_id path string true "Tenant ID"
 // @Produce     json
 // @Success     200 {array}  models.Project
 // @failure     500
-// @Router      /{org_id}/project [get]
+// @Router      /{tenant_id}/project [get]
 func GetProjects(c echo.Context) error {
 	projects := []models.Project{}
-	orgId := string(c.Param("org_id"))
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
+	tenantId := string(c.Param("tenant_id"))
+	exists, err := handlers.CheckTenantExistsById(tenantId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !exists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
-	err = handlers.GetProjects(&projects, orgId)
+	err = handlers.GetProjects(tenantId, &projects)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -40,24 +39,24 @@ func GetProjects(c echo.Context) error {
 
 // @Description Get project by ID.
 // @Tags        Project
-// @Param org_id path int true "Organization ID"
-// @Param id path int true "Project ID"
+// @Param tenant_id path string true "Tenant ID"
+// @Param id path string true "Project ID"
 // @Produce     json
 // @Success     200 {object}  models.Project
 // @failure     404,500
-// @Router      /{org_id}/project/{id} [get]
+// @Router      /{tenant_id}/project/{id} [get]
 func GetProject(c echo.Context) error {
 	var proj models.Project
-	orgId := string(c.Param("org_id"))
+	tenantId := string(c.Param("tenant_id"))
 	projId := string(c.Param("id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
 	projExists, projErr := handlers.CheckProjectExistsById(projId)
 	if projErr != nil {
@@ -68,7 +67,7 @@ func GetProject(c echo.Context) error {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
-	err := handlers.GetProject(&proj, projId)
+	err := handlers.GetProject(tenantId, projId, &proj)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -80,23 +79,23 @@ func GetProject(c echo.Context) error {
 // @Description Create project.
 // @Tags        Project
 // @Accept      json
-// @Param org_id path int true "Organization ID"
+// @Param tenant_id path string true "Tenant ID"
 // @Param request body models.ProjectCreateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Project
 // @failure     400,403,500
-// @Router      /{org_id}/project [post]
+// @Router      /{tenant_id}/project [post]
 func CreateProject(c echo.Context) error {
 	var project models.Project
-	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	tenantId := string(c.Param("tenant_id"))
+	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
 	if err := c.Bind(&project); err != nil {
 		if project.Key == "" || len(project.Key) < 4 || project.Name == "" || len(project.Name) < 4 {
@@ -106,9 +105,8 @@ func CreateProject(c echo.Context) error {
 	if err := c.Validate(&project); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	intOrgId, _ := strconv.Atoi(orgId)
-	project.OrganizationID = intOrgId
-	exists, err := handlers.CheckProjectExistsByKey(project.Key, orgId)
+	project.TenantID = tenantId
+	exists, err := handlers.CheckProjectExistsByKey(tenantId, project.Key)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -117,7 +115,7 @@ func CreateProject(c echo.Context) error {
 		config.Log.Info("Project already exists")
 		return utils.AlreadyExistsErrorResponse("Project")
 	}
-	err = handlers.CreateProject(&project)
+	err = handlers.CreateProject(tenantId, &project)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -128,24 +126,24 @@ func CreateProject(c echo.Context) error {
 
 // @Description Delete project.
 // @Tags        Project
-// @Param org_id path int true "Organization ID"
-// @Param id path int true "Project ID"
+// @Param tenant_id path string true "Tenant ID"
+// @Param id path string true "Project ID"
 // @Produce     json
 // @Success     204
 // @failure     404,500
-// @Router      /{org_id}/project/{id} [delete]
+// @Router      /{tenant_id}/project/{id} [delete]
 func DeleteProject(c echo.Context) error {
-	var project models.Project
+
 	projId := string(c.Param("id"))
-	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	tenantId := string(c.Param("tenant_id"))
+	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
 	projExists, projErr := handlers.CheckProjectExistsById(projId)
 	if projErr != nil {
@@ -156,7 +154,7 @@ func DeleteProject(c echo.Context) error {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
-	err := handlers.DeleteProject(&project, projId)
+	err := handlers.DeleteProject(tenantId, projId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -167,26 +165,26 @@ func DeleteProject(c echo.Context) error {
 // @Description Update project.
 // @Tags        Project
 // @Accept      json
-// @Param org_id path int true "Organization ID"
-// @Param id path int true "Project ID"
+// @Param tenant_id path string true "Tenant ID"
+// @Param id path string true "Project ID"
 // @Param request body models.ProjectUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Project
 // @failure     400,403,404,500
-// @Router      /{org_id}/project/{id} [put]
+// @Router      /{tenant_id}/project/{id} [put]
 func UpdateProject(c echo.Context) error {
 	var project models.Project
 	var reqProject models.Project
 	projId := string(c.Param("id"))
-	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
+	tenantId := string(c.Param("tenant_id"))
+	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
 	if orgErr != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
 	projExists, projErr := handlers.CheckProjectExistsById(projId)
 	if projErr != nil {
@@ -202,7 +200,7 @@ func UpdateProject(c echo.Context) error {
 			return utils.ServerErrorResponse()
 		}
 	}
-	err := handlers.UpdateProject(&project, &reqProject, projId)
+	err := handlers.UpdateProject(tenantId, projId, &project, &reqProject)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()

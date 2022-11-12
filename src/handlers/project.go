@@ -7,39 +7,34 @@ import (
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetProjects(projects *[]models.Project, orgId string) error {
-	return repositories.GetProjects(projects, orgId)
+func GetProjects(tenant_id string, projects *[]models.Project) error {
+	return repositories.GetProjects(tenant_id, projects)
 }
 
-func GetProject(project *models.Project, projId string) error {
-	return repositories.GetProject(project, projId)
+func GetProject(tenant_id string, id string, project *models.Project) error {
+	return repositories.GetProject(tenant_id, id, project)
 }
 
-func CreateProject(project *models.Project) error {
-	return repositories.CreateProject(project)
+func CreateProject(tenant_id string, project *models.Project) error {
+	return repositories.CreateProject(tenant_id, project)
 }
 
-func DeleteProject(project *models.Project, projId string) error {
-	err := repositories.DeleteAllResources(projId)
-	if err != nil {
-		return err
-	}
-	return repositories.DeleteProject(project, projId)
+func DeleteProject(tenant_id string, id string) error {
+	return repositories.DeleteProject(tenant_id, id)
 }
 
-func UpdateProject(project *models.Project, reqProject *models.Project, projId string) error {
-	err := repositories.GetProject(project, projId)
+func UpdateProject(tenant_id string, id string, project *models.Project, reqProject *models.Project) error {
+	err := repositories.GetProject(tenant_id, id, project)
 	if err != nil {
 		return err
 	}
 	project.Name = reqProject.Name
-	project.Description = reqProject.Description
 	return repositories.UpdateProject(project)
 }
 
-func CheckProjectExistsById(projId string) (bool, error) {
+func CheckProjectExistsById(id string) (bool, error) {
 	var exists bool
-	err := repositories.CheckProjectExistsById(projId, &exists)
+	err := repositories.CheckProjectExistsById(id, &exists)
 	if err != nil {
 		return false, errors.New("project not exists")
 	}
@@ -50,9 +45,9 @@ func CheckProjectExistsById(projId string) (bool, error) {
 	}
 }
 
-func CheckProjectExistsByKey(key string, orgId string) (bool, error) {
+func CheckProjectExistsByKey(tenant_id string, key string) (bool, error) {
 	var exists bool
-	err := repositories.CheckProjectExistsByKey(key, orgId, &exists)
+	err := repositories.CheckProjectExistsByKey(tenant_id, key, &exists)
 	if err != nil {
 		return false, errors.New("")
 	}
