@@ -54,9 +54,9 @@ CREATE TABLE if not exists tenant(
    resource_id uuid DEFAULT uuid_generate_v4 (),
    resource_key VARCHAR(40) NOT NULL,
    name VARCHAR(40),
-   tenant_id uuid,
+   project_id uuid,
    PRIMARY KEY ( resource_id ),
-   CONSTRAINT FK_tenant_resource FOREIGN KEY(tenant_id) REFERENCES tenant(tenant_id)
+   CONSTRAINT FK_project_resource FOREIGN KEY(project_id) REFERENCES project(project_id)
    ); 
    
 CREATE TABLE if not exists resource_action (
