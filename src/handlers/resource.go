@@ -1,68 +1,44 @@
 package handlers
 
 import (
-	"errors"
-
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetResources(resources *[]models.Resource, projId string) error {
-	return repositories.GetResources(resources, projId)
+func GetResources(project_id string, projects *[]models.Resource) error {
+	return repositories.GetResources(project_id, projects)
 }
 
-func GetResource(resource *models.Resource, resId string) error {
-	return repositories.GetResource(resource, resId)
+func GetResource(project_id string, id string, project *models.Resource) error {
+	return repositories.GetResource(project_id, id, project)
 }
 
-func CreateResource(resource *models.Resource) error {
-	return repositories.CreateResource(resource)
+func CreateResource(project_id string, project *models.Resource) error {
+	return repositories.CreateResource(project_id, project)
 }
 
-func DeleteResource(resource *models.Resource, resId string) error {
-	err := repositories.DeleteAllResourceActions(string(resId))
+func DeleteResource(project_id string, id string) error {
+	return repositories.DeleteResource(project_id, id)
+}
+
+func UpdateResource(project_id string, id string, project *models.Resource,
+	reqResource *models.ResourceUpdateRequest) error {
+	err := repositories.GetResource(project_id, id, project)
 	if err != nil {
 		return err
 	}
-	err = repositories.DeleteAllResourceRoles(string(resId))
-	if err != nil {
-		return err
-	}
-	return repositories.DeleteResource(resource, resId)
+	project.Name = reqResource.Name
+	return repositories.UpdateResource(project)
 }
 
-func UpdateResource(resource *models.Resource, reqResource *models.Resource, resId string) error {
-	err := repositories.GetResource(resource, resId)
-	if err != nil {
-		return err
-	}
-	resource.Name = reqResource.Name
-	resource.Description = reqResource.Description
-	return repositories.UpdateResource(resource)
-}
-
-func CheckResourceExistsById(resId string) (bool, error) {
+func CheckResourceExistsById(id string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceExistsById(resId, &exists)
-	if err != nil {
-		return false, errors.New("resource not exists")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	err := repositories.CheckResourceExistsById(id, &exists)
+	return exists, err
 }
 
-func CheckResourceExistsByKey(key string, projId string) (bool, error) {
+func CheckResourceExistsByKey(project_id string, key string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceExistsByKey(key, projId, &exists)
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	err := repositories.CheckResourceExistsByKey(project_id, key, &exists)
+	return exists, err
 }

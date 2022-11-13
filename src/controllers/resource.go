@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
@@ -13,7 +12,7 @@ import (
 
 // @Description Get all resources.
 // @Tags        Resource
-// @Param proj_id path int true "Project ID"
+// @Param proj_id path string true "Project ID"
 // @Produce     json
 // @Success     200 {array}  models.Resource
 // @failure     500
@@ -21,16 +20,14 @@ import (
 func GetResources(c echo.Context) error {
 	resources := []models.Resource{}
 	projId := string(c.Param("proj_id"))
-	exists, err := handlers.CheckProjectExistsById(projId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+
+	exists, _ := handlers.CheckProjectExistsById(projId)
 	if !exists {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
-	err = handlers.GetResources(&resources, projId)
+
+	err := handlers.GetResources(projId, &resources)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -40,8 +37,8 @@ func GetResources(c echo.Context) error {
 
 // @Description Get resource by ID.
 // @Tags        Resource
-// @Param proj_id path int true "Project ID"
-// @Param id path int true "Resource ID"
+// @Param proj_id path string true "Project ID"
+// @Param id path string true "Resource ID"
 // @Produce     json
 // @Success     200 {object}  models.Resource
 // @failure     404,500
@@ -50,26 +47,20 @@ func GetResource(c echo.Context) error {
 	var resource models.Resource
 	resId := string(c.Param("id"))
 	projId := string(c.Param("proj_id"))
-	projExists, projErr := handlers.CheckProjectExistsById(projId)
-	if projErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !projExists {
+
+	exists, _ := handlers.CheckProjectExistsById(projId)
+	if !exists {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
-	resExists, resErr := handlers.CheckResourceExistsById(resId)
-	if resErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
 
-	}
-	if !resExists {
+	exists, _ = handlers.CheckResourceExistsById(resId)
+	if !exists {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	err := handlers.GetResource(&resource, resId)
+
+	err := handlers.GetResource(projId, resId, &resource)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -80,7 +71,7 @@ func GetResource(c echo.Context) error {
 // @Description Create resource.
 // @Tags        Resource
 // @Accept      json
-// @Param proj_id path int true "Project ID"
+// @Param proj_id path string true "Project ID"
 // @Param request body models.ResourceCreateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Resource
@@ -89,12 +80,9 @@ func GetResource(c echo.Context) error {
 func CreateResource(c echo.Context) error {
 	var resource models.Resource
 	projId := string(c.Param("proj_id"))
-	projExists, projErr := handlers.CheckProjectExistsById(projId)
-	if projErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !projExists {
+
+	exists, _ := handlers.CheckProjectExistsById(projId)
+	if !exists {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
@@ -106,18 +94,15 @@ func CreateResource(c echo.Context) error {
 	if err := c.Validate(&resource); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	intProjId, _ := strconv.Atoi(projId)
-	resource.ProjectID = intProjId
-	exists, err := handlers.CheckResourceExistsByKey(resource.Key, projId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+
+	resource.ProjectID = projId
+	exists, _ = handlers.CheckResourceExistsByKey(resource.Key, projId)
 	if exists {
 		config.Log.Info("Resource already exists")
 		return utils.AlreadyExistsErrorResponse("Resource")
 	}
-	err = handlers.CreateResource(&resource)
+
+	err := handlers.CreateResource(projId, &resource)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -127,35 +112,30 @@ func CreateResource(c echo.Context) error {
 
 // @Description Delete resource.
 // @Tags        Resource
-// @Param proj_id path int true "Project ID"
-// @Param id path int true "Resource ID"
+// @Param proj_id path string true "Project ID"
+// @Param id path string true "Resource ID"
 // @Produce     json
 // @Success     204
 // @failure     404,500
 // @Router      /{proj_id}/resource/{id} [delete]
 func DeleteResource(c echo.Context) error {
-	var resource models.Resource
+
 	projId := string(c.Param("proj_id"))
 	resId := string(c.Param("id"))
-	projExists, projErr := handlers.CheckProjectExistsById(projId)
-	if projErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !projExists {
+
+	exists, _ := handlers.CheckProjectExistsById(projId)
+	if !exists {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
-	resExists, resErr := handlers.CheckResourceExistsById(resId)
-	if resErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !resExists {
+
+	exists, _ = handlers.CheckResourceExistsById(resId)
+	if !exists {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	err := handlers.DeleteResource(&resource, resId)
+
+	err := handlers.DeleteResource(projId, resId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -166,8 +146,8 @@ func DeleteResource(c echo.Context) error {
 // @Description Update resource.
 // @Tags        Resource
 // @Accept      json
-// @Param proj_id path int true "Project ID"
-// @Param id path int true "Resource ID"
+// @Param proj_id path string true "Project ID"
+// @Param id path string true "Resource ID"
 // @Param request body models.ResourceUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Resource
@@ -175,28 +155,30 @@ func DeleteResource(c echo.Context) error {
 // @Router      /{proj_id}/resource/{id} [put]
 func UpdateResource(c echo.Context) error {
 	var resource models.Resource
-	var reqResource models.Resource
+	var reqResource models.ResourceUpdateRequest
 	projId := string(c.Param("proj_id"))
 	resId := string(c.Param("id"))
-	projExists, projErr := handlers.CheckProjectExistsById(projId)
-	if projErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !projExists {
+
+	exists, _ := handlers.CheckProjectExistsById(projId)
+	if !exists {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
-	resExists, resErr := handlers.CheckResourceExistsById(resId)
-	if resErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !resExists {
+
+	exists, _ = handlers.CheckResourceExistsById(resId)
+	if !exists {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	err := handlers.UpdateResource(&resource, &reqResource, resId)
+
+	if err := c.Bind(&reqResource); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+	if err := c.Validate(&reqResource); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+
+	err := handlers.UpdateResource(projId, resId, &resource, &reqResource)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()

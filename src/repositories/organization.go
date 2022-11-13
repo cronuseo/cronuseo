@@ -22,6 +22,7 @@ func GetOrganization(org *models.Organization, id string) error {
 }
 
 func CreateOrganization(org *models.Organization) error {
+
 	stmt, err := config.DB.Prepare("INSERT INTO organization(org_key,name) VALUES($1, $2)")
 	if err != nil {
 		return err

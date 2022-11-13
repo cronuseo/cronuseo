@@ -1,57 +1,79 @@
 package repositories
 
 import (
-	"fmt"
-
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetResources(resources *[]models.Resource, proj_id string) error {
-	return config.DB.Model(&models.Resource{}).Where("project_id = ?", proj_id).Find(&resources).Error
-}
-
-func GetResource(resource *models.Resource, res_id string) error {
-	return config.DB.Where("id = ?", res_id).First(&resource).Error
-}
-
-func CreateResource(resource *models.Resource) error {
-	return config.DB.Create(&resource).Error
-}
-
-func DeleteResource(resource *models.Resource, res_id string) error {
-	return config.DB.Where("id = ?", res_id).Delete(&resource).Error
-}
-
-func UpdateResource(resource *models.Resource) error {
-	return config.DB.Save(&resource).Error
-}
-
-func DeleteAllResources(proj_id string) error {
-	resources := []models.Resource{}
-	err := GetResources(&resources, proj_id)
+func GetResources(project_id string, projects *[]models.Resource) error {
+	err := config.DB.Select(projects, "SELECT * FROM resource WHERE project_id = $1", project_id)
 	if err != nil {
 		return err
 	}
-	for _, resource := range resources {
-		res_id := resource.ID
-		err = DeleteAllResourceActions(fmt.Sprint(res_id))
-		if err != nil {
-			return err
-		}
-		err = DeleteAllResourceRoles(fmt.Sprint(res_id))
-		if err != nil {
-			return err
-		}
+	return nil
+}
+
+func GetResource(project_id string, id string, resource *models.Resource) error {
+	err := config.DB.Get(resource, "SELECT * FROM resource WHERE project_id = $1 AND resource_id = $2", project_id, id)
+	if err != nil {
+		return err
 	}
-	return config.DB.Where("project_id = ?", proj_id).Delete(&models.Resource{}).Error
+	return nil
 }
 
-func CheckResourceExistsById(resId string, exists *bool) error {
-	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("id = ?", resId).Find(exists).Error
+func CreateResource(project_id string, resource *models.Resource) error {
+
+	stmt, err := config.DB.Prepare(
+		"INSERT INTO resource(resource_key,name,project_id) VALUES($1, $2, $3)")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(resource.Key, resource.Name, project_id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func CheckResourceExistsByKey(key string, projId string, exists *bool) error {
-	return config.DB.Model(&models.Resource{}).Select("count(*) > 0").Where("key = ? AND project_id = ?",
-		key, projId).Find(exists).Error
+func DeleteResource(project_id string, id string) error {
+	stmt, err := config.DB.Prepare("DELETE FROM resource WHERE project_id = $1 AND resource_id = $2")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(project_id, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func UpdateResource(resource *models.Resource) error {
+	stmt, err := config.DB.Prepare("UPDATE resource SET name = $1 WHERE project_id = $2 AND resource_id = $3")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(resource.Name, resource.ProjectID, resource.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CheckResourceExistsById(id string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT resource_id FROM resource WHERE resource_id = $1)", id).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func CheckResourceExistsByKey(project_id string, key string, exists *bool) error {
+	err := config.DB.QueryRow(
+		"SELECT exists (SELECT resource_key FROM resource WHERE project_id = $1 AND project_key = $2)",
+		project_id, key).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
 }
