@@ -9,7 +9,7 @@ type Tenant struct {
 }
 
 type TenantCreateRequest struct {
-	Key  string `json:"org_key" validate:"required,min=4"`
+	Key  string `json:"tenant_key" validate:"required,min=4"`
 	Name string `json:"name" validate:"required,min=4"`
 }
 

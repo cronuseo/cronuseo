@@ -36,16 +36,14 @@ func GetOrganizations(c echo.Context) error {
 func GetOrganization(c echo.Context) error {
 	var org models.Organization
 	orgId := string(c.Param("id"))
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
 	}
-	err = handlers.GetOrganization(&org, orgId)
+
+	err := handlers.GetOrganization(&org, orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -70,16 +68,13 @@ func CreateOrganization(c echo.Context) error {
 	if err := c.Validate(&org); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	exists, err := handlers.CheckOrganizationExistsByKey(org.Key)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ := handlers.CheckOrganizationExistsByKey(org.Key)
+
 	if exists {
-		config.Log.Info("Organization already exists")
+		config.Log.Info("Organization not exists")
 		return utils.AlreadyExistsErrorResponse("Organization")
 	}
-	err = handlers.CreateOrganization(&org)
+	err := handlers.CreateOrganization(&org)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -97,16 +92,14 @@ func CreateOrganization(c echo.Context) error {
 func DeleteOrganization(c echo.Context) error {
 
 	orgId := string(c.Param("id"))
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
 	}
-	err = handlers.DeleteOrganization(orgId)
+
+	err := handlers.DeleteOrganization(orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -127,21 +120,20 @@ func UpdateOrganization(c echo.Context) error {
 	var org models.Organization
 	orgId := string(c.Param("id"))
 	var reqOrg models.Organization
+
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
+	if !exists {
+		config.Log.Info("Organization not exists")
+		return utils.NotFoundErrorResponse("Organization")
+	}
+
 	if err := c.Bind(&reqOrg); err != nil {
 		if reqOrg.Name == "" || len(reqOrg.Name) < 4 {
 			return utils.InvalidErrorResponse()
 		}
 	}
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !exists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
-	}
-	err = handlers.UpdateOrganization(&org, &reqOrg, orgId)
+
+	err := handlers.UpdateOrganization(&org, &reqOrg, orgId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()

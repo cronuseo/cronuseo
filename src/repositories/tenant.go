@@ -50,16 +50,15 @@ func UpdateTenant(tenant *models.Tenant) error {
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(tenant.Name, tenant.ID, tenant.OraganizationID)
+	_, err = stmt.Exec(tenant.Name, tenant.OraganizationID, tenant.ID)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func CheckTenantExistsById(org_id string, id string, exists *bool) error {
-	err := config.DB.QueryRow("SELECT exists (SELECT tenant_id FROM tenant WHERE org_id = $1 AND tenant_id = $2)",
-		org_id, id).Scan(exists)
+func CheckTenantExistsById(id string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT tenant_id FROM tenant WHERE tenant_id = $1)", id).Scan(exists)
 	if err != nil {
 		return err
 	}

@@ -58,7 +58,7 @@ func UpdateUser(tenantId string, userId string, user *models.User, reqUser *mode
 func CheckUserExistsById(userId string) (bool, error) {
 	var exists bool
 	err := repositories.CheckUserExistsById(userId, &exists)
-	if err != nil {
+	if err != nil && !exists {
 		return false, errors.New("user not exists")
 	}
 	if exists {
@@ -71,7 +71,7 @@ func CheckUserExistsById(userId string) (bool, error) {
 func CheckUserExistsByUsername(tenantId string, username string) (bool, error) {
 	var exists bool
 	err := repositories.CheckUserExistsByUsername(tenantId, username, &exists)
-	if err != nil {
+	if err != nil && !exists {
 		return false, errors.New("")
 	}
 	if exists {

@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"errors"
-
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
@@ -32,28 +30,14 @@ func UpdateTenant(org_id string, id string, tenant *models.Tenant, reqTenant *mo
 	return repositories.UpdateTenant(tenant)
 }
 
-func CheckTenantExistsById(org_id string, id string) (bool, error) {
+func CheckTenantExistsById(id string) (bool, error) {
 	var exists bool
-	err := repositories.CheckTenantExistsById(org_id, id, &exists)
-	if err != nil {
-		return false, errors.New("tenant not exists")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	err := repositories.CheckTenantExistsById(id, &exists)
+	return exists, err
 }
 
 func CheckTenantExistsByKey(org_id string, key string) (bool, error) {
 	var exists bool
 	err := repositories.CheckTenantExistsByKey(org_id, key, &exists)
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return exists, err
 }

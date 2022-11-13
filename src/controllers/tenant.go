@@ -20,6 +20,13 @@ import (
 func GetTenants(c echo.Context) error {
 	tenant := []models.Tenant{}
 	orgId := string(c.Param("org_id"))
+
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
+	if !exists {
+		config.Log.Info("Organization not exists")
+		return utils.NotFoundErrorResponse("Organization")
+	}
+
 	err := handlers.GetTenants(orgId, &tenant)
 	if err != nil {
 		config.Log.Panic("Server Error!")
@@ -41,27 +48,19 @@ func GetTenant(c echo.Context) error {
 	orgId := string(c.Param("org_id"))
 	tenantId := string(c.Param("id"))
 
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
 	}
 
-	exists, err = handlers.CheckTenantExistsById(orgId, tenantId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ = handlers.CheckTenantExistsById(tenantId)
 	if !exists {
 		config.Log.Info("Tenant not exists")
 		return utils.NotFoundErrorResponse("Tenant")
 	}
 
-	err = handlers.GetTenant(orgId, tenantId, &tenant)
+	err := handlers.GetTenant(orgId, tenantId, &tenant)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -83,11 +82,7 @@ func CreateTenant(c echo.Context) error {
 	var tenant models.Tenant
 	orgId := string(c.Param("org_id"))
 
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
@@ -100,17 +95,14 @@ func CreateTenant(c echo.Context) error {
 		return utils.InvalidErrorResponse()
 	}
 
-	exists, err = handlers.CheckTenantExistsByKey(orgId, tenant.Key)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ = handlers.CheckTenantExistsByKey(orgId, tenant.Key)
+
 	if exists {
 		config.Log.Info("Tenant already exists")
 		return utils.AlreadyExistsErrorResponse("Organization")
 	}
 
-	err = handlers.CreateTenant(orgId, &tenant)
+	err := handlers.CreateTenant(orgId, &tenant)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -131,27 +123,19 @@ func DeleteTenant(c echo.Context) error {
 	orgId := string(c.Param("org_id"))
 	tenantId := string(c.Param("id"))
 
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
 	}
 
-	exists, err = handlers.CheckTenantExistsById(orgId, tenantId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ = handlers.CheckTenantExistsById(tenantId)
 	if !exists {
 		config.Log.Info("Tenant not exists")
 		return utils.NotFoundErrorResponse("Tenant")
 	}
 
-	err = handlers.DeleteTenant(orgId, tenantId)
+	err := handlers.DeleteTenant(orgId, tenantId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -175,21 +159,13 @@ func UpdateTenant(c echo.Context) error {
 	tenantId := string(c.Param("id"))
 	var reqTenant models.Tenant
 
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
 		config.Log.Info("Organization not exists")
 		return utils.NotFoundErrorResponse("Organization")
 	}
 
-	exists, err = handlers.CheckTenantExistsById(orgId, tenantId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ = handlers.CheckTenantExistsById(tenantId)
 	if !exists {
 		config.Log.Info("Tenant not exists")
 		return utils.NotFoundErrorResponse("Tenant")
@@ -201,7 +177,7 @@ func UpdateTenant(c echo.Context) error {
 		}
 	}
 
-	err = handlers.UpdateTenant(orgId, tenantId, &tenant, &reqTenant)
+	err := handlers.UpdateTenant(orgId, tenantId, &tenant, &reqTenant)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()

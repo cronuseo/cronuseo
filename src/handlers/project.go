@@ -35,7 +35,7 @@ func UpdateProject(tenant_id string, id string, project *models.Project, reqProj
 func CheckProjectExistsById(id string) (bool, error) {
 	var exists bool
 	err := repositories.CheckProjectExistsById(id, &exists)
-	if err != nil {
+	if err != nil && !exists {
 		return false, errors.New("project not exists")
 	}
 	if exists {
@@ -48,7 +48,7 @@ func CheckProjectExistsById(id string) (bool, error) {
 func CheckProjectExistsByKey(tenant_id string, key string) (bool, error) {
 	var exists bool
 	err := repositories.CheckProjectExistsByKey(tenant_id, key, &exists)
-	if err != nil {
+	if err != nil && !exists {
 		return false, errors.New("")
 	}
 	if exists {

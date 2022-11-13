@@ -20,16 +20,14 @@ import (
 func GetProjects(c echo.Context) error {
 	projects := []models.Project{}
 	tenantId := string(c.Param("tenant_id"))
-	exists, err := handlers.CheckTenantExistsById(tenantId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
 	if !exists {
 		config.Log.Info("Tenant not exists")
 		return utils.NotFoundErrorResponse("Tenant")
 	}
-	err = handlers.GetProjects(tenantId, &projects)
+
+	err := handlers.GetProjects(tenantId, &projects)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -49,24 +47,19 @@ func GetProject(c echo.Context) error {
 	var proj models.Project
 	tenantId := string(c.Param("tenant_id"))
 	projId := string(c.Param("id"))
-	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !orgExists {
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	if !exists {
 		config.Log.Info("Tenant not exists")
 		return utils.NotFoundErrorResponse("Tenant")
 	}
-	projExists, projErr := handlers.CheckProjectExistsById(projId)
-	if projErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !projExists {
+
+	exists, _ = handlers.CheckProjectExistsById(projId)
+	if !exists {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
+
 	err := handlers.GetProject(tenantId, projId, &proj)
 	if err != nil {
 		config.Log.Panic("Server Error!")
@@ -88,15 +81,13 @@ func GetProject(c echo.Context) error {
 func CreateProject(c echo.Context) error {
 	var project models.Project
 	tenantId := string(c.Param("tenant_id"))
-	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !orgExists {
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	if !exists {
 		config.Log.Info("Tenant not exists")
 		return utils.NotFoundErrorResponse("Tenant")
 	}
+
 	if err := c.Bind(&project); err != nil {
 		if project.Key == "" || len(project.Key) < 4 || project.Name == "" || len(project.Name) < 4 {
 			return utils.InvalidErrorResponse()
@@ -105,17 +96,15 @@ func CreateProject(c echo.Context) error {
 	if err := c.Validate(&project); err != nil {
 		return utils.InvalidErrorResponse()
 	}
+
 	project.TenantID = tenantId
-	exists, err := handlers.CheckProjectExistsByKey(tenantId, project.Key)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	exists, _ = handlers.CheckProjectExistsByKey(tenantId, project.Key)
 	if exists {
 		config.Log.Info("Project already exists")
 		return utils.AlreadyExistsErrorResponse("Project")
 	}
-	err = handlers.CreateProject(tenantId, &project)
+
+	err := handlers.CreateProject(tenantId, &project)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -136,24 +125,19 @@ func DeleteProject(c echo.Context) error {
 
 	projId := string(c.Param("id"))
 	tenantId := string(c.Param("tenant_id"))
-	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !orgExists {
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	if !exists {
 		config.Log.Info("Tenant not exists")
 		return utils.NotFoundErrorResponse("Tenant")
 	}
-	projExists, projErr := handlers.CheckProjectExistsById(projId)
-	if projErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !projExists {
+
+	exists, _ = handlers.CheckProjectExistsById(projId)
+	if !exists {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
+
 	err := handlers.DeleteProject(tenantId, projId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
@@ -177,21 +161,15 @@ func UpdateProject(c echo.Context) error {
 	var reqProject models.Project
 	projId := string(c.Param("id"))
 	tenantId := string(c.Param("tenant_id"))
-	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !orgExists {
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	if !exists {
 		config.Log.Info("Tenant not exists")
 		return utils.NotFoundErrorResponse("Tenant")
 	}
-	projExists, projErr := handlers.CheckProjectExistsById(projId)
-	if projErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !projExists {
+
+	exists, _ = handlers.CheckProjectExistsById(projId)
+	if !exists {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
@@ -200,6 +178,7 @@ func UpdateProject(c echo.Context) error {
 			return utils.ServerErrorResponse()
 		}
 	}
+
 	err := handlers.UpdateProject(tenantId, projId, &project, &reqProject)
 	if err != nil {
 		config.Log.Panic("Server Error!")

@@ -58,17 +58,9 @@ func UpdateOrganization(org *models.Organization) error {
 }
 
 func CheckOrganizationExistsById(id string, exists *bool) error {
-	err := config.DB.QueryRow("SELECT exists (SELECT org_id FROM organization WHERE org_id = $1)", id).Scan(exists)
-	if err != nil {
-		return err
-	}
-	return nil
+	return config.DB.QueryRow("SELECT exists (SELECT org_id FROM organization WHERE org_id = $1)", id).Scan(exists)
 }
 
 func CheckOrganizationExistsByKey(key string, exists *bool) error {
-	err := config.DB.QueryRow("SELECT exists (SELECT org_id FROM organization WHERE org_key = $1)", key).Scan(exists)
-	if err != nil {
-		return err
-	}
-	return nil
+	return config.DB.QueryRow("SELECT exists (SELECT org_id FROM organization WHERE org_key = $1)", key).Scan(exists)
 }
