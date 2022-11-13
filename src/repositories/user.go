@@ -68,6 +68,15 @@ func CheckUserExistsById(id string, exists *bool) error {
 	return nil
 }
 
+func CheckUserExistsByTenant(tenant_id string, id string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT user_id FROM tenant_user WHERE tenant_id = $1 AND user_id = $2)",
+		tenant_id, id).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func CheckUserExistsByUsername(tenant_id string, username string, exists *bool) error {
 	err := config.DB.QueryRow("SELECT exists (SELECT username FROM tenant_user WHERE tenant_id = $1 AND username = $2)",
 		tenant_id, username).Scan(exists)

@@ -5,24 +5,27 @@ import (
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetGroups(tenant_id string, groups *[]models.Group) error {
-	return repositories.GetGroups(tenant_id, groups)
+func GetGroups(tenantId string, groups *[]models.Group) error {
+	return repositories.GetGroups(tenantId, groups)
 }
 
-func GetGroup(tenant_id string, id string, group *models.Group) error {
-	return repositories.GetGroup(tenant_id, id, group)
+func GetGroup(tenantId string, id string, group *models.Group) error {
+	return repositories.GetGroup(tenantId, id, group)
 }
 
-func CreateGroup(tenant_id string, group *models.Group) error {
-	return repositories.CreateGroup(tenant_id, group)
+func CreateGroup(tenantId string, group *models.Group) error {
+	group.Users = GetExistsUsers(tenantId, group.Users)
+	err := repositories.CreateGroup(tenantId, group)
+	return err
+
 }
 
-func DeleteGroup(tenant_id string, id string) error {
-	return repositories.DeleteGroup(tenant_id, id)
+func DeleteGroup(tenantId string, id string) error {
+	return repositories.DeleteGroup(tenantId, id)
 }
 
-func UpdateGroup(tenant_id string, id string, group *models.Group, reqGroup *models.GroupUpdateRequest) error {
-	err := repositories.GetGroup(tenant_id, id, group)
+func UpdateGroup(tenantId string, id string, group *models.Group, reqGroup *models.GroupUpdateRequest) error {
+	err := repositories.GetGroup(tenantId, id, group)
 	if err != nil {
 		return err
 	}
@@ -36,21 +39,28 @@ func CheckGroupExistsById(id string) (bool, error) {
 	return exists, err
 }
 
-func CheckGroupExistsByKey(tenant_id string, key string) (bool, error) {
+func CheckGroupExistsByKey(tenantId string, key string) (bool, error) {
 	var exists bool
-	err := repositories.CheckGroupExistsByKey(tenant_id, key, &exists)
+	err := repositories.CheckGroupExistsByKey(tenantId, key, &exists)
 	return exists, err
 }
 
-// func AddUserToGroup(groupId string, userId string) error {
-// 	groupuser := models.GroupUser{}
-// 	intGroupId, _ := strconv.Atoi(groupId)
-// 	intUserId, _ := strconv.Atoi(userId)
-// 	groupuser.GroupID = intGroupId
-// 	groupuser.UserID = intUserId
-// 	return repositories.AddUserToGroup(groupuser)
+func AddUserToGroup(groupId string, userId string) error {
+	return repositories.AddUserToGroup(groupId, userId)
 
-// }
+}
+
+func GetExistsUsers(tenantId string, users []models.UserID) []models.UserID {
+	existsUsers := []models.UserID{}
+	for _, user := range users {
+		exists, _ := CheckUserExistsByTenant(tenantId, user.UserID)
+		if exists {
+			existsUsers = append(existsUsers, user)
+		}
+
+	}
+	return existsUsers
+}
 
 // func GetUsersFromGroup(groupId string, resGroupusers *models.GroupUsers) error {
 // 	var groupusers []models.GroupUser

@@ -58,6 +58,12 @@ func CheckUserExistsById(userId string) (bool, error) {
 	return exists, err
 }
 
+func CheckUserExistsByTenant(tenantId string, userId string) (bool, error) {
+	var exists bool
+	err := repositories.CheckUserExistsByTenant(tenantId, userId, &exists)
+	return exists, err
+}
+
 func CheckUserExistsByUsername(tenantId string, username string) (bool, error) {
 	var exists bool
 	err := repositories.CheckUserExistsByUsername(tenantId, username, &exists)

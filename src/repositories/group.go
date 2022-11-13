@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"log"
+
 	"github.com/shashimalcse/Cronuseo/config"
 	"github.com/shashimalcse/Cronuseo/models"
 )
@@ -22,14 +24,55 @@ func GetGroup(tenant_id string, id string, group *models.Group) error {
 }
 
 func CreateGroup(tenant_id string, group *models.Group) error {
-	stmt, err := config.DB.Prepare("INSERT INTO tenant_group(group_key,name,tenant_id) VALUES($1, $2, $3)")
+
+	var group_id string
+
+	tx, err := config.DB.Begin()
+
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(group.Key, group.Name, tenant_id)
-	if err != nil {
-		return err
+	// add group
+	{
+		stmt, err := tx.Prepare(`INSERT INTO tenant_group(group_key,name,tenant_id) VALUES($1, $2, $3) RETURNING group_id`)
+
+		if err != nil {
+			return err
+		}
+
+		defer stmt.Close()
+
+		err = stmt.QueryRow(group.Key, group.Name, tenant_id).Scan(&group_id)
+
+		if err != nil {
+			return err
+		}
 	}
+
+	// add users to group
+	{
+		stmt, err := tx.Prepare("INSERT INTO group_user(group_id,user_id) VALUES ($1,$2)")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer stmt.Close()
+		for _, user := range group.Users {
+			_, err = stmt.Exec(group_id, user.UserID)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+		}
+	}
+
+	{
+		err := tx.Commit()
+
+		if err != nil {
+			return err
+		}
+	}
+	group.ID = group_id
 	return nil
 }
 
@@ -68,6 +111,18 @@ func CheckGroupExistsById(id string, exists *bool) error {
 func CheckGroupExistsByKey(tenant_id string, key string, exists *bool) error {
 	err := config.DB.QueryRow("SELECT exists (SELECT group_key FROM tenant_group WHERE tenant_id = $1 AND group_key = $2)",
 		tenant_id, key).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func AddUserToGroup(group_id string, user_id string) error {
+	stmt, err := config.DB.Prepare("INSERT INTO group_user (group_id,user_id) VALUES($1, $2)")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(group_id, user_id)
 	if err != nil {
 		return err
 	}
