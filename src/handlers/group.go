@@ -45,8 +45,12 @@ func CheckGroupExistsByKey(tenantId string, key string) (bool, error) {
 	return exists, err
 }
 
-func AddUserToGroup(groupId string, userId string) error {
-	return repositories.AddUserToGroup(groupId, userId)
+func PatchGroup(tenantId string, groupId string, group *models.Group, ugroupPatch *models.GroupPatchRequest) error {
+	err := repositories.PatchGroup(groupId, ugroupPatch)
+	if err != nil {
+		return err
+	}
+	return GetGroup(tenantId, groupId, group)
 
 }
 

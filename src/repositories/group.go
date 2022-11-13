@@ -16,10 +16,16 @@ func GetGroups(tenant_id string, groups *[]models.Group) error {
 }
 
 func GetGroup(tenant_id string, id string, group *models.Group) error {
+	users := []models.UserID{}
 	err := config.DB.Get(group, "SELECT * FROM tenant_group WHERE tenant_id = $1 AND group_id = $2", tenant_id, id)
 	if err != nil {
 		return err
 	}
+	err = config.DB.Select(&users, "SELECT user_id FROM group_user WHERE group_id = $1", id)
+	if err != nil {
+		return err
+	}
+	group.Users = users
 	return nil
 }
 
@@ -50,7 +56,7 @@ func CreateGroup(tenant_id string, group *models.Group) error {
 	}
 
 	// add users to group
-	{
+	if len(group.Users) > 0 {
 		stmt, err := tx.Prepare("INSERT INTO group_user(group_id,user_id) VALUES ($1,$2)")
 		if err != nil {
 			log.Fatal(err)
@@ -97,6 +103,64 @@ func UpdateGroup(group *models.Group) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func PatchGroup(group_id string, groupPatch *models.GroupPatchRequest) error {
+
+	tx, err := config.DB.Begin()
+
+	if err != nil {
+		return err
+	}
+
+	for _, operation := range groupPatch.Operations {
+		switch operation.Operation {
+
+		case "add":
+			if len(operation.Users) > 0 {
+				stmt, err := tx.Prepare("INSERT INTO group_user(group_id,user_id) VALUES ($1,$2)")
+				if err != nil {
+					log.Fatal(err)
+				}
+				defer stmt.Close()
+
+				for _, user := range operation.Users {
+					_, err = stmt.Exec(group_id, user.UserID)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+				}
+			}
+
+		case "remove":
+			if len(operation.Users) > 0 {
+				stmt, err := tx.Prepare("DELETE FROM group_user WHERE group_id = $1 AND user_id = $2")
+				if err != nil {
+					log.Fatal(err)
+				}
+				defer stmt.Close()
+
+				for _, user := range operation.Users {
+					_, err = stmt.Exec(group_id, user.UserID)
+					if err != nil {
+						log.Fatal(err)
+					}
+
+				}
+			}
+		}
+	}
+
+	{
+		err := tx.Commit()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

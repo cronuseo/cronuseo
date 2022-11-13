@@ -12,7 +12,7 @@ func GroupRoutes(router *echo.Group) {
 	userRouter.GET("", controllers.GetGroups)
 	userRouter.GET("/:id", controllers.GetGroup)
 	userRouter.POST("", controllers.CreateGroup)
-	// userRouter.POST("/:id/user", controllers.AddUsersToGroup)
+	userRouter.PATCH("/:id", controllers.PatchGroup)
 	userRouter.DELETE("/:id", controllers.DeleteGroup)
 	userRouter.PUT("/:id", controllers.UpdateGroup)
 }
