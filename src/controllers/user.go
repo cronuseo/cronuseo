@@ -160,7 +160,7 @@ func DeleteUser(c echo.Context) error {
 // @Router      /{tenant_id}/user/{id} [put]
 func UpdateUser(c echo.Context) error {
 	var user models.User
-	var reqUser models.User
+	var reqUser models.UserUpdateRequest
 	userId := string(c.Param("id"))
 	tenantId := string(c.Param("tenant_id"))
 
@@ -174,6 +174,13 @@ func UpdateUser(c echo.Context) error {
 	if !exists {
 		config.Log.Info("User not exists")
 		return utils.NotFoundErrorResponse("User")
+	}
+
+	if err := c.Bind(&reqUser); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+	if err := c.Validate(&reqUser); err != nil {
+		return utils.InvalidErrorResponse()
 	}
 
 	err := handlers.UpdateUser(tenantId, userId, &user, &reqUser)

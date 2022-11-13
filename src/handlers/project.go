@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"errors"
-
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
@@ -23,7 +21,8 @@ func DeleteProject(tenant_id string, id string) error {
 	return repositories.DeleteProject(tenant_id, id)
 }
 
-func UpdateProject(tenant_id string, id string, project *models.Project, reqProject *models.Project) error {
+func UpdateProject(tenant_id string, id string, project *models.Project,
+	reqProject *models.ProjectUpdateRequest) error {
 	err := repositories.GetProject(tenant_id, id, project)
 	if err != nil {
 		return err
@@ -35,25 +34,11 @@ func UpdateProject(tenant_id string, id string, project *models.Project, reqProj
 func CheckProjectExistsById(id string) (bool, error) {
 	var exists bool
 	err := repositories.CheckProjectExistsById(id, &exists)
-	if err != nil && !exists {
-		return false, errors.New("project not exists")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return exists, err
 }
 
 func CheckProjectExistsByKey(tenant_id string, key string) (bool, error) {
 	var exists bool
 	err := repositories.CheckProjectExistsByKey(tenant_id, key, &exists)
-	if err != nil && !exists {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return exists, err
 }

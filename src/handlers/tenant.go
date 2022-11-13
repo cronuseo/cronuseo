@@ -21,7 +21,7 @@ func DeleteTenant(org_id string, id string) error {
 	return repositories.DeleteTenant(org_id, id)
 }
 
-func UpdateTenant(org_id string, id string, tenant *models.Tenant, reqTenant *models.Tenant) error {
+func UpdateTenant(org_id string, id string, tenant *models.Tenant, reqTenant *models.TenantUpdateRequest) error {
 	err := repositories.GetTenant(org_id, id, tenant)
 	if err != nil {
 		return err

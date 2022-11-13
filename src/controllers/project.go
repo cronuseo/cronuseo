@@ -158,7 +158,7 @@ func DeleteProject(c echo.Context) error {
 // @Router      /{tenant_id}/project/{id} [put]
 func UpdateProject(c echo.Context) error {
 	var project models.Project
-	var reqProject models.Project
+	var reqProject models.ProjectUpdateRequest
 	projId := string(c.Param("id"))
 	tenantId := string(c.Param("tenant_id"))
 
@@ -173,10 +173,12 @@ func UpdateProject(c echo.Context) error {
 		config.Log.Info("Project not exists")
 		return utils.NotFoundErrorResponse("Project")
 	}
+
 	if err := c.Bind(&reqProject); err != nil {
-		if reqProject.Name == "" {
-			return utils.ServerErrorResponse()
-		}
+		return utils.InvalidErrorResponse()
+	}
+	if err := c.Validate(&reqProject); err != nil {
+		return utils.InvalidErrorResponse()
 	}
 
 	err := handlers.UpdateProject(tenantId, projId, &project, &reqProject)

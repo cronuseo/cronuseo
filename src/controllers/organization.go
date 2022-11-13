@@ -119,7 +119,7 @@ func DeleteOrganization(c echo.Context) error {
 func UpdateOrganization(c echo.Context) error {
 	var org models.Organization
 	orgId := string(c.Param("id"))
-	var reqOrg models.Organization
+	var reqOrg models.OrganizationUpdateRequest
 
 	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
@@ -128,9 +128,10 @@ func UpdateOrganization(c echo.Context) error {
 	}
 
 	if err := c.Bind(&reqOrg); err != nil {
-		if reqOrg.Name == "" || len(reqOrg.Name) < 4 {
-			return utils.InvalidErrorResponse()
-		}
+		return utils.InvalidErrorResponse()
+	}
+	if err := c.Validate(&reqOrg); err != nil {
+		return utils.InvalidErrorResponse()
 	}
 
 	err := handlers.UpdateOrganization(&org, &reqOrg, orgId)

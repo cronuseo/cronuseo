@@ -1,9 +1,6 @@
 package handlers
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/shashimalcse/Cronuseo/models"
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
@@ -45,7 +42,7 @@ func DeleteUser(tenantId string, userId string) error {
 	return repositories.DeleteUser(tenantId, userId)
 }
 
-func UpdateUser(tenantId string, userId string, user *models.User, reqUser *models.User) error {
+func UpdateUser(tenantId string, userId string, user *models.User, reqUser *models.UserUpdateRequest) error {
 	err := repositories.GetUser(tenantId, userId, user)
 	if err != nil {
 		return err
@@ -58,38 +55,24 @@ func UpdateUser(tenantId string, userId string, user *models.User, reqUser *mode
 func CheckUserExistsById(userId string) (bool, error) {
 	var exists bool
 	err := repositories.CheckUserExistsById(userId, &exists)
-	if err != nil && !exists {
-		return false, errors.New("user not exists")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return exists, err
 }
 
 func CheckUserExistsByUsername(tenantId string, username string) (bool, error) {
 	var exists bool
 	err := repositories.CheckUserExistsByUsername(tenantId, username, &exists)
-	if err != nil && !exists {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	return exists, err
 }
 
-func CheckAllUsersExistsById(users models.AddUsersToGroup) (bool, error) {
-	for _, user := range users.Users {
-		exists := false
-		userId := fmt.Sprint(user.UserID)
-		err := repositories.CheckUserExistsById(userId, &exists)
-		if err != nil || !exists {
-			return false, errors.New("user not exists")
-		}
+// func CheckAllUsersExistsById(users models.AddUsersToGroup) (bool, error) {
+// 	for _, user := range users.Users {
+// 		exists := false
+// 		userId := fmt.Sprint(user.UserID)
+// 		err := repositories.CheckUserExistsById(userId, &exists)
+// 		if err != nil || !exists {
+// 			return false, errors.New("user not exists")
+// 		}
 
-	}
-	return true, nil
-}
+// 	}
+// 	return true, nil
+// }

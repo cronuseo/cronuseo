@@ -1,14 +1,14 @@
 package models
 
 type Group struct {
-	ID             int    `json:"id" gorm:"primary_key"`
-	Key            string `json:"key" validate:"required,min=4"`
-	Name           string `json:"name" validate:"required,min=4"`
-	OrganizationID int    `json:"-" gorm:"foreignKey:ID"`
+	ID       string `json:"group_id" gorm:"primary_key" db:"group_id"`
+	Key      string `json:"group_key" validate:"required,min=4" db:"group_key"`
+	Name     string `json:"name" validate:"required,min=4" db:"name"`
+	TenantID string `json:"tenant_id" gorm:"foreignKey:ID" db:"tenant_id"`
 }
 
 type GroupCreateRequest struct {
-	Key  string `json:"key" validate:"required,min=4"`
+	Key  string `json:"group_key" validate:"required,min=4"`
 	Name string `json:"name" validate:"required,min=4"`
 }
 

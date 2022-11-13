@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
@@ -13,24 +12,22 @@ import (
 
 // @Description Get all groups.
 // @Tags        Group
-// @Param org_id path int true "Organization ID"
+// @Param tenant_id path string true "Tenant ID"
 // @Produce     json
 // @Success     200 {array}  models.Group
 // @failure     500
-// @Router      /{org_id}/group [get]
+// @Router      /{tenant_id}/group [get]
 func GetGroups(c echo.Context) error {
 	groups := []models.Group{}
-	orgId := string(c.Param("org_id"))
-	exists, err := handlers.CheckOrganizationExistsById(orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	tenantId := string(c.Param("tenant_id"))
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
 	if !exists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
-	err = handlers.GetGroups(&groups, orgId)
+
+	err := handlers.GetGroups(tenantId, &groups)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -40,35 +37,30 @@ func GetGroups(c echo.Context) error {
 
 // @Description Get groups by ID.
 // @Tags        Group
-// @Param org_id path int true "Organization ID"
-// @Param id path int true "Group ID"
+// @Param tenant_id path string true "Tenant ID"
+// @Param id path string true "Group ID"
 // @Produce     json
-// @Success     200 {object}  models.GroupUsers
+// @Success     200 {object}  models.Group
 // @failure     404,500
-// @Router      /{org_id}/group/{id} [get]
+// @Router      /{tenant_id}/group/{id} [get]
 func GetGroup(c echo.Context) error {
-	var group models.GroupUsers
-	orgId := string(c.Param("org_id"))
+	var group models.Group
+	tenantId := string(c.Param("tenant_id"))
 	groupId := string(c.Param("id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	if !exists {
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
-	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
-	}
-	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
-	if groupErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !groupExists {
+
+	exists, _ = handlers.CheckGroupExistsById(groupId)
+	if !exists {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
 	}
-	err := handlers.GetUsersFromGroup(groupId, &group)
+
+	err := handlers.GetGroup(tenantId, groupId, &group)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -80,24 +72,22 @@ func GetGroup(c echo.Context) error {
 // @Description Create group.
 // @Tags        Group
 // @Accept      json
-// @Param org_id path int true "Organization ID"
+// @Param tenant_id path string true "Tenant ID"
 // @Param request body models.GroupCreateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Group
 // @failure     400,403,500
-// @Router      /{org_id}/group [post]
+// @Router      /{tenant_id}/group [post]
 func CreateGroup(c echo.Context) error {
 	var group models.Group
-	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
+	tenantId := string(c.Param("tenant_id"))
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	if !exists {
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
-	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
-	}
+
 	if err := c.Bind(&group); err != nil {
 		if group.Key == "" || len(group.Key) < 4 || group.Name == "" || len(group.Name) < 4 {
 			return utils.InvalidErrorResponse()
@@ -106,18 +96,15 @@ func CreateGroup(c echo.Context) error {
 	if err := c.Validate(&group); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	intOrgId, _ := strconv.Atoi(orgId)
-	group.OrganizationID = intOrgId
-	exists, err := handlers.CheckGroupExistsByKey(group.Key, orgId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+
+	group.TenantID = tenantId
+	exists, _ = handlers.CheckGroupExistsByKey(group.Key, tenantId)
 	if exists {
 		config.Log.Info("Group already exists")
 		return utils.AlreadyExistsErrorResponse("Group")
 	}
-	err = handlers.CreateGroup(&group)
+
+	err := handlers.CreateGroup(tenantId, &group)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -128,34 +115,29 @@ func CreateGroup(c echo.Context) error {
 
 // @Description Delete group.
 // @Tags        Group
-// @Param org_id path int true "Organization ID"
-// @Param id path int true "Group ID"
+// @Param tenant_id path string true "Tenant ID"
+// @Param id path string true "Group ID"
 // @Produce     json
 // @Success     204
 // @failure     404,500
-// @Router      /{org_id}/group/{id} [delete]
+// @Router      /{tenant_id}/group/{id} [delete]
 func DeleteGroup(c echo.Context) error {
 	var group models.Group
 	groupId := string(c.Param("id"))
-	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
+	tenantId := string(c.Param("tenant_id"))
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	if !exists {
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
-	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
-	}
-	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
-	if groupErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !groupExists {
+
+	exists, _ = handlers.CheckGroupExistsById(groupId)
+	if !exists {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
 	}
+
 	if err := c.Bind(&group); err != nil {
 		if group.Name == "" || len(group.Name) < 4 {
 			return utils.InvalidErrorResponse()
@@ -164,7 +146,8 @@ func DeleteGroup(c echo.Context) error {
 	if err := c.Validate(&group); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	err := handlers.DeleteGroup(&group, groupId)
+
+	err := handlers.DeleteGroup(tenantId, groupId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -176,37 +159,39 @@ func DeleteGroup(c echo.Context) error {
 // @Description Update group.
 // @Tags        Group
 // @Accept      json
-// @Param org_id path int true "Organization ID"
-// @Param id path int true "Group ID"
+// @Param tenant_id path string true "Tenant ID"
+// @Param id path string true "Group ID"
 // @Param request body models.GroupUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.Group
 // @failure     400,403,404,500
-// @Router      /{org_id}/group/{id} [put]
+// @Router      /{tenant_id}/group/{id} [put]
 func UpdateGroup(c echo.Context) error {
 	var group models.Group
-	var reqGroup models.Group
+	var reqGroup models.GroupUpdateRequest
 	groupId := string(c.Param("id"))
-	orgId := string(c.Param("org_id"))
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
+	tenantId := string(c.Param("tenant_id"))
+
+	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	if !exists {
+		config.Log.Info("Tenant not exists")
+		return utils.NotFoundErrorResponse("Tenant")
 	}
-	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
-	}
-	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
-	if groupErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !groupExists {
+
+	exists, _ = handlers.CheckGroupExistsById(groupId)
+	if !exists {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
 	}
-	err := handlers.UpdateGroup(&group, &reqGroup, groupId)
+
+	if err := c.Bind(&reqGroup); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+	if err := c.Validate(&reqGroup); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+
+	err := handlers.UpdateGroup(tenantId, groupId, &group, &reqGroup)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -217,55 +202,55 @@ func UpdateGroup(c echo.Context) error {
 // @Description Add users to group.
 // @Tags        Group
 // @Accept      json
-// @Param org_id path int true "Organization ID"
-// @Param id path int true "Group ID"
+// @Param tenant_id path string true "Tenant ID"
+// @Param id path string true "Group ID"
 // @Param request body models.AddUsersToGroup true "body"
 // @Produce     json
 // @Success     200
 // @failure     404,500
-// @Router      /{org_id}/group/{id}/user [post]
-func AddUsersToGroup(c echo.Context) error {
-	orgId := string(c.Param("org_id"))
-	groupId := string(c.Param("id"))
-	users := models.AddUsersToGroup{}
-	orgExists, orgErr := handlers.CheckOrganizationExistsById(orgId)
-	if orgErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !orgExists {
-		config.Log.Info("Organization not exists")
-		return utils.NotFoundErrorResponse("Organization")
-	}
-	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
-	if groupErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !groupExists {
-		config.Log.Info("Group not exists")
-		return utils.NotFoundErrorResponse("Group")
-	}
-	if err := c.Bind(&users); err != nil {
-		return utils.InvalidErrorResponse()
-	}
-	if err := c.Validate(&users); err != nil {
-		return utils.InvalidErrorResponse()
-	}
-	userExists, userErr := handlers.CheckAllUsersExistsById(users)
-	if userErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !userExists {
-		config.Log.Info("Users not exists")
-		return utils.NotFoundErrorResponse("Users")
-	}
+// @Router      /{tenant_id}/group/{id}/user [post]
+// func AddUsersToGroup(c echo.Context) error {
+// 	tenantId := string(c.Param("tenant_id"))
+// 	groupId := string(c.Param("id"))
+// 	users := models.AddUsersToGroup{}
+// 	orgExists, orgErr := handlers.CheckTenantExistsById(tenantId)
+// 	if orgErr != nil {
+// 		config.Log.Panic("Server Error!")
+// 		return utils.ServerErrorResponse()
+// 	}
+// 	if !orgExists {
+// 		config.Log.Info("Tenant not exists")
+// 		return utils.NotFoundErrorResponse("Tenant")
+// 	}
+// 	groupExists, groupErr := handlers.CheckGroupExistsById(groupId)
+// 	if groupErr != nil {
+// 		config.Log.Panic("Server Error!")
+// 		return utils.ServerErrorResponse()
+// 	}
+// 	if !groupExists {
+// 		config.Log.Info("Group not exists")
+// 		return utils.NotFoundErrorResponse("Group")
+// 	}
+// 	if err := c.Bind(&users); err != nil {
+// 		return utils.InvalidErrorResponse()
+// 	}
+// 	if err := c.Validate(&users); err != nil {
+// 		return utils.InvalidErrorResponse()
+// 	}
+// 	userExists, userErr := handlers.CheckAllUsersExistsById(users)
+// 	if userErr != nil {
+// 		config.Log.Panic("Server Error!")
+// 		return utils.ServerErrorResponse()
+// 	}
+// 	if !userExists {
+// 		config.Log.Info("Users not exists")
+// 		return utils.NotFoundErrorResponse("Users")
+// 	}
 
-	err := handlers.AddUsersToGroup(groupId, users)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	return c.JSON(http.StatusOK, "")
-}
+// 	err := handlers.AddUsersToGroup(groupId, users)
+// 	if err != nil {
+// 		config.Log.Panic("Server Error!")
+// 		return utils.ServerErrorResponse()
+// 	}
+// 	return c.JSON(http.StatusOK, "")
+// }

@@ -157,7 +157,7 @@ func UpdateTenant(c echo.Context) error {
 	var tenant models.Tenant
 	orgId := string(c.Param("org_id"))
 	tenantId := string(c.Param("id"))
-	var reqTenant models.Tenant
+	var reqTenant models.TenantUpdateRequest
 
 	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
@@ -172,9 +172,10 @@ func UpdateTenant(c echo.Context) error {
 	}
 
 	if err := c.Bind(&reqTenant); err != nil {
-		if reqTenant.Name == "" || len(reqTenant.Name) < 4 {
-			return utils.InvalidErrorResponse()
-		}
+		return utils.InvalidErrorResponse()
+	}
+	if err := c.Validate(&reqTenant); err != nil {
+		return utils.InvalidErrorResponse()
 	}
 
 	err := handlers.UpdateTenant(orgId, tenantId, &tenant, &reqTenant)

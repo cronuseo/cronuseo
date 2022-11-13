@@ -16,8 +16,8 @@ type UserCreateRequest struct {
 }
 
 type UserUpdateRequest struct {
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
 }
 
 type UserWithGroup struct {

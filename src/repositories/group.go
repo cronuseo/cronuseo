@@ -1,56 +1,75 @@
 package repositories
 
-// import (
-// 	"github.com/shashimalcse/Cronuseo/config"
-// 	"github.com/shashimalcse/Cronuseo/models"
-// )
+import (
+	"github.com/shashimalcse/Cronuseo/config"
+	"github.com/shashimalcse/Cronuseo/models"
+)
 
-// func GetGroups(groups *[]models.Group, orgId string) error {
-// 	return config.DB.Model(&models.Group{}).Where("organization_id = ?", orgId).Find(&groups).Error
-// }
+func GetGroups(tenant_id string, groups *[]models.Group) error {
+	err := config.DB.Select(groups, "SELECT * FROM tenant_group WHERE tenant_id = $1", tenant_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// func GetGroup(group *models.Group, groupId string) error {
-// 	return config.DB.Where("id = ?", groupId).First(&group).Error
-// }
+func GetGroup(tenant_id string, id string, group *models.Group) error {
+	err := config.DB.Get(group, "SELECT * FROM tenant_group WHERE tenant_id = $1 AND group_id = $2", tenant_id, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// func CreateGroup(group *models.Group) error {
-// 	return config.DB.Create(&group).Error
-// }
+func CreateGroup(tenant_id string, group *models.Group) error {
+	stmt, err := config.DB.Prepare("INSERT INTO tenant_group(group_key,name,tenant_id) VALUES($1, $2, $3)")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(group.Key, group.Name, tenant_id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// func DeleteGroup(group *models.Group, groupId string) error {
-// 	return config.DB.Where("id = ?", groupId).Delete(&group).Error
-// }
+func DeleteGroup(tenant_id string, id string) error {
+	stmt, err := config.DB.Prepare("DELETE FROM tenant_group WHERE tenant_id = $1 AND group_id = $2")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(tenant_id, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// func UpdateGroup(group *models.Group) error {
-// 	return config.DB.Save(&group).Error
-// }
+func UpdateGroup(group *models.Group) error {
+	stmt, err := config.DB.Prepare("UPDATE tenant_group SET name = $1 WHERE tenant_id = $2 AND group_id = $3")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(group.Name, group.TenantID, group.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// func AddUserToGroup(groupuser models.GroupUser) error {
+func CheckGroupExistsById(id string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT group_id FROM tenant_group WHERE group_id = $1)", id).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
-// 	return config.DB.Create(groupuser).Error
-
-// }
-
-// func GetUsersFromGroup(groupId int, resGroupUsers *models.GroupUsers, groupusers *[]models.GroupUser) error {
-// 	err := config.DB.Model(&models.Group{}).Select("id", "key", "name", "organization_id").Where("id = ?",
-// 		groupId).Find(&resGroupUsers).Error
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return config.DB.Model(&models.GroupUser{}).Where("group_id = ?", groupId).Find(&groupusers).Error
-
-// }
-
-// func CheckGroupExistsById(groupId string, exists *bool) error {
-// 	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("id = ?", groupId).Find(exists).Error
-// }
-
-// func CheckGroupExistsByKey(key string, orgId string, exists *bool) error {
-// 	return config.DB.Model(&models.Group{}).Select("count(*) > 0").Where("key = ? AND organization_id = ?",
-// 		key, orgId).Find(exists).Error
-// }
-
-// func CheckGroupAlreadyInGroup(groupId string, userId string, exists *bool) error {
-// 	return config.DB.Model(&models.GroupUser{}).Select(
-// 		"count(*) > 0").Where("group_id = ? AND user_id = ?", groupId, userId).Find(exists).Error
-// }
+func CheckGroupExistsByKey(tenant_id string, key string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT group_key FROM tenant_group WHERE tenant_id = $1 AND group_key = $2)",
+		tenant_id, key).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
+}

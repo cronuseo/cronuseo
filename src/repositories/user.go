@@ -52,7 +52,7 @@ func UpdateUser(user *models.User) error {
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(user.Username, user.FirstName, user.LastName, user.TenantID, user.ID)
+	_, err = stmt.Exec(user.FirstName, user.LastName, user.TenantID, user.ID)
 	if err != nil {
 		return err
 	}

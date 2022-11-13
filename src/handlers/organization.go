@@ -21,7 +21,7 @@ func DeleteOrganization(id string) error {
 	return repositories.DeleteOrganization(id)
 }
 
-func UpdateOrganization(org *models.Organization, reqOrg *models.Organization, id string) error {
+func UpdateOrganization(org *models.Organization, reqOrg *models.OrganizationUpdateRequest, id string) error {
 	err := repositories.GetOrganization(org, id)
 	if err != nil {
 		return err
