@@ -1,22 +1,19 @@
 package models
 
 type ResourceRole struct {
-	ID          int    `json:"id" gorm:"primary_key"`
-	Key         string `json:"key" validate:"required,min=4"`
-	Name        string `json:"name" validate:"required,min=4"`
-	Description string `json:"description"`
-	ResourceID  int    `json:"-" gorm:"foreignKey:ID"`
+	ID         string `json:"resource_role_id" db:"resource_role_id"`
+	Key        string `json:"resource_role_key" validate:"required,min=4" db:"resource_role_key"`
+	Name       string `json:"name" validate:"required,min=4" db:"name"`
+	ResourceID string `json:"resource_id" db:"resource_id"`
 }
 
 type ResourceRoleCreateRequest struct {
-	Key         string `json:"key" validate:"required,min=4"`
-	Name        string `json:"name" validate:"required,min=4"`
-	Description string `json:"description"`
+	Key  string `json:"resource_role_key" validate:"required,min=4" db:"resource_role_key"`
+	Name string `json:"name" validate:"required,min=4" db:"name"`
 }
 
 type ResourceRoleUpdateRequest struct {
-	Name        string `json:"name" validate:"required,min=4"`
-	Description string `json:"description"`
+	Name string `json:"name" validate:"required,min=4" db:"name"`
 }
 
 type ResourceRoleToGroup struct {
@@ -46,7 +43,7 @@ type ResourceRoleWithGroupsUsers struct {
 	Key             string                 `json:"key"`
 	Name            string                 `json:"name"`
 	ResourceID      int                    `json:"res_id"`
-	Users           []UserOnlyWithID       `json:"users"`
+	Users           []UserID               `json:"users"`
 	Groups          []GroupOnlyWithID      `json:"groups"`
 	ResourceActions []ResourceActionWithID `json:"actions"`
 }

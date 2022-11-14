@@ -51,7 +51,7 @@ func setRoutes(e *echo.Echo) {
 	routes.ProjectRoutes(apiV1)
 	// routes.ResourceRoutes(apiV1)
 	// routes.ResourceActionRoutes(apiV1)
-	// routes.ResourceRoleRoutes(apiV1)
+	routes.ResourceRoleRoutes(apiV1)
 	routes.ResourceRoutes(apiV1)
 	routes.GroupRoutes(apiV1)
 	routes.UserRoutes(apiV1)
