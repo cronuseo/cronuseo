@@ -83,14 +83,53 @@ func CreateGroup(tenant_id string, group *models.Group) error {
 }
 
 func DeleteGroup(tenant_id string, id string) error {
-	stmt, err := config.DB.Prepare("DELETE FROM tenant_group WHERE tenant_id = $1 AND group_id = $2")
+
+	tx, err := config.DB.Begin()
+
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(tenant_id, id)
-	if err != nil {
-		return err
+	// remove all users from group
+	{
+		stmt, err := tx.Prepare(`DELETE FROM group_user WHERE group_id = $1`)
+
+		if err != nil {
+			return err
+		}
+
+		defer stmt.Close()
+
+		_, err = stmt.Exec(id)
+
+		if err != nil {
+			return err
+		}
 	}
+
+	// remove group
+	{
+		stmt, err := tx.Prepare(`DELETE FROM tenant_group WHERE tenant_id = $1 AND group_id = $2`)
+
+		if err != nil {
+			return err
+		}
+
+		defer stmt.Close()
+
+		_, err = stmt.Exec(tenant_id, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	{
+		err := tx.Commit()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

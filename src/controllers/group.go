@@ -122,7 +122,7 @@ func CreateGroup(c echo.Context) error {
 // @failure     404,500
 // @Router      /{tenant_id}/group/{id} [delete]
 func DeleteGroup(c echo.Context) error {
-	var group models.Group
+
 	groupId := string(c.Param("id"))
 	tenantId := string(c.Param("tenant_id"))
 
@@ -136,15 +136,6 @@ func DeleteGroup(c echo.Context) error {
 	if !exists {
 		config.Log.Info("Group not exists")
 		return utils.NotFoundErrorResponse("Group")
-	}
-
-	if err := c.Bind(&group); err != nil {
-		if group.Name == "" || len(group.Name) < 4 {
-			return utils.InvalidErrorResponse()
-		}
-	}
-	if err := c.Validate(&group); err != nil {
-		return utils.InvalidErrorResponse()
 	}
 
 	err := handlers.DeleteGroup(tenantId, groupId)
