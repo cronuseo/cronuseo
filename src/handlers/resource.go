@@ -5,30 +5,30 @@ import (
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetResources(project_id string, projects *[]models.Resource) error {
-	return repositories.GetResources(project_id, projects)
+func GetResources(project_id string, resources *[]models.Resource) error {
+	return repositories.GetResources(project_id, resources)
 }
 
-func GetResource(project_id string, id string, project *models.Resource) error {
-	return repositories.GetResource(project_id, id, project)
+func GetResource(project_id string, id string, resource *models.Resource) error {
+	return repositories.GetResource(project_id, id, resource)
 }
 
-func CreateResource(project_id string, project *models.Resource) error {
-	return repositories.CreateResource(project_id, project)
+func CreateResource(project_id string, resource *models.Resource) error {
+	return repositories.CreateResource(project_id, resource)
 }
 
 func DeleteResource(project_id string, id string) error {
 	return repositories.DeleteResource(project_id, id)
 }
 
-func UpdateResource(project_id string, id string, project *models.Resource,
+func UpdateResource(project_id string, id string, resource *models.Resource,
 	reqResource *models.ResourceUpdateRequest) error {
-	err := repositories.GetResource(project_id, id, project)
+	err := repositories.GetResource(project_id, id, resource)
 	if err != nil {
 		return err
 	}
-	project.Name = reqResource.Name
-	return repositories.UpdateResource(project)
+	resource.Name = reqResource.Name
+	return repositories.UpdateResource(resource)
 }
 
 func CheckResourceExistsById(id string) (bool, error) {

@@ -69,16 +69,3 @@ func CheckUserExistsByUsername(tenantId string, username string) (bool, error) {
 	err := repositories.CheckUserExistsByUsername(tenantId, username, &exists)
 	return exists, err
 }
-
-// func CheckAllUsersExistsById(users models.AddUsersToGroup) (bool, error) {
-// 	for _, user := range users.Users {
-// 		exists := false
-// 		userId := fmt.Sprint(user.UserID)
-// 		err := repositories.CheckUserExistsById(userId, &exists)
-// 		if err != nil || !exists {
-// 			return false, errors.New("user not exists")
-// 		}
-
-// 	}
-// 	return true, nil
-// }

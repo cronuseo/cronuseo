@@ -165,6 +165,11 @@ func PatchGroup(group_id string, groupPatch *models.GroupPatchRequest) error {
 				defer stmt.Close()
 
 				for _, user := range operation.Users {
+					var exists bool
+					user_error := IsUserInGroup(group_id, user.UserID, &exists)
+					if exists || user_error != nil {
+						continue
+					}
 					_, err = stmt.Exec(group_id, user.UserID)
 					if err != nil {
 						log.Fatal(err)
@@ -182,6 +187,11 @@ func PatchGroup(group_id string, groupPatch *models.GroupPatchRequest) error {
 				defer stmt.Close()
 
 				for _, user := range operation.Users {
+					var exists bool
+					user_error := IsUserInGroup(group_id, user.UserID, &exists)
+					if !exists || user_error != nil {
+						continue
+					}
 					_, err = stmt.Exec(group_id, user.UserID)
 					if err != nil {
 						log.Fatal(err)
@@ -214,6 +224,15 @@ func CheckGroupExistsById(id string, exists *bool) error {
 func CheckGroupExistsByKey(tenant_id string, key string, exists *bool) error {
 	err := config.DB.QueryRow("SELECT exists (SELECT group_key FROM tenant_group WHERE tenant_id = $1 AND group_key = $2)",
 		tenant_id, key).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func IsUserInGroup(groupId string, userId string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT user_id FROM group_user WHERE group_id = $1 AND user_id = $2)",
+		groupId, userId).Scan(exists)
 	if err != nil {
 		return err
 	}

@@ -14,6 +14,7 @@ func GetGroup(tenantId string, id string, group *models.Group) error {
 }
 
 func CreateGroup(tenantId string, group *models.Group) error {
+	group.Users = RemoveDuplicateUsers(group.Users)
 	group.Users = GetExistsUsers(tenantId, group.Users)
 	err := repositories.CreateGroup(tenantId, group)
 	return err
@@ -45,8 +46,11 @@ func CheckGroupExistsByKey(tenantId string, key string) (bool, error) {
 	return exists, err
 }
 
-func PatchGroup(tenantId string, groupId string, group *models.Group, ugroupPatch *models.GroupPatchRequest) error {
-	err := repositories.PatchGroup(groupId, ugroupPatch)
+func PatchGroup(tenantId string, groupId string, group *models.Group, groupPatch *models.GroupPatchRequest) error {
+	for _, operation := range groupPatch.Operations {
+		operation.Users = RemoveDuplicateUsers(operation.Users)
+	}
+	err := repositories.PatchGroup(groupId, groupPatch)
 	if err != nil {
 		return err
 	}
@@ -66,83 +70,18 @@ func GetExistsUsers(tenantId string, users []models.UserID) []models.UserID {
 	return existsUsers
 }
 
-// func GetUsersFromGroup(groupId string, resGroupusers *models.GroupUsers) error {
-// 	var groupusers []models.GroupUser
-// 	intGroupId, _ := strconv.Atoi(groupId)
-// 	err := repositories.GetUsersFromGroup(intGroupId, resGroupusers, &groupusers)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if len(groupusers) > 0 {
-// 		for _, groupuser := range groupusers {
-// 			user_id := groupuser.UserID
-// 			user := models.UserOnlyWithID{UserID: user_id}
-// 			resGroupusers.Users = append(resGroupusers.Users, user)
-// 		}
-// 	}
-// 	return nil
-// }
+func RemoveDuplicateUsers(userIDs []models.UserID) []models.UserID {
 
-// func CheckGroupExistsById(groupId string) (bool, error) {
-// 	var exists bool
-// 	err := repositories.CheckGroupExistsById(groupId, &exists)
-// 	if err != nil {
-// 		return false, errors.New("group not exists")
-// 	}
-// 	if exists {
-// 		return true, nil
-// 	} else {
-// 		return false, nil
-// 	}
-// }
+	processed := make(map[models.UserID]struct{})
 
-// func CheckGroupExistsByKey(key string, orgId string) (bool, error) {
-// 	var exists bool
-// 	err := repositories.CheckGroupExistsByKey(key, orgId, &exists)
-// 	if err != nil {
-// 		return false, errors.New("")
-// 	}
-// 	if exists {
-// 		return true, nil
-// 	} else {
-// 		return false, nil
-// 	}
-// }
+	uniqUserIDs := make([]models.UserID, 0)
+	for _, uid := range userIDs {
+		if _, ok := processed[uid]; ok {
+			continue
+		}
+		uniqUserIDs = append(uniqUserIDs, uid)
+		processed[uid] = struct{}{}
+	}
 
-// func AddUsersToGroup(groupId string, users models.AddUsersToGroup) error {
-// 	for _, user := range users.Users {
-// 		userId := fmt.Sprint(user.UserID)
-// 		exists, err := CheckUserAlreadyInGroup(groupId, userId)
-// 		if err != nil {
-// 			return err
-// 		}
-// 		if exists {
-// 			continue
-// 		}
-// 		groupuser := models.GroupUser{}
-// 		intGroupId, _ := strconv.Atoi(groupId)
-// 		intUserId, _ := strconv.Atoi(userId)
-// 		groupuser.GroupID = intGroupId
-// 		groupuser.UserID = intUserId
-// 		err = repositories.AddUserToGroup(groupuser)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 	}
-// 	return nil
-
-// }
-
-// func CheckUserAlreadyInGroup(groupId string, userId string) (bool, error) {
-// 	var exists bool
-// 	err := repositories.CheckGroupAlreadyInGroup(groupId, userId, &exists)
-// 	if err != nil {
-// 		return false, errors.New("")
-// 	}
-// 	if exists {
-// 		return true, nil
-// 	} else {
-// 		return false, nil
-// 	}
-// }
+	return uniqUserIDs
+}
