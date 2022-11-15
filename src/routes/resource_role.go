@@ -7,14 +7,12 @@ import (
 
 func ResourceRoleRoutes(router *echo.Group) {
 
-	resourceActionRouter := router.Group("/:res_id/resource_role")
+	resourceRoleRouter := router.Group("/:res_id/resource_role")
 
-	resourceActionRouter.GET("/:id", controllers.GetResourceRole)
-	resourceActionRouter.GET("", controllers.GetResourceRoles)
-	resourceActionRouter.POST("", controllers.CreateResourceRole)
-	// resourceActionRouter.POST("/:id/user/:user_id", controllers.AddUserToResourceRole)
-	// resourceActionRouter.POST("/:id/group/:group_id", controllers.AddGroupToResourceRole)
-	// resourceActionRouter.POST("/:id/action/:resact_id", controllers.AddResourceActionToResourceRole)
-	resourceActionRouter.DELETE("/:id", controllers.DeleteResourceRole)
-	resourceActionRouter.PUT("/:id", controllers.UpdateResourceRole)
+	resourceRoleRouter.GET("/:id", controllers.GetResourceRole)
+	resourceRoleRouter.GET("", controllers.GetResourceRoles)
+	resourceRoleRouter.POST("", controllers.CreateResourceRole)
+	resourceRoleRouter.PATCH("/:id", controllers.PatchResourceRole)
+	resourceRoleRouter.DELETE("/:id", controllers.DeleteResourceRole)
+	resourceRoleRouter.PUT("/:id", controllers.UpdateResourceRole)
 }

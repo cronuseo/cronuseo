@@ -41,9 +41,27 @@ func DeleteUser(tenant_id string, id string) error {
 	if err != nil {
 		return err
 	}
-	// remove all users from group
+
+	// remove user from group
 	{
 		stmt, err := tx.Prepare(`DELETE FROM group_user WHERE user_id = $1`)
+
+		if err != nil {
+			return err
+		}
+
+		defer stmt.Close()
+
+		_, err = stmt.Exec(id)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	// remove user from resource role
+	{
+		stmt, err := tx.Prepare(`DELETE FROM user_resource_role WHERE user_id = $1`)
 
 		if err != nil {
 			return err

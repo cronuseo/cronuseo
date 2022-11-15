@@ -31,6 +31,19 @@ func UpdateResourceRole(resource_id string, id string, resource_role *models.Res
 	return repositories.UpdateResourceRole(resource_role)
 }
 
+func PatchResourceRole(resource_id string, resource_role_id string,
+	resourceRole *models.ResourceRole, resourceRolePatch *models.ResourceRolePatchRequest) error {
+	for _, operation := range resourceRolePatch.Operations {
+		operation.Values = RemoveDuplicateValues(operation.Values)
+	}
+	err := repositories.PatchResourceRole(resource_role_id, resourceRolePatch)
+	if err != nil {
+		return err
+	}
+	return GetResourceRole(resource_id, resource_role_id, resourceRole)
+
+}
+
 func CheckResourceRoleExistsById(id string) (bool, error) {
 	var exists bool
 	err := repositories.CheckResourceRoleExistsById(id, &exists)
@@ -41,4 +54,20 @@ func CheckResourceRoleExistsByKey(resource_id string, key string) (bool, error) 
 	var exists bool
 	err := repositories.CheckResourceRoleExistsByKey(resource_id, key, &exists)
 	return exists, err
+}
+
+func RemoveDuplicateValues(values []models.Value) []models.Value {
+
+	processed := make(map[models.Value]struct{})
+
+	uniqValues := make([]models.Value, 0)
+	for _, uid := range values {
+		if _, ok := processed[uid]; ok {
+			continue
+		}
+		uniqValues = append(uniqValues, uid)
+		processed[uid] = struct{}{}
+	}
+
+	return uniqValues
 }

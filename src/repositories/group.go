@@ -106,6 +106,23 @@ func DeleteGroup(tenant_id string, id string) error {
 		}
 	}
 
+	// remove group from resource role
+	{
+		stmt, err := tx.Prepare(`DELETE FROM group_resource_role WHERE group_id = $1`)
+
+		if err != nil {
+			return err
+		}
+
+		defer stmt.Close()
+
+		_, err = stmt.Exec(id)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	// remove group
 	{
 		stmt, err := tx.Prepare(`DELETE FROM tenant_group WHERE tenant_id = $1 AND group_id = $2`)

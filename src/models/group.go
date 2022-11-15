@@ -22,6 +22,10 @@ type UserID struct {
 	UserID string `json:"user_id" db:"user_id"`
 }
 
+type GroupID struct {
+	GroupID string `json:"group_id" db:"group_id"`
+}
+
 type GroupPatchRequest struct {
 	Operations []GroupPatchOperation `json:"operations"`
 }
