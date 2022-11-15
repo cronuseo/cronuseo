@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/Cronuseo/config"
@@ -13,24 +12,22 @@ import (
 
 // @Description Get all resource actions.
 // @Tags        Resource Action
-// @Param res_id path int true "Resource ID"
+// @Param resource_id path string true "Resource ID"
 // @Produce     json
-// @Success     200 {array}  models.Resource
+// @Success     200 {array}  models.ResourceAction
 // @failure     500
 // @Router      /{res_id}/resource_action [get]
 func GetResourceActions(c echo.Context) error {
 	resourceActions := []models.ResourceAction{}
-	resId := string(c.Param("res_id"))
-	exists, err := handlers.CheckResourceExistsById(resId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+	resourceId := string(c.Param("res_id"))
+
+	exists, _ := handlers.CheckResourceExistsById(resourceId)
 	if !exists {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	err = handlers.GetResourceActions(&resourceActions, resId)
+
+	err := handlers.GetResourceActions(resourceId, &resourceActions)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -40,35 +37,30 @@ func GetResourceActions(c echo.Context) error {
 
 // @Description Get resource action by ID.
 // @Tags        Resource Action
-// @Param res_id path int true "Resource ID"
-// @Param id path int true "Resource Action ID"
+// @Param resource_id path string true "Resource ID"
+// @Param id path string true "Resource Action ID"
 // @Produce     json
 // @Success     200 {object}  models.ResourceAction
 // @failure     404,500
 // @Router      /{res_id}/resource_action/{id} [get]
 func GetResourceAction(c echo.Context) error {
 	var resourceAction models.ResourceAction
-	resId := string(c.Param("res_id"))
-	resactId := string(c.Param("id"))
-	resExists, resErr := handlers.CheckResourceExistsById(resId)
-	if resErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !resExists {
+	resourceId := string(c.Param("res_id"))
+	resourceActionId := string(c.Param("id"))
+
+	exists, _ := handlers.CheckResourceExistsById(resourceId)
+	if !exists {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	resact_exists, resact_err := handlers.CheckResourceActionExistsById(resactId)
-	if resact_err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !resact_exists {
+
+	exists, _ = handlers.CheckResourceActionExistsById(resourceActionId)
+	if !exists {
 		config.Log.Info("Resource Action not exists")
 		return utils.NotFoundErrorResponse("Resource Action")
 	}
-	err := handlers.GetResourceAction(&resourceAction, resactId)
+
+	err := handlers.GetResourceAction(resourceId, resourceActionId, &resourceAction)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -80,7 +72,7 @@ func GetResourceAction(c echo.Context) error {
 // @Description Create resource action.
 // @Tags        Resource Action
 // @Accept      json
-// @Param res_id path int true "Resource ID"
+// @Param resource_id path string true "Resource ID"
 // @Param request body models.ResourceActionCreateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.ResourceAction
@@ -88,75 +80,65 @@ func GetResourceAction(c echo.Context) error {
 // @Router      /{res_id}/resource_action [post]
 func CreateResourceAction(c echo.Context) error {
 	var resourceAction models.ResourceAction
-	resId := string(c.Param("res_id"))
-	resExists, resErr := handlers.CheckResourceExistsById(resId)
-	if resErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !resExists {
+	resourceId := string(c.Param("res_id"))
+
+	exists, _ := handlers.CheckResourceExistsById(resourceId)
+	if !exists {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
+
 	if err := c.Bind(&resourceAction); err != nil {
-		if resourceAction.Key == "" || len(resourceAction.Key) < 4 ||
-			resourceAction.Name == "" || len(resourceAction.Name) < 4 {
+		if resourceAction.Name == "" || len(resourceAction.Name) < 4 {
 			return utils.InvalidErrorResponse()
 		}
 	}
 	if err := c.Validate(&resourceAction); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	intResId, _ := strconv.Atoi(resId)
-	resourceAction.ResourceID = intResId
-	exists, err := handlers.CheckResourceActionExistsByKey(resourceAction.Key, resId)
-	if err != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
+
+	resourceAction.ResourceID = resourceId
+	exists, _ = handlers.CheckResourceActionExistsByKey(resourceId, resourceAction.Key)
 	if exists {
 		config.Log.Info("Resource Action already exists")
 		return utils.AlreadyExistsErrorResponse("Resource Action")
 	}
-	err = handlers.CreateResourceAction(&resourceAction)
+
+	err := handlers.CreateResourceAction(resourceId, &resourceAction)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
 	}
 	return c.JSON(http.StatusCreated, &resourceAction)
+
 }
 
 // @Description Delete resource action.
 // @Tags        Resource Action
-// @Param res_id path int true "Resource ID"
-// @Param id path int true "Resource Action ID"
+// @Param resource_id path string true "Resource ID"
+// @Param id path string true "Resource Action ID"
 // @Produce     json
 // @Success     204
 // @failure     404,500
 // @Router      /{res_id}/resource_action/{id} [delete]
 func DeleteResourceAction(c echo.Context) error {
-	var resourceAction models.ResourceAction
-	resId := string(c.Param("res_id"))
-	resactId := string(c.Param("id"))
-	resExists, resErr := handlers.CheckResourceExistsById(resId)
-	if resErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !resExists {
+
+	resourceActionId := string(c.Param("id"))
+	resourceId := string(c.Param("res_id"))
+
+	exists, _ := handlers.CheckResourceExistsById(resourceId)
+	if !exists {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	resactExists, resactErr := handlers.CheckResourceActionExistsById(resactId)
-	if resactErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !resactExists {
+
+	exists, _ = handlers.CheckResourceActionExistsById(resourceActionId)
+	if !exists {
 		config.Log.Info("Resource Action not exists")
 		return utils.NotFoundErrorResponse("Resource Action")
 	}
-	err := handlers.DeleteResourceAction(&resourceAction, resactId)
+
+	err := handlers.DeleteResourceAction(resourceId, resourceActionId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -167,46 +149,39 @@ func DeleteResourceAction(c echo.Context) error {
 // @Description Update resource action.
 // @Tags        Resource Action
 // @Accept      json
-// @Param res_id path int true "Resource ID"
-// @Param id path int true "Resource Action ID"
+// @Param resource_id path string true "Resource ID"
+// @Param id path string true "Resource Action ID"
 // @Param request body models.ResourceActionUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.ResourceAction
 // @failure     400,403,404,500
-// @Router      /{proj_id}/resource_action/{id} [put]
+// @Router      /{res_id}/resource_action/{id} [put]
 func UpdateResourceAction(c echo.Context) error {
 	var resourceAction models.ResourceAction
-	var reqResourceAction models.ResourceAction
-	resId := string(c.Param("res_id"))
-	resactId := string(c.Param("id"))
-	resExists, resErr := handlers.CheckResourceExistsById(resId)
-	if resErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
-	}
-	if !resExists {
+	var reqResourceAction models.ResourceActionUpdateRequest
+	resourceActionId := string(c.Param("id"))
+	resourceId := string(c.Param("res_id"))
+
+	exists, _ := handlers.CheckResourceExistsById(resourceId)
+	if !exists {
 		config.Log.Info("Resource not exists")
 		return utils.NotFoundErrorResponse("Resource")
 	}
-	resactExists, resactErr := handlers.CheckResourceActionExistsById(resactId)
-	if resactErr != nil {
-		config.Log.Panic("Server Error!")
-		return utils.ServerErrorResponse()
+
+	exists, _ = handlers.CheckResourceActionExistsById(resourceActionId)
+	if !exists {
+		config.Log.Info("ResourceAction not exists")
+		return utils.NotFoundErrorResponse("ResourceAction")
 	}
-	if !resactExists {
-		config.Log.Info("Resource Action not exists")
-		return utils.NotFoundErrorResponse("Resource Action")
-	}
-	if err := c.Bind(&resourceAction); err != nil {
-		if resourceAction.Key == "" || len(resourceAction.Key) < 4 ||
-			resourceAction.Name == "" || len(resourceAction.Name) < 4 {
-			return utils.InvalidErrorResponse()
-		}
-	}
-	if err := c.Validate(&resourceAction); err != nil {
+
+	if err := c.Bind(&reqResourceAction); err != nil {
 		return utils.InvalidErrorResponse()
 	}
-	err := handlers.UpdateResourceAction(&resourceAction, &reqResourceAction, resactId)
+	if err := c.Validate(&reqResourceAction); err != nil {
+		return utils.InvalidErrorResponse()
+	}
+
+	err := handlers.UpdateResourceAction(resourceId, resourceActionId, &resourceAction, &reqResourceAction)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()

@@ -5,36 +5,75 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetResourceActions(resourceActions *[]models.ResourceAction, res_id string) error {
-	return config.DB.Model(&models.ResourceAction{}).Where("resource_id = ?", res_id).Find(&resourceActions).Error
+func GetResourceActions(resource_id string, resourceActions *[]models.ResourceAction) error {
+	err := config.DB.Select(resourceActions, "SELECT * FROM resource_action WHERE resource_id = $1", resource_id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func GetResourceAction(resourceAction *models.ResourceAction, resact_id string) error {
-	return config.DB.Where("id = ?", resact_id).First(&resourceAction).Error
+func GetResourceAction(resource_id string, id string, resourceAction *models.ResourceAction) error {
+	err := config.DB.Get(resourceAction,
+		"SELECT * FROM resource_action WHERE resource_id = $1 AND resource_action_id = $2", resource_id, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func CreateResourceAction(resourceAction *models.ResourceAction) error {
-	return config.DB.Create(&resourceAction).Error
+func CreateResourceAction(resource_id string, resourceAction *models.ResourceAction) error {
+	stmt, err := config.DB.Prepare("INSERT INTO resource_action(resource_action_key,name,resource_id) VALUES($1, $2, $3)")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(resourceAction.Key, resourceAction.Name, resource_id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func DeleteResourceAction(resourceAction *models.ResourceAction, resact_id string) error {
-	return config.DB.Where("id = ?", resact_id).Delete(&resourceAction).Error
+func DeleteResourceAction(resource_id string, id string) error {
+	stmt, err := config.DB.Prepare("DELETE FROM resource_action WHERE resource_id = $1 AND resource_action_id = $2")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(resource_id, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func UpdateResourceAction(resourceAction *models.ResourceAction) error {
-	return config.DB.Save(&resourceAction).Error
+	stmt, err := config.DB.Prepare(
+		"UPDATE resource_action SET name = $1 WHERE resource_id = $2 AND resource_action_id = $3")
+	if err != nil {
+		return err
+	}
+	_, err = stmt.Exec(resourceAction.Name, resourceAction.ResourceID, resourceAction.ID)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func DeleteAllResourceActions(res_id string) error {
-	return config.DB.Where("resource_id = ?", res_id).Delete(&models.ResourceAction{}).Error
+func CheckResourceActionExistsById(id string, exists *bool) error {
+	err := config.DB.QueryRow(
+		"SELECT exists (SELECT resource_action_id FROM resource_action WHERE resource_action_id = $1)", id).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func CheckResourceActionExistsById(resactId string, exists *bool) error {
-	return config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where("id = ?",
-		resactId).Find(exists).Error
-}
-
-func CheckResourceActionExistsByKey(key string, resId string, exists *bool) error {
-	return config.DB.Model(&models.ResourceAction{}).Select("count(*) > 0").Where(
-		"key = ? AND resource_id = ?", key, resId).Find(exists).Error
+func CheckResourceActionExistsByKey(resource_id string, key string, exists *bool) error {
+	err := config.DB.QueryRow(
+		"SELECT exists (SELECT resource_action_key FROM resource_action WHERE resource_id = $1 AND resource_action_key = $2)",
+		resource_id, key).Scan(exists)
+	if err != nil {
+		return err
+	}
+	return nil
 }

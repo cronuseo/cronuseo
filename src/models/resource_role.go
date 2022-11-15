@@ -33,39 +33,3 @@ type ResourceRolePatchOperation struct {
 type Value struct {
 	Value string `json:"value" db:"value"`
 }
-
-type ResourceRoleToGroup struct {
-	GroupID        int `gorm:"foreignKey:ID"`
-	ResourceRoleID int `gorm:"foreignKey:ID"`
-}
-
-type ResourceRoleToUser struct {
-	UserID         int `gorm:"foreignKey:ID"`
-	ResourceRoleID int `gorm:"foreignKey:ID"`
-}
-
-type ResourceRoleToResourceAction struct {
-	ResourceID       int `gorm:"foreignKey:ID"`
-	ResourceActionID int `gorm:"foreignKey:ID"`
-	ResourceRoleID   int `gorm:"foreignKey:ID"`
-}
-
-type ResourceRoleToResourceActionKey struct {
-	Resource       string `json:"resource"`
-	ResourceAction string `json:"resourceAction"`
-	ResourceRole   string `json:"resourceRole"`
-}
-
-type ResourceRoleWithGroupsUsers struct {
-	ID              int                    `json:"id"`
-	Key             string                 `json:"key"`
-	Name            string                 `json:"name"`
-	ResourceID      int                    `json:"res_id"`
-	Users           []UserID               `json:"users"`
-	Groups          []GroupOnlyWithID      `json:"groups"`
-	ResourceActions []ResourceActionWithID `json:"actions"`
-}
-
-type ResourceActionWithID struct {
-	ResourceActionID int `json:"resact_id"`
-}

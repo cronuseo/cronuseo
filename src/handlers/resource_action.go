@@ -1,62 +1,44 @@
 package handlers
 
 import (
-	"errors"
-
-	"github.com/shashimalcse/Cronuseo/repositories"
-
 	"github.com/shashimalcse/Cronuseo/models"
+	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetResourceActions(resourceActions *[]models.ResourceAction, resId string) error {
-	return repositories.GetResourceActions(resourceActions, resId)
+func GetResourceActions(resource_id string, resourceActions *[]models.ResourceAction) error {
+	return repositories.GetResourceActions(resource_id, resourceActions)
 }
 
-func GetResourceAction(resourceAction *models.ResourceAction, resactId string) error {
-	return repositories.GetResourceAction(resourceAction, resactId)
+func GetResourceAction(resource_id string, id string, resourceAction *models.ResourceAction) error {
+	return repositories.GetResourceAction(resource_id, id, resourceAction)
 }
 
-func CreateResourceAction(resourceAction *models.ResourceAction) error {
-	return repositories.CreateResourceAction(resourceAction)
+func CreateResourceAction(resource_id string, resourceAction *models.ResourceAction) error {
+	return repositories.CreateResourceAction(resource_id, resourceAction)
 }
 
-func DeleteResourceAction(resourceAction *models.ResourceAction, resactId string) error {
-	return repositories.DeleteResourceAction(resourceAction, resactId)
+func DeleteResourceAction(resource_id string, id string) error {
+	return repositories.DeleteResourceAction(resource_id, id)
 }
 
-func UpdateResourceAction(resourceAction *models.ResourceAction, reqResourceAction *models.ResourceAction,
-	resactId string) error {
-	err := repositories.GetResourceAction(resourceAction, resactId)
+func UpdateResourceAction(resource_id string, id string, resourceAction *models.ResourceAction,
+	reqResourceAction *models.ResourceActionUpdateRequest) error {
+	err := repositories.GetResourceAction(resource_id, id, resourceAction)
 	if err != nil {
 		return err
 	}
 	resourceAction.Name = reqResourceAction.Name
-	resourceAction.Description = reqResourceAction.Description
 	return repositories.UpdateResourceAction(resourceAction)
 }
 
-func CheckResourceActionExistsById(resactId string) (bool, error) {
+func CheckResourceActionExistsById(id string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceActionExistsById(resactId, &exists)
-	if err != nil {
-		return false, errors.New("resource action not exists")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	err := repositories.CheckResourceActionExistsById(id, &exists)
+	return exists, err
 }
 
-func CheckResourceActionExistsByKey(key string, resId string) (bool, error) {
+func CheckResourceActionExistsByKey(resource_id string, key string) (bool, error) {
 	var exists bool
-	err := repositories.CheckResourceActionExistsByKey(key, resId, &exists)
-	if err != nil {
-		return false, errors.New("")
-	}
-	if exists {
-		return true, nil
-	} else {
-		return false, nil
-	}
+	err := repositories.CheckResourceActionExistsByKey(resource_id, key, &exists)
+	return exists, err
 }

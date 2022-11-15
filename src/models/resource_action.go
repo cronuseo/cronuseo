@@ -1,23 +1,17 @@
 package models
 
 type ResourceAction struct {
-	ID             int    `json:"id" gorm:"primary_key"`
-	Key            string `json:"key" validate:"required,min=4"`
-	Name           string `json:"name" validate:"required,min=4"`
-	PermissionName string `json:"permission_name"`
-	Description    string `json:"description"`
-	ResourceID     int    `json:"-" gorm:"foreignKey:ID"`
+	ID         string `json:"resource_action_id" db:"resource_action_id"`
+	Key        string `json:"resource_action_key" validate:"required,min=4" db:"resource_action_key"`
+	Name       string `json:"name" validate:"required,min=4" db:"name"`
+	ResourceID string `json:"resource_id" db:"resource_id"`
 }
 
 type ResourceActionCreateRequest struct {
-	Key            string `json:"key" validate:"required,min=4"`
-	Name           string `json:"name" validate:"required,min=4"`
-	PermissionName string `json:"permission_name"`
-	Description    string `json:"description"`
+	Key  string `json:"resource_action_key" validate:"required,min=4" db:"resource_action_key"`
+	Name string `json:"name" validate:"required,min=4" db:"name"`
 }
 
 type ResourceActionUpdateRequest struct {
-	Name           string `json:"name" validate:"required,min=4"`
-	PermissionName string `json:"permission_name"`
-	Description    string `json:"description"`
+	Name string `json:"name" validate:"required,min=4" db:"name"`
 }
