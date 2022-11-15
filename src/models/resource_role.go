@@ -10,8 +10,10 @@ type ResourceRole struct {
 }
 
 type ResourceRoleCreateRequest struct {
-	Key  string `json:"resource_role_key" validate:"required,min=4" db:"resource_role_key"`
-	Name string `json:"name" validate:"required,min=4" db:"name"`
+	Key    string    `json:"resource_role_key" validate:"required,min=4" db:"resource_role_key"`
+	Name   string    `json:"name" validate:"required,min=4" db:"name"`
+	Users  []UserID  `json:"users"`
+	Groups []GroupID `json:"groups"`
 }
 
 type ResourceRoleUpdateRequest struct {

@@ -27,7 +27,7 @@ func GetResourceRole(resource_id string, id string, resource_role *models.Resour
 	if err != nil {
 		return err
 	}
-	err = config.DB.Select(&groups, "SELECT user_id FROM user_resource_role WHERE resource_role_id = $1", id)
+	err = config.DB.Select(&groups, "SELECT group_id FROM group_resource_role WHERE resource_role_id = $1", id)
 	if err != nil {
 		return err
 	}
@@ -213,7 +213,7 @@ func PatchResourceRole(resource_role_id string, resourecRolePatch *models.Resour
 							if exists || user_error != nil {
 								continue
 							}
-							_, err = stmt.Exec(resource_role_id, userId)
+							_, err = stmt.Exec(resource_role_id, userId.Value)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -234,7 +234,7 @@ func PatchResourceRole(resource_role_id string, resourecRolePatch *models.Resour
 							if !exists || user_error != nil {
 								continue
 							}
-							_, err = stmt.Exec(resource_role_id, userId)
+							_, err = stmt.Exec(resource_role_id, userId.Value)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -262,7 +262,7 @@ func PatchResourceRole(resource_role_id string, resourecRolePatch *models.Resour
 							if exists || user_error != nil {
 								continue
 							}
-							_, err = stmt.Exec(resource_role_id, groupId)
+							_, err = stmt.Exec(resource_role_id, groupId.Value)
 							if err != nil {
 								log.Fatal(err)
 							}
@@ -283,7 +283,7 @@ func PatchResourceRole(resource_role_id string, resourecRolePatch *models.Resour
 							if !exists || user_error != nil {
 								continue
 							}
-							_, err = stmt.Exec(resource_role_id, groupId)
+							_, err = stmt.Exec(resource_role_id, groupId.Value)
 							if err != nil {
 								log.Fatal(err)
 							}
