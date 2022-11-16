@@ -12,7 +12,7 @@ import (
 
 // @Description Get all resource actions.
 // @Tags        Resource Action
-// @Param resource_id path string true "Resource ID"
+// @Param res_id path string true "Resource ID"
 // @Produce     json
 // @Success     200 {array}  models.ResourceAction
 // @failure     500
@@ -37,7 +37,7 @@ func GetResourceActions(c echo.Context) error {
 
 // @Description Get resource action by ID.
 // @Tags        Resource Action
-// @Param resource_id path string true "Resource ID"
+// @Param res_id path string true "Resource ID"
 // @Param id path string true "Resource Action ID"
 // @Produce     json
 // @Success     200 {object}  models.ResourceAction
@@ -72,7 +72,7 @@ func GetResourceAction(c echo.Context) error {
 // @Description Create resource action.
 // @Tags        Resource Action
 // @Accept      json
-// @Param resource_id path string true "Resource ID"
+// @Param res_id path string true "Resource ID"
 // @Param request body models.ResourceActionCreateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.ResourceAction
@@ -115,7 +115,7 @@ func CreateResourceAction(c echo.Context) error {
 
 // @Description Delete resource action.
 // @Tags        Resource Action
-// @Param resource_id path string true "Resource ID"
+// @Param res_id path string true "Resource ID"
 // @Param id path string true "Resource Action ID"
 // @Produce     json
 // @Success     204
@@ -149,7 +149,7 @@ func DeleteResourceAction(c echo.Context) error {
 // @Description Update resource action.
 // @Tags        Resource Action
 // @Accept      json
-// @Param resource_id path string true "Resource ID"
+// @Param res_id path string true "Resource ID"
 // @Param id path string true "Resource Action ID"
 // @Param request body models.ResourceActionUpdateRequest true "body"
 // @Produce     json

@@ -77,3 +77,19 @@ func CheckResourceExistsByKey(project_id string, key string, exists *bool) error
 	}
 	return nil
 }
+
+func GetResourceKeyById(resourceId string, key *string) error {
+	err := config.DB.QueryRow("SELECT resource_key FROM resource WHERE resource_id = $1", resourceId).Scan(key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func GetProjectIDById(resourceId string, projectId *string) error {
+	err := config.DB.QueryRow("SELECT project_id FROM resource WHERE resource_id = $1", resourceId).Scan(projectId)
+	if err != nil {
+		return err
+	}
+	return nil
+}

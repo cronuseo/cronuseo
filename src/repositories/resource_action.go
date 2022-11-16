@@ -77,3 +77,12 @@ func CheckResourceActionExistsByKey(resource_id string, key string, exists *bool
 	}
 	return nil
 }
+
+func GetActionKeyById(id string, key *string) error {
+	err := config.DB.QueryRow("SELECT resource_action_key FROM resource_action WHERE resource_action_id = $1",
+		id).Scan(key)
+	if err != nil {
+		return err
+	}
+	return nil
+}

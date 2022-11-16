@@ -344,3 +344,12 @@ func IsGroupInRole(resource_role_id string, groupId string, exists *bool) error 
 	}
 	return nil
 }
+
+func GetRoleKeyById(resource_role_id string, key *string) error {
+	err := config.DB.QueryRow("SELECT resource_role_key FROM resource_role WHERE resource_role_id = $1",
+		resource_role_id).Scan(key)
+	if err != nil {
+		return err
+	}
+	return nil
+}

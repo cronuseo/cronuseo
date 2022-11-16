@@ -25,84 +25,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/check": {
-            "post": {
-                "description": "Check RBAC.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Check"
-                ],
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ResourceRoleToResourceActionKey"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "status",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/check/list": {
-            "post": {
-                "description": "Check RBAC list.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Check"
-                ],
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ResourceRoleToResourceActionKey"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "scopes",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
         "/organization": {
             "get": {
                 "description": "Get all organizations.",
@@ -179,7 +101,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "id",
                         "in": "path",
@@ -214,7 +136,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "id",
                         "in": "path",
@@ -261,7 +183,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "id",
                         "in": "path",
@@ -281,6 +203,59 @@ const docTemplate = `{
                 }
             }
         },
+        "/{orgKey}/permission/{res_id}": {
+            "post": {
+                "description": "Create permission.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization Key",
+                        "name": "orgKey",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Resource ID",
+                        "name": "res_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.Permissions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/{org_id}/group": {
             "get": {
                 "description": "Get all groups.",
@@ -292,7 +267,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
@@ -327,7 +302,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
@@ -373,14 +348,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Group ID",
                         "name": "id",
                         "in": "path",
@@ -391,7 +366,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.GroupUsers"
+                            "$ref": "#/definitions/models.Group"
                         }
                     },
                     "404": {
@@ -415,14 +390,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Group ID",
                         "name": "id",
                         "in": "path",
@@ -469,14 +444,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Group ID",
                         "name": "id",
                         "in": "path",
@@ -494,11 +469,9 @@ const docTemplate = `{
                         "description": "Internal Server Error"
                     }
                 }
-            }
-        },
-        "/{org_id}/group/{id}/users": {
-            "post": {
-                "description": "Add users to group.",
+            },
+            "patch": {
+                "description": "Patch group.",
                 "consumes": [
                     "application/json"
                 ],
@@ -510,14 +483,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Group ID",
                         "name": "id",
                         "in": "path",
@@ -529,13 +502,22 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/models.AddUsersToGroup"
+                            "$ref": "#/definitions/models.GroupPatchRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK"
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.Group"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "Not Found"
@@ -557,7 +539,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
@@ -592,7 +574,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
@@ -638,14 +620,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Project ID",
                         "name": "id",
                         "in": "path",
@@ -680,14 +662,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Project ID",
                         "name": "id",
                         "in": "path",
@@ -734,14 +716,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Project ID",
                         "name": "id",
                         "in": "path",
@@ -772,7 +754,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
@@ -807,7 +789,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
@@ -853,14 +835,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -895,14 +877,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -949,14 +931,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "User ID",
                         "name": "id",
                         "in": "path",
@@ -987,7 +969,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Project ID",
                         "name": "proj_id",
                         "in": "path",
@@ -1022,7 +1004,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Project ID",
                         "name": "proj_id",
                         "in": "path",
@@ -1068,14 +1050,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Project ID",
                         "name": "proj_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "id",
                         "in": "path",
@@ -1110,14 +1092,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Project ID",
                         "name": "proj_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "id",
                         "in": "path",
@@ -1164,14 +1146,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Project ID",
                         "name": "proj_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "id",
                         "in": "path",
@@ -1181,124 +1163,6 @@ const docTemplate = `{
                 "responses": {
                     "204": {
                         "description": "No Content"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{proj_id}/resource_action/{id}": {
-            "put": {
-                "description": "Update resource action.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Resource Action"
-                ],
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Resource ID",
-                        "name": "res_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Resource Action ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ResourceActionUpdateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.ResourceAction"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{proj_id}/resource_role/{id}": {
-            "put": {
-                "description": "Update resource role.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Resource Role"
-                ],
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Resource ID",
-                        "name": "res_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Resource Role ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/models.ResourceRoleUpdateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/models.ResourceRole"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "Not Found"
@@ -1320,7 +1184,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "res_id",
                         "in": "path",
@@ -1333,7 +1197,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/models.Resource"
+                                "$ref": "#/definitions/models.ResourceAction"
                             }
                         }
                     },
@@ -1355,7 +1219,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "res_id",
                         "in": "path",
@@ -1401,14 +1265,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "res_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource Action ID",
                         "name": "id",
                         "in": "path",
@@ -1430,6 +1294,63 @@ const docTemplate = `{
                     }
                 }
             },
+            "put": {
+                "description": "Update resource action.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resource Action"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource ID",
+                        "name": "res_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Resource Action ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceActionUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceAction"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
             "delete": {
                 "description": "Delete resource action.",
                 "produces": [
@@ -1440,14 +1361,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "res_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource Action ID",
                         "name": "id",
                         "in": "path",
@@ -1478,7 +1399,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "res_id",
                         "in": "path",
@@ -1513,7 +1434,7 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "res_id",
                         "in": "path",
@@ -1548,138 +1469,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/{res_id}/resource_role/action/{resact_id}": {
-            "post": {
-                "description": "Assign resource role to group.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Resource Role"
-                ],
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Resource ID",
-                        "name": "res_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Resource Action ID",
-                        "name": "resact_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{res_id}/resource_role/group/{group_id}": {
-            "post": {
-                "description": "Assign resource role to group.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Resource Role"
-                ],
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Resource ID",
-                        "name": "res_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Group ID",
-                        "name": "group_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{res_id}/resource_role/user/{user_id}": {
-            "post": {
-                "description": "Assign resource role to user.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Resource Role"
-                ],
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Resource ID",
-                        "name": "res_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
         "/{res_id}/resource_role/{id}": {
             "get": {
                 "description": "Get resource roles by ID.",
@@ -1691,14 +1480,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "res_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource Role ID",
                         "name": "id",
                         "in": "path",
@@ -1709,8 +1498,65 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/models.ResourceRoleWithGroupsUsers"
+                            "$ref": "#/definitions/models.ResourceRole"
                         }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "put": {
+                "description": "Update resource role.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resource Role"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource ID",
+                        "name": "res_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Resource Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceRoleUpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "Not Found"
@@ -1730,14 +1576,14 @@ const docTemplate = `{
                 ],
                 "parameters": [
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource ID",
                         "name": "res_id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "type": "integer",
+                        "type": "string",
                         "description": "Resource Role ID",
                         "name": "id",
                         "in": "path",
@@ -1755,55 +1601,132 @@ const docTemplate = `{
                         "description": "Internal Server Error"
                     }
                 }
+            },
+            "patch": {
+                "description": "Patch resource role.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Resource Role"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Resource ID",
+                        "name": "res_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Resource Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceRolePatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/models.ResourceRole"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
             }
         }
     },
     "definitions": {
-        "models.AddUsersToGroup": {
+        "models.Action": {
             "type": "object",
             "properties": {
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UserOnlyWithID"
-                    }
+                "action_id": {
+                    "type": "string"
                 }
             }
         },
         "models.Group": {
             "type": "object",
             "required": [
-                "key",
+                "group_key",
                 "name"
             ],
             "properties": {
-                "id": {
-                    "type": "integer"
+                "group_id": {
+                    "type": "string"
                 },
-                "key": {
+                "group_key": {
                     "type": "string",
                     "minLength": 4
                 },
                 "name": {
                     "type": "string",
                     "minLength": 4
+                },
+                "org_id": {
+                    "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserID"
+                    }
                 }
             }
         },
         "models.GroupCreateRequest": {
             "type": "object",
             "required": [
-                "key",
+                "group_key",
                 "name"
             ],
             "properties": {
-                "key": {
+                "group_key": {
                     "type": "string",
                     "minLength": 4
                 },
                 "name": {
                     "type": "string",
                     "minLength": 4
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserID"
+                    }
+                }
+            }
+        },
+        "models.GroupID": {
+            "type": "object",
+            "properties": {
+                "group_id": {
+                    "type": "string"
                 }
             }
         },
@@ -1812,6 +1735,31 @@ const docTemplate = `{
             "properties": {
                 "group_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.GroupPatchOperation": {
+            "type": "object",
+            "properties": {
+                "op": {
+                    "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserID"
+                    }
+                }
+            }
+        },
+        "models.GroupPatchRequest": {
+            "type": "object",
+            "properties": {
+                "operations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.GroupPatchOperation"
+                    }
                 }
             }
         },
@@ -1827,62 +1775,39 @@ const docTemplate = `{
                 }
             }
         },
-        "models.GroupUsers": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "org_id": {
-                    "type": "integer"
-                },
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UserOnlyWithID"
-                    }
-                }
-            }
-        },
         "models.Organization": {
             "description": "Organization information",
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "org_key"
             ],
             "properties": {
-                "key": {
-                    "type": "string",
-                    "minLength": 4
-                },
                 "name": {
                     "type": "string",
                     "minLength": 4
                 },
                 "org_id": {
-                    "type": "integer"
+                    "type": "string"
+                },
+                "org_key": {
+                    "type": "string",
+                    "minLength": 4
                 }
             }
         },
         "models.OrganizationRequest": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "org_key"
             ],
             "properties": {
-                "key": {
+                "name": {
                     "type": "string",
                     "minLength": 4
                 },
-                "name": {
+                "org_key": {
                     "type": "string",
                     "minLength": 4
                 }
@@ -1900,44 +1825,69 @@ const docTemplate = `{
                 }
             }
         },
+        "models.Permission": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Action"
+                    }
+                },
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Permissions": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Permission"
+                    }
+                }
+            }
+        },
         "models.Project": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "project_key"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "key": {
-                    "type": "string",
-                    "minLength": 4
-                },
                 "name": {
                     "type": "string"
+                },
+                "org_id": {
+                    "type": "string"
+                },
+                "project_id": {
+                    "type": "string"
+                },
+                "project_key": {
+                    "type": "string",
+                    "minLength": 4
                 }
             }
         },
         "models.ProjectCreateRequest": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "project_key"
             ],
             "properties": {
                 "description": {
                     "type": "string"
                 },
-                "key": {
-                    "type": "string",
-                    "minLength": 4
-                },
                 "name": {
                     "type": "string"
+                },
+                "project_key": {
+                    "type": "string",
+                    "minLength": 4
                 }
             }
         },
@@ -1958,21 +1908,21 @@ const docTemplate = `{
         "models.Resource": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "resource_key"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "key": {
+                "name": {
                     "type": "string",
                     "minLength": 4
                 },
-                "name": {
+                "project_id": {
+                    "type": "string"
+                },
+                "resource_id": {
+                    "type": "string"
+                },
+                "resource_key": {
                     "type": "string",
                     "minLength": 4
                 }
@@ -1981,25 +1931,22 @@ const docTemplate = `{
         "models.ResourceAction": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "resource_action_key"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "key": {
-                    "type": "string",
-                    "minLength": 4
-                },
                 "name": {
                     "type": "string",
                     "minLength": 4
                 },
-                "permission_name": {
+                "resource_action_id": {
+                    "type": "string"
+                },
+                "resource_action_key": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "resource_id": {
                     "type": "string"
                 }
             }
@@ -2007,23 +1954,17 @@ const docTemplate = `{
         "models.ResourceActionCreateRequest": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "resource_action_key"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "key": {
-                    "type": "string",
-                    "minLength": 4
-                },
                 "name": {
                     "type": "string",
                     "minLength": 4
                 },
-                "permission_name": {
-                    "type": "string"
+                "resource_action_key": {
+                    "type": "string",
+                    "minLength": 4
                 }
             }
         },
@@ -2033,41 +1974,24 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string",
                     "minLength": 4
-                },
-                "permission_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "models.ResourceActionWithID": {
-            "type": "object",
-            "properties": {
-                "resact_id": {
-                    "type": "integer"
                 }
             }
         },
         "models.ResourceCreateRequest": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "resource_key"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "key": {
+                "name": {
                     "type": "string",
                     "minLength": 4
                 },
-                "name": {
+                "resource_key": {
                     "type": "string",
                     "minLength": 4
                 }
@@ -2076,57 +2000,92 @@ const docTemplate = `{
         "models.ResourceRole": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "resource_role_key"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "key": {
-                    "type": "string",
-                    "minLength": 4
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.GroupID"
+                    }
                 },
                 "name": {
                     "type": "string",
                     "minLength": 4
+                },
+                "resource_id": {
+                    "type": "string"
+                },
+                "resource_role_id": {
+                    "type": "string"
+                },
+                "resource_role_key": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserID"
+                    }
                 }
             }
         },
         "models.ResourceRoleCreateRequest": {
             "type": "object",
             "required": [
-                "key",
-                "name"
+                "name",
+                "resource_role_key"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "key": {
-                    "type": "string",
-                    "minLength": 4
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.GroupID"
+                    }
                 },
                 "name": {
                     "type": "string",
                     "minLength": 4
+                },
+                "resource_role_key": {
+                    "type": "string",
+                    "minLength": 4
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserID"
+                    }
                 }
             }
         },
-        "models.ResourceRoleToResourceActionKey": {
+        "models.ResourceRolePatchOperation": {
             "type": "object",
             "properties": {
-                "resource": {
+                "op": {
                     "type": "string"
                 },
-                "resourceAction": {
+                "path": {
                     "type": "string"
                 },
-                "resourceRole": {
-                    "type": "string"
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Value"
+                    }
+                }
+            }
+        },
+        "models.ResourceRolePatchRequest": {
+            "type": "object",
+            "properties": {
+                "operations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ResourceRolePatchOperation"
+                    }
                 }
             }
         },
@@ -2136,64 +2095,18 @@ const docTemplate = `{
                 "name"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
                 "name": {
                     "type": "string",
                     "minLength": 4
-                }
-            }
-        },
-        "models.ResourceRoleWithGroupsUsers": {
-            "type": "object",
-            "properties": {
-                "actions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.ResourceActionWithID"
-                    }
-                },
-                "groups": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.GroupOnlyWithID"
-                    }
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "res_id": {
-                    "type": "integer"
-                },
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/models.UserOnlyWithID"
-                    }
                 }
             }
         },
         "models.ResourceUpdateRequest": {
             "type": "object",
             "required": [
-                "key",
                 "name"
             ],
             "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "key": {
-                    "type": "string",
-                    "minLength": 4
-                },
                 "name": {
                     "type": "string",
                     "minLength": 4
@@ -2206,13 +2119,16 @@ const docTemplate = `{
                 "username"
             ],
             "properties": {
-                "firstname": {
+                "first_name": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
+                "last_name": {
+                    "type": "string"
                 },
-                "lastname": {
+                "org_id": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 },
                 "username": {
@@ -2227,13 +2143,13 @@ const docTemplate = `{
                 "username"
             ],
             "properties": {
-                "firstname": {
+                "first_name": {
                     "type": "string"
                 },
-                "id": {
-                    "type": "integer"
+                "last_name": {
+                    "type": "string"
                 },
-                "lastname": {
+                "user_id": {
                     "type": "string"
                 },
                 "username": {
@@ -2242,21 +2158,21 @@ const docTemplate = `{
                 }
             }
         },
-        "models.UserOnlyWithID": {
+        "models.UserID": {
             "type": "object",
             "properties": {
                 "user_id": {
-                    "type": "integer"
+                    "type": "string"
                 }
             }
         },
         "models.UserUpdateRequest": {
             "type": "object",
             "properties": {
-                "firstname": {
+                "first_name": {
                     "type": "string"
                 },
-                "lastname": {
+                "last_name": {
                     "type": "string"
                 }
             }
@@ -2283,6 +2199,14 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Value": {
+            "type": "object",
+            "properties": {
+                "value": {
                     "type": "string"
                 }
             }

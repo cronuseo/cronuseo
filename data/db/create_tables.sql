@@ -101,8 +101,6 @@ CREATE TABLE if not exists resource_action_role(
    );
   
 CREATE TABLE if not exists resource_action_role_key(
-   resource_action_key VARCHAR(40) NOT NULL,
-   resource_role_key VARCHAR(40) NOT NULL,
-   resource_key VARCHAR(160) NOT NULL
+   value_key VARCHAR(200) NOT NULL
    );
    

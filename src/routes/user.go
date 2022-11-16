@@ -7,7 +7,7 @@ import (
 
 func UserRoutes(router *echo.Group) {
 
-	userRouter := router.Group("/:tenant_id/user")
+	userRouter := router.Group("/:org_id/user")
 
 	userRouter.GET("", controllers.GetUsers)
 	userRouter.GET("/:id", controllers.GetUser)

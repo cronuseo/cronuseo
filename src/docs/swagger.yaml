@@ -1,42 +1,71 @@
 basePath: /api/v1
 definitions:
-  models.AddUsersToGroup:
+  models.Action:
     properties:
-      users:
-        items:
-          $ref: '#/definitions/models.UserOnlyWithID'
-        type: array
+      action_id:
+        type: string
     type: object
   models.Group:
     properties:
-      id:
-        type: integer
-      key:
+      group_id:
+        type: string
+      group_key:
         minLength: 4
         type: string
       name:
         minLength: 4
         type: string
+      org_id:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/models.UserID'
+        type: array
     required:
-    - key
+    - group_key
     - name
     type: object
   models.GroupCreateRequest:
     properties:
-      key:
+      group_key:
         minLength: 4
         type: string
       name:
         minLength: 4
         type: string
+      users:
+        items:
+          $ref: '#/definitions/models.UserID'
+        type: array
     required:
-    - key
+    - group_key
     - name
+    type: object
+  models.GroupID:
+    properties:
+      group_id:
+        type: string
     type: object
   models.GroupOnlyWithID:
     properties:
       group_id:
         type: integer
+    type: object
+  models.GroupPatchOperation:
+    properties:
+      op:
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/models.UserID'
+        type: array
+    type: object
+  models.GroupPatchRequest:
+    properties:
+      operations:
+        items:
+          $ref: '#/definitions/models.GroupPatchOperation'
+        type: array
     type: object
   models.GroupUpdateRequest:
     properties:
@@ -46,47 +75,32 @@ definitions:
     required:
     - name
     type: object
-  models.GroupUsers:
-    properties:
-      id:
-        type: integer
-      key:
-        type: string
-      name:
-        type: string
-      org_id:
-        type: integer
-      users:
-        items:
-          $ref: '#/definitions/models.UserOnlyWithID'
-        type: array
-    type: object
   models.Organization:
     description: Organization information
     properties:
-      key:
-        minLength: 4
-        type: string
       name:
         minLength: 4
         type: string
       org_id:
-        type: integer
+        type: string
+      org_key:
+        minLength: 4
+        type: string
     required:
-    - key
     - name
+    - org_key
     type: object
   models.OrganizationRequest:
     properties:
-      key:
-        minLength: 4
-        type: string
       name:
         minLength: 4
         type: string
+      org_key:
+        minLength: 4
+        type: string
     required:
-    - key
     - name
+    - org_key
     type: object
   models.OrganizationUpdateRequest:
     properties:
@@ -96,33 +110,49 @@ definitions:
     required:
     - name
     type: object
+  models.Permission:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/models.Action'
+        type: array
+      role_id:
+        type: string
+    type: object
+  models.Permissions:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/models.Permission'
+        type: array
+    type: object
   models.Project:
     properties:
-      description:
-        type: string
-      id:
-        type: integer
-      key:
-        minLength: 4
-        type: string
       name:
         type: string
+      org_id:
+        type: string
+      project_id:
+        type: string
+      project_key:
+        minLength: 4
+        type: string
     required:
-    - key
     - name
+    - project_key
     type: object
   models.ProjectCreateRequest:
     properties:
       description:
         type: string
-      key:
-        minLength: 4
-        type: string
       name:
         type: string
+      project_key:
+        minLength: 4
+        type: string
     required:
-    - key
     - name
+    - project_key
     type: object
   models.ProjectUpdateRequest:
     properties:
@@ -135,178 +165,155 @@ definitions:
     type: object
   models.Resource:
     properties:
-      description:
-        type: string
-      id:
-        type: integer
-      key:
-        minLength: 4
-        type: string
       name:
         minLength: 4
         type: string
+      project_id:
+        type: string
+      resource_id:
+        type: string
+      resource_key:
+        minLength: 4
+        type: string
     required:
-    - key
     - name
+    - resource_key
     type: object
   models.ResourceAction:
     properties:
-      description:
-        type: string
-      id:
-        type: integer
-      key:
-        minLength: 4
-        type: string
       name:
         minLength: 4
         type: string
-      permission_name:
+      resource_action_id:
+        type: string
+      resource_action_key:
+        minLength: 4
+        type: string
+      resource_id:
         type: string
     required:
-    - key
     - name
+    - resource_action_key
     type: object
   models.ResourceActionCreateRequest:
     properties:
-      description:
-        type: string
-      key:
-        minLength: 4
-        type: string
       name:
         minLength: 4
         type: string
-      permission_name:
+      resource_action_key:
+        minLength: 4
         type: string
     required:
-    - key
     - name
+    - resource_action_key
     type: object
   models.ResourceActionUpdateRequest:
     properties:
-      description:
-        type: string
       name:
         minLength: 4
         type: string
-      permission_name:
-        type: string
     required:
     - name
-    type: object
-  models.ResourceActionWithID:
-    properties:
-      resact_id:
-        type: integer
     type: object
   models.ResourceCreateRequest:
     properties:
-      description:
-        type: string
-      key:
-        minLength: 4
-        type: string
       name:
         minLength: 4
         type: string
+      resource_key:
+        minLength: 4
+        type: string
     required:
-    - key
     - name
+    - resource_key
     type: object
   models.ResourceRole:
     properties:
-      description:
-        type: string
-      id:
-        type: integer
-      key:
-        minLength: 4
-        type: string
+      groups:
+        items:
+          $ref: '#/definitions/models.GroupID'
+        type: array
       name:
         minLength: 4
         type: string
+      resource_id:
+        type: string
+      resource_role_id:
+        type: string
+      resource_role_key:
+        minLength: 4
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/models.UserID'
+        type: array
     required:
-    - key
     - name
+    - resource_role_key
     type: object
   models.ResourceRoleCreateRequest:
     properties:
-      description:
-        type: string
-      key:
-        minLength: 4
-        type: string
+      groups:
+        items:
+          $ref: '#/definitions/models.GroupID'
+        type: array
       name:
         minLength: 4
         type: string
+      resource_role_key:
+        minLength: 4
+        type: string
+      users:
+        items:
+          $ref: '#/definitions/models.UserID'
+        type: array
     required:
-    - key
     - name
+    - resource_role_key
     type: object
-  models.ResourceRoleToResourceActionKey:
+  models.ResourceRolePatchOperation:
     properties:
-      resource:
+      op:
         type: string
-      resourceAction:
+      path:
         type: string
-      resourceRole:
-        type: string
+      values:
+        items:
+          $ref: '#/definitions/models.Value'
+        type: array
+    type: object
+  models.ResourceRolePatchRequest:
+    properties:
+      operations:
+        items:
+          $ref: '#/definitions/models.ResourceRolePatchOperation'
+        type: array
     type: object
   models.ResourceRoleUpdateRequest:
     properties:
-      description:
-        type: string
       name:
         minLength: 4
         type: string
     required:
     - name
     type: object
-  models.ResourceRoleWithGroupsUsers:
-    properties:
-      actions:
-        items:
-          $ref: '#/definitions/models.ResourceActionWithID'
-        type: array
-      groups:
-        items:
-          $ref: '#/definitions/models.GroupOnlyWithID'
-        type: array
-      id:
-        type: integer
-      key:
-        type: string
-      name:
-        type: string
-      res_id:
-        type: integer
-      users:
-        items:
-          $ref: '#/definitions/models.UserOnlyWithID'
-        type: array
-    type: object
   models.ResourceUpdateRequest:
     properties:
-      description:
-        type: string
-      key:
-        minLength: 4
-        type: string
       name:
         minLength: 4
         type: string
     required:
-    - key
     - name
     type: object
   models.User:
     properties:
-      firstname:
+      first_name:
         type: string
-      id:
-        type: integer
-      lastname:
+      last_name:
+        type: string
+      org_id:
+        type: string
+      user_id:
         type: string
       username:
         minLength: 4
@@ -316,11 +323,11 @@ definitions:
     type: object
   models.UserCreateRequest:
     properties:
-      firstname:
+      first_name:
         type: string
-      id:
-        type: integer
-      lastname:
+      last_name:
+        type: string
+      user_id:
         type: string
       username:
         minLength: 4
@@ -328,16 +335,16 @@ definitions:
     required:
     - username
     type: object
-  models.UserOnlyWithID:
+  models.UserID:
     properties:
       user_id:
-        type: integer
+        type: string
     type: object
   models.UserUpdateRequest:
     properties:
-      firstname:
+      first_name:
         type: string
-      lastname:
+      last_name:
         type: string
     type: object
   models.UserWithGroup:
@@ -355,6 +362,11 @@ definitions:
       org_id:
         type: integer
       username:
+        type: string
+    type: object
+  models.Value:
+    properties:
+      value:
         type: string
     type: object
 host: localhost:8080
@@ -379,7 +391,7 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -402,7 +414,7 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -432,12 +444,12 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: Group ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -456,19 +468,57 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: Group ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.GroupUsers'
+            $ref: '#/definitions/models.Group'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
+    patch:
+      consumes:
+      - application/json
+      description: Patch group.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.GroupPatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Group'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
         "404":
           description: Not Found
         "500":
@@ -484,12 +534,12 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: Group ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -513,39 +563,6 @@ paths:
           description: Internal Server Error
       tags:
       - Group
-  /{org_id}/group/{id}/users:
-    post:
-      consumes:
-      - application/json
-      description: Add users to group.
-      parameters:
-      - description: Organization ID
-        in: path
-        name: org_id
-        required: true
-        type: integer
-      - description: Group ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.AddUsersToGroup'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Group
   /{org_id}/project:
     get:
       description: Get all projects.
@@ -554,7 +571,7 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -577,7 +594,7 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -607,12 +624,12 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: Project ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -631,12 +648,12 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: Project ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -659,12 +676,12 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: Project ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -696,7 +713,7 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -719,7 +736,7 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -749,12 +766,12 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: User ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -773,12 +790,12 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: User ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -801,12 +818,12 @@ paths:
         in: path
         name: org_id
         required: true
-        type: integer
+        type: string
       - description: User ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -830,6 +847,41 @@ paths:
           description: Internal Server Error
       tags:
       - User
+  /{orgKey}/permission/{res_id}:
+    post:
+      consumes:
+      - application/json
+      description: Create permission.
+      parameters:
+      - description: Organization Key
+        in: path
+        name: orgKey
+        required: true
+        type: string
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.Permissions'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
   /{proj_id}/resource:
     get:
       description: Get all resources.
@@ -838,7 +890,7 @@ paths:
         in: path
         name: proj_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -861,7 +913,7 @@ paths:
         in: path
         name: proj_id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -891,12 +943,12 @@ paths:
         in: path
         name: proj_id
         required: true
-        type: integer
+        type: string
       - description: Resource ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -915,12 +967,12 @@ paths:
         in: path
         name: proj_id
         required: true
-        type: integer
+        type: string
       - description: Resource ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -943,12 +995,12 @@ paths:
         in: path
         name: proj_id
         required: true
-        type: integer
+        type: string
       - description: Resource ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -972,84 +1024,6 @@ paths:
           description: Internal Server Error
       tags:
       - Resource
-  /{proj_id}/resource_action/{id}:
-    put:
-      consumes:
-      - application/json
-      description: Update resource action.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: res_id
-        required: true
-        type: integer
-      - description: Resource Action ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.ResourceActionUpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.ResourceAction'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Resource Action
-  /{proj_id}/resource_role/{id}:
-    put:
-      consumes:
-      - application/json
-      description: Update resource role.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: res_id
-        required: true
-        type: integer
-      - description: Resource Role ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.ResourceRoleUpdateRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/models.ResourceRole'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Resource Role
   /{res_id}/resource_action:
     get:
       description: Get all resource actions.
@@ -1058,7 +1032,7 @@ paths:
         in: path
         name: res_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1066,7 +1040,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/models.Resource'
+              $ref: '#/definitions/models.ResourceAction'
             type: array
         "500":
           description: Internal Server Error
@@ -1081,7 +1055,7 @@ paths:
         in: path
         name: res_id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -1111,12 +1085,12 @@ paths:
         in: path
         name: res_id
         required: true
-        type: integer
+        type: string
       - description: Resource Action ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1135,12 +1109,12 @@ paths:
         in: path
         name: res_id
         required: true
-        type: integer
+        type: string
       - description: Resource Action ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1148,6 +1122,44 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/models.ResourceAction'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Resource Action
+    put:
+      consumes:
+      - application/json
+      description: Update resource action.
+      parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: string
+      - description: Resource Action ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.ResourceActionUpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.ResourceAction'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
         "404":
           description: Not Found
         "500":
@@ -1162,7 +1174,7 @@ paths:
         in: path
         name: res_id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1185,7 +1197,7 @@ paths:
         in: path
         name: res_id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request
@@ -1215,12 +1227,12 @@ paths:
         in: path
         name: res_id
         required: true
-        type: integer
+        type: string
       - description: Resource Role ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1239,162 +1251,101 @@ paths:
         in: path
         name: res_id
         required: true
-        type: integer
+        type: string
       - description: Resource Role ID
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ResourceRoleWithGroupsUsers'
+            $ref: '#/definitions/models.ResourceRole'
         "404":
           description: Not Found
         "500":
           description: Internal Server Error
       tags:
       - Resource Role
-  /{res_id}/resource_role/action/{resact_id}:
-    post:
+    patch:
       consumes:
       - application/json
-      description: Assign resource role to group.
+      description: Patch resource role.
       parameters:
       - description: Resource ID
         in: path
         name: res_id
         required: true
-        type: integer
-      - description: Resource Action ID
+        type: string
+      - description: Resource Role ID
         in: path
-        name: resact_id
+        name: id
         required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Resource Role
-  /{res_id}/resource_role/group/{group_id}:
-    post:
-      consumes:
-      - application/json
-      description: Assign resource role to group.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: res_id
-        required: true
-        type: integer
-      - description: Group ID
-        in: path
-        name: group_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Resource Role
-  /{res_id}/resource_role/user/{user_id}:
-    post:
-      consumes:
-      - application/json
-      description: Assign resource role to user.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: res_id
-        required: true
-        type: integer
-      - description: User ID
-        in: path
-        name: user_id
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Resource Role
-  /check:
-    post:
-      consumes:
-      - application/json
-      description: Check RBAC.
-      parameters:
+        type: string
       - description: body
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.ResourceRoleToResourceActionKey'
+          $ref: '#/definitions/models.ResourceRolePatchRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: status
+        "201":
+          description: Created
           schema:
-            type: string
+            $ref: '#/definitions/models.ResourceRole'
+        "400":
+          description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
-      - Check
-  /check/list:
-    post:
+      - Resource Role
+    put:
       consumes:
       - application/json
-      description: Check RBAC list.
+      description: Update resource role.
       parameters:
+      - description: Resource ID
+        in: path
+        name: res_id
+        required: true
+        type: string
+      - description: Resource Role ID
+        in: path
+        name: id
+        required: true
+        type: string
       - description: body
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/models.ResourceRoleToResourceActionKey'
+          $ref: '#/definitions/models.ResourceRoleUpdateRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: scopes
+        "201":
+          description: Created
           schema:
-            type: string
+            $ref: '#/definitions/models.ResourceRole'
+        "400":
+          description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
-      - Check
+      - Resource Role
   /organization:
     get:
       description: Get all organizations.
@@ -1445,7 +1396,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1464,7 +1415,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       produces:
       - application/json
       responses:
@@ -1487,7 +1438,7 @@ paths:
         in: path
         name: id
         required: true
-        type: integer
+        type: string
       - description: body
         in: body
         name: request

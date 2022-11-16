@@ -73,3 +73,11 @@ func CheckProjectExistsByKey(org_id string, key string, exists *bool) error {
 	}
 	return nil
 }
+
+func GetProjectKeyById(projectId string, key *string) error {
+	err := config.DB.QueryRow("SELECT project_key FROM project WHERE project_id = $1", projectId).Scan(key)
+	if err != nil {
+		return err
+	}
+	return nil
+}
