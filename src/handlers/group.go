@@ -5,28 +5,28 @@ import (
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetGroups(tenantId string, groups *[]models.Group) error {
-	return repositories.GetGroups(tenantId, groups)
+func GetGroups(orgId string, groups *[]models.Group) error {
+	return repositories.GetGroups(orgId, groups)
 }
 
-func GetGroup(tenantId string, id string, group *models.Group) error {
-	return repositories.GetGroup(tenantId, id, group)
+func GetGroup(orgId string, id string, group *models.Group) error {
+	return repositories.GetGroup(orgId, id, group)
 }
 
-func CreateGroup(tenantId string, group *models.Group) error {
+func CreateGroup(orgId string, group *models.Group) error {
 	group.Users = RemoveDuplicateUsers(group.Users)
-	group.Users = GetExistsUsers(tenantId, group.Users)
-	err := repositories.CreateGroup(tenantId, group)
+	group.Users = GetExistsUsers(orgId, group.Users)
+	err := repositories.CreateGroup(orgId, group)
 	return err
 
 }
 
-func DeleteGroup(tenantId string, id string) error {
-	return repositories.DeleteGroup(tenantId, id)
+func DeleteGroup(orgId string, id string) error {
+	return repositories.DeleteGroup(orgId, id)
 }
 
-func UpdateGroup(tenantId string, id string, group *models.Group, reqGroup *models.GroupUpdateRequest) error {
-	err := repositories.GetGroup(tenantId, id, group)
+func UpdateGroup(orgId string, id string, group *models.Group, reqGroup *models.GroupUpdateRequest) error {
+	err := repositories.GetGroup(orgId, id, group)
 	if err != nil {
 		return err
 	}
@@ -40,13 +40,13 @@ func CheckGroupExistsById(id string) (bool, error) {
 	return exists, err
 }
 
-func CheckGroupExistsByKey(tenantId string, key string) (bool, error) {
+func CheckGroupExistsByKey(orgId string, key string) (bool, error) {
 	var exists bool
-	err := repositories.CheckGroupExistsByKey(tenantId, key, &exists)
+	err := repositories.CheckGroupExistsByKey(orgId, key, &exists)
 	return exists, err
 }
 
-func PatchGroup(tenantId string, groupId string, group *models.Group, groupPatch *models.GroupPatchRequest) error {
+func PatchGroup(orgId string, groupId string, group *models.Group, groupPatch *models.GroupPatchRequest) error {
 	for _, operation := range groupPatch.Operations {
 		operation.Users = RemoveDuplicateUsers(operation.Users)
 	}
@@ -54,14 +54,14 @@ func PatchGroup(tenantId string, groupId string, group *models.Group, groupPatch
 	if err != nil {
 		return err
 	}
-	return GetGroup(tenantId, groupId, group)
+	return GetGroup(orgId, groupId, group)
 
 }
 
-func GetExistsUsers(tenantId string, users []models.UserID) []models.UserID {
+func GetExistsUsers(orgId string, users []models.UserID) []models.UserID {
 	existsUsers := []models.UserID{}
 	for _, user := range users {
-		exists, _ := CheckUserExistsByTenant(tenantId, user.UserID)
+		exists, _ := CheckUserExistsByTenant(orgId, user.UserID)
 		if exists {
 			existsUsers = append(existsUsers, user)
 		}

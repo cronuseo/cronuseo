@@ -1,11 +1,11 @@
 package models
 
 type Group struct {
-	ID       string   `json:"group_id" gorm:"primary_key" db:"group_id"`
-	Key      string   `json:"group_key" validate:"required,min=4" db:"group_key"`
-	Name     string   `json:"name" validate:"required,min=4" db:"name"`
-	TenantID string   `json:"tenant_id" gorm:"foreignKey:ID" db:"tenant_id"`
-	Users    []UserID `json:"users,omitempty"`
+	ID    string   `json:"group_id" gorm:"primary_key" db:"group_id"`
+	Key   string   `json:"group_key" validate:"required,min=4" db:"group_key"`
+	Name  string   `json:"name" validate:"required,min=4" db:"name"`
+	OrgID string   `json:"org_id" gorm:"foreignKey:ID" db:"org_id"`
+	Users []UserID `json:"users,omitempty"`
 }
 
 type GroupCreateRequest struct {

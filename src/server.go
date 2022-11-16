@@ -47,10 +47,8 @@ func main() {
 func setRoutes(e *echo.Echo) {
 	apiV1 := e.Group("/api/v1")
 	routes.OrganizationRoutes(apiV1)
-	routes.TenantRoutes(apiV1)
 	routes.ProjectRoutes(apiV1)
-	// routes.ResourceRoutes(apiV1)
-	// routes.ResourceActionRoutes(apiV1)
+	routes.ResourceActionRoutes(apiV1)
 	routes.ResourceRoleRoutes(apiV1)
 	routes.ResourceRoutes(apiV1)
 	routes.GroupRoutes(apiV1)

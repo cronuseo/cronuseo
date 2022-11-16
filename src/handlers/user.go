@@ -5,8 +5,8 @@ import (
 	"github.com/shashimalcse/Cronuseo/repositories"
 )
 
-func GetUsers(tenantId string, users *[]models.User) error {
-	return repositories.GetUsers(tenantId, users)
+func GetUsers(orgId string, users *[]models.User) error {
+	return repositories.GetUsers(orgId, users)
 }
 
 // func GetUser(resUser *models.UserWithGroup, userId string) error {
@@ -25,25 +25,25 @@ func GetUsers(tenantId string, users *[]models.User) error {
 // 	return nil
 // }
 
-func GetUser(tenantId string, userId string, user *models.User) error {
+func GetUser(orgId string, userId string, user *models.User) error {
 
-	err := repositories.GetUser(tenantId, userId, user)
+	err := repositories.GetUser(orgId, userId, user)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func CreateUser(tenantId string, user *models.User) error {
-	return repositories.CreateUser(tenantId, user)
+func CreateUser(orgId string, user *models.User) error {
+	return repositories.CreateUser(orgId, user)
 }
 
-func DeleteUser(tenantId string, userId string) error {
-	return repositories.DeleteUser(tenantId, userId)
+func DeleteUser(orgId string, userId string) error {
+	return repositories.DeleteUser(orgId, userId)
 }
 
-func UpdateUser(tenantId string, userId string, user *models.User, reqUser *models.UserUpdateRequest) error {
-	err := repositories.GetUser(tenantId, userId, user)
+func UpdateUser(orgId string, userId string, user *models.User, reqUser *models.UserUpdateRequest) error {
+	err := repositories.GetUser(orgId, userId, user)
 	if err != nil {
 		return err
 	}
@@ -58,14 +58,14 @@ func CheckUserExistsById(userId string) (bool, error) {
 	return exists, err
 }
 
-func CheckUserExistsByTenant(tenantId string, userId string) (bool, error) {
+func CheckUserExistsByTenant(orgId string, userId string) (bool, error) {
 	var exists bool
-	err := repositories.CheckUserExistsByTenant(tenantId, userId, &exists)
+	err := repositories.CheckUserExistsByTenant(orgId, userId, &exists)
 	return exists, err
 }
 
-func CheckUserExistsByUsername(tenantId string, username string) (bool, error) {
+func CheckUserExistsByUsername(orgId string, username string) (bool, error) {
 	var exists bool
-	err := repositories.CheckUserExistsByUsername(tenantId, username, &exists)
+	err := repositories.CheckUserExistsByUsername(orgId, username, &exists)
 	return exists, err
 }

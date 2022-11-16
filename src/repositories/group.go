@@ -7,17 +7,17 @@ import (
 	"github.com/shashimalcse/Cronuseo/models"
 )
 
-func GetGroups(tenant_id string, groups *[]models.Group) error {
-	err := config.DB.Select(groups, "SELECT * FROM tenant_group WHERE tenant_id = $1", tenant_id)
+func GetGroups(org_id string, groups *[]models.Group) error {
+	err := config.DB.Select(groups, "SELECT * FROM organization_group WHERE org_id = $1", org_id)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func GetGroup(tenant_id string, id string, group *models.Group) error {
+func GetGroup(org_id string, id string, group *models.Group) error {
 	users := []models.UserID{}
-	err := config.DB.Get(group, "SELECT * FROM tenant_group WHERE tenant_id = $1 AND group_id = $2", tenant_id, id)
+	err := config.DB.Get(group, "SELECT * FROM organization_group WHERE org_id = $1 AND group_id = $2", org_id, id)
 	if err != nil {
 		return err
 	}
@@ -29,7 +29,7 @@ func GetGroup(tenant_id string, id string, group *models.Group) error {
 	return nil
 }
 
-func CreateGroup(tenant_id string, group *models.Group) error {
+func CreateGroup(org_id string, group *models.Group) error {
 
 	var group_id string
 
@@ -40,7 +40,7 @@ func CreateGroup(tenant_id string, group *models.Group) error {
 	}
 	// add group
 	{
-		stmt, err := tx.Prepare(`INSERT INTO tenant_group(group_key,name,tenant_id) VALUES($1, $2, $3) RETURNING group_id`)
+		stmt, err := tx.Prepare(`INSERT INTO organization_group(group_key,name,org_id) VALUES($1, $2, $3) RETURNING group_id`)
 
 		if err != nil {
 			return err
@@ -48,7 +48,7 @@ func CreateGroup(tenant_id string, group *models.Group) error {
 
 		defer stmt.Close()
 
-		err = stmt.QueryRow(group.Key, group.Name, tenant_id).Scan(&group_id)
+		err = stmt.QueryRow(group.Key, group.Name, org_id).Scan(&group_id)
 
 		if err != nil {
 			return err
@@ -82,7 +82,7 @@ func CreateGroup(tenant_id string, group *models.Group) error {
 	return nil
 }
 
-func DeleteGroup(tenant_id string, id string) error {
+func DeleteGroup(org_id string, id string) error {
 
 	tx, err := config.DB.Begin()
 
@@ -125,7 +125,7 @@ func DeleteGroup(tenant_id string, id string) error {
 
 	// remove group
 	{
-		stmt, err := tx.Prepare(`DELETE FROM tenant_group WHERE tenant_id = $1 AND group_id = $2`)
+		stmt, err := tx.Prepare(`DELETE FROM organization_group WHERE org_id = $1 AND group_id = $2`)
 
 		if err != nil {
 			return err
@@ -133,7 +133,7 @@ func DeleteGroup(tenant_id string, id string) error {
 
 		defer stmt.Close()
 
-		_, err = stmt.Exec(tenant_id, id)
+		_, err = stmt.Exec(org_id, id)
 		if err != nil {
 			return err
 		}
@@ -151,11 +151,11 @@ func DeleteGroup(tenant_id string, id string) error {
 }
 
 func UpdateGroup(group *models.Group) error {
-	stmt, err := config.DB.Prepare("UPDATE tenant_group SET name = $1 WHERE tenant_id = $2 AND group_id = $3")
+	stmt, err := config.DB.Prepare("UPDATE organization_group SET name = $1 WHERE org_id = $2 AND group_id = $3")
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(group.Name, group.TenantID, group.ID)
+	_, err = stmt.Exec(group.Name, group.OrgID, group.ID)
 	if err != nil {
 		return err
 	}
@@ -231,16 +231,16 @@ func PatchGroup(group_id string, groupPatch *models.GroupPatchRequest) error {
 }
 
 func CheckGroupExistsById(id string, exists *bool) error {
-	err := config.DB.QueryRow("SELECT exists (SELECT group_id FROM tenant_group WHERE group_id = $1)", id).Scan(exists)
+	err := config.DB.QueryRow("SELECT exists (SELECT group_id FROM organization_group WHERE group_id = $1)", id).Scan(exists)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func CheckGroupExistsByKey(tenant_id string, key string, exists *bool) error {
-	err := config.DB.QueryRow("SELECT exists (SELECT group_key FROM tenant_group WHERE tenant_id = $1 AND group_key = $2)",
-		tenant_id, key).Scan(exists)
+func CheckGroupExistsByKey(org_id string, key string, exists *bool) error {
+	err := config.DB.QueryRow("SELECT exists (SELECT group_key FROM organization_group WHERE org_id = $1 AND group_key = $2)",
+		org_id, key).Scan(exists)
 	if err != nil {
 		return err
 	}

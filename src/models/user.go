@@ -5,7 +5,7 @@ type User struct {
 	Username  string `json:"username" validate:"required,min=4" db:"username"`
 	FirstName string `json:"first_name" db:"first_name"`
 	LastName  string `json:"last_name" db:"last_name"`
-	TenantID  string `json:"tenant_id" db:"tenant_id"`
+	OrgID     string `json:"org_id" db:"org_id"`
 }
 
 type UserCreateRequest struct {

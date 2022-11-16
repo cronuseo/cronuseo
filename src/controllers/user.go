@@ -12,26 +12,26 @@ import (
 
 // @Description Get all users.
 // @Tags        User
-// @Param tenant_id path string true "Tenant ID"
+// @Param org_id path string true "Organization ID"
 // @Produce     json
 // @Success     200 {array}  models.User
 // @failure     500
-// @Router      /{tenant_id}/user [get]
+// @Router      /{org_id}/user [get]
 func GetUsers(c echo.Context) error {
 	users := []models.User{}
-	tenantId := string(c.Param("tenant_id"))
+	orgId := string(c.Param("org_id"))
 
-	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
-		config.Log.Info("Tenant not exists")
-		return utils.NotFoundErrorResponse("Tenant")
+		config.Log.Info("Organization not exists")
+		return utils.NotFoundErrorResponse("Organization")
 	}
 	if !exists {
-		config.Log.Info("Tenant not exists")
-		return utils.NotFoundErrorResponse("Tenant")
+		config.Log.Info("Organization not exists")
+		return utils.NotFoundErrorResponse("Organization")
 	}
 
-	err := handlers.GetUsers(tenantId, &users)
+	err := handlers.GetUsers(orgId, &users)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -41,21 +41,21 @@ func GetUsers(c echo.Context) error {
 
 // @Description Get user by ID.
 // @Tags        User
-// @Param tenant_id path string true "Tenant ID"
+// @Param org_id path string true "Organization ID"
 // @Param id path string true "User ID"
 // @Produce     json
 // @Success     200 {object}  models.UserWithGroup
 // @failure     404,500
-// @Router      /{tenant_id}/user/{id} [get]
+// @Router      /{org_id}/user/{id} [get]
 func GetUser(c echo.Context) error {
 	var user models.User
-	tenantId := string(c.Param("tenant_id"))
+	orgId := string(c.Param("org_id"))
 	userId := string(c.Param("id"))
 
-	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
-		config.Log.Info("Tenant not exists")
-		return utils.NotFoundErrorResponse("Tenant")
+		config.Log.Info("Organization not exists")
+		return utils.NotFoundErrorResponse("Organization")
 	}
 
 	exists, _ = handlers.CheckUserExistsById(userId)
@@ -64,7 +64,7 @@ func GetUser(c echo.Context) error {
 		return utils.NotFoundErrorResponse("User")
 	}
 
-	err := handlers.GetUser(tenantId, userId, &user)
+	err := handlers.GetUser(orgId, userId, &user)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -75,20 +75,20 @@ func GetUser(c echo.Context) error {
 // @Description Create user.
 // @Tags        User
 // @Accept      json
-// @Param tenant_id path string true "Tenant ID"
+// @Param org_id path string true "Organization ID"
 // @Param request body models.UserCreateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.User
 // @failure     400,403,500
-// @Router      /{tenant_id}/user [post]
+// @Router      /{org_id}/user [post]
 func CreateUser(c echo.Context) error {
 	var user models.User
-	tenantId := string(c.Param("tenant_id"))
+	orgId := string(c.Param("org_id"))
 
-	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
-		config.Log.Info("Tenant not exists")
-		return utils.NotFoundErrorResponse("Tenant")
+		config.Log.Info("Organization not exists")
+		return utils.NotFoundErrorResponse("Organization")
 	}
 
 	if err := c.Bind(&user); err != nil {
@@ -101,13 +101,13 @@ func CreateUser(c echo.Context) error {
 		return utils.InvalidErrorResponse()
 	}
 
-	exists, _ = handlers.CheckUserExistsByUsername(tenantId, user.Username)
+	exists, _ = handlers.CheckUserExistsByUsername(orgId, user.Username)
 	if exists {
 		config.Log.Info("User already exists")
 		return utils.AlreadyExistsErrorResponse("User")
 	}
 
-	err := handlers.CreateUser(tenantId, &user)
+	err := handlers.CreateUser(orgId, &user)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -117,21 +117,21 @@ func CreateUser(c echo.Context) error {
 
 // @Description Delete user.
 // @Tags        User
-// @Param tenant_id path string true "Tenant ID"
+// @Param org_id path string true "Organization ID"
 // @Param id path string true "User ID"
 // @Produce     json
 // @Success     204
 // @failure     404,500
-// @Router      /{tenant_id}/user/{id} [delete]
+// @Router      /{org_id}/user/{id} [delete]
 func DeleteUser(c echo.Context) error {
 
 	userId := string(c.Param("id"))
-	tenantId := string(c.Param("tenant_id"))
+	orgId := string(c.Param("org_id"))
 
-	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
-		config.Log.Info("Tenant not exists")
-		return utils.NotFoundErrorResponse("Tenant")
+		config.Log.Info("Organization not exists")
+		return utils.NotFoundErrorResponse("Organization")
 	}
 
 	exists, _ = handlers.CheckUserExistsById(userId)
@@ -140,7 +140,7 @@ func DeleteUser(c echo.Context) error {
 		return utils.NotFoundErrorResponse("User")
 	}
 
-	err := handlers.DeleteUser(tenantId, userId)
+	err := handlers.DeleteUser(orgId, userId)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
@@ -151,23 +151,23 @@ func DeleteUser(c echo.Context) error {
 // @Description Update user.
 // @Tags        User
 // @Accept      json
-// @Param tenant_id path string true "Tenant ID"
+// @Param org_id path string true "Organization ID"
 // @Param id path string true "User ID"
 // @Param request body models.UserUpdateRequest true "body"
 // @Produce     json
 // @Success     201 {object}  models.User
 // @failure     400,403,404,500
-// @Router      /{tenant_id}/user/{id} [put]
+// @Router      /{org_id}/user/{id} [put]
 func UpdateUser(c echo.Context) error {
 	var user models.User
 	var reqUser models.UserUpdateRequest
 	userId := string(c.Param("id"))
-	tenantId := string(c.Param("tenant_id"))
+	orgId := string(c.Param("org_id"))
 
-	exists, _ := handlers.CheckTenantExistsById(tenantId)
+	exists, _ := handlers.CheckOrganizationExistsById(orgId)
 	if !exists {
-		config.Log.Info("Tenant not exists")
-		return utils.NotFoundErrorResponse("Tenant")
+		config.Log.Info("Organization not exists")
+		return utils.NotFoundErrorResponse("Organization")
 	}
 
 	exists, _ = handlers.CheckUserExistsById(userId)
@@ -183,7 +183,7 @@ func UpdateUser(c echo.Context) error {
 		return utils.InvalidErrorResponse()
 	}
 
-	err := handlers.UpdateUser(tenantId, userId, &user, &reqUser)
+	err := handlers.UpdateUser(orgId, userId, &user, &reqUser)
 	if err != nil {
 		config.Log.Panic("Server Error!")
 		return utils.ServerErrorResponse()
