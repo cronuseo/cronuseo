@@ -14,23 +14,7 @@ services:
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
     networks:
-      - "api.network"  
-  api:
-    build: .
-    ports:
-      - "8080"
-    networks:
-      - "api.network"  
-    deploy:
-        replicas: 2
-  nginx:
-    build: "./nginx"
-    ports:
-      - "80:80"
-    depends_on:
-      - "api"
-    networks:
-      - "api.network"  
+      - "api.network" 
 
 volumes:
   data:
