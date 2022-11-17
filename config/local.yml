@@ -1,0 +1,1 @@
+dsn: "postgres://localhost/cronuseo?sslmode=disable&user=postgres&password=postgres"
