@@ -8,12 +8,12 @@ import (
 
 func RegisterHandlers(r *echo.Group, service Service) {
 	res := resource{service}
-	r = r.Group("/organization")
-	r.GET("", res.get)
-	r.GET("/:id", res.get)
-	r.POST("", res.get)
-	r.DELETE("/:id", res.get)
-	r.PUT("/:id", res.get)
+	router := r.Group("/organization")
+	router.GET("", res.query)
+	router.GET("/:id", res.get)
+	router.POST("", res.create)
+	router.DELETE("/:id", res.delete)
+	router.PUT("/:id", res.update)
 }
 
 type resource struct {
@@ -45,6 +45,7 @@ func (r resource) get(c echo.Context) error {
 func (r resource) query(c echo.Context) error {
 	organizations, err := r.service.Query(c.Request().Context())
 	if err != nil {
+
 		return err
 	}
 	return c.JSON(http.StatusOK, organizations)

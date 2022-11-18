@@ -24,18 +24,19 @@ func NewRepository(db *sqlx.DB) Repository {
 }
 
 func (r repository) Get(ctx context.Context, id string) (entity.Organization, error) {
-	var orgnization entity.Organization
-	err := r.db.Get(orgnization, "SELECT * FROM org WHERE org_id = $1", id)
+	orgnization := entity.Organization{}
+	err := r.db.Get(&orgnization, "SELECT * FROM org WHERE org_id = $1", id)
 	return orgnization, err
 }
 
 func (r repository) Create(ctx context.Context, orgnization entity.Organization) error {
 
 	var org_id string
-
+	println("trans starting...")
 	tx, err := r.db.Begin()
 
 	if err != nil {
+		println(err.Error())
 		return err
 	}
 	// add group
@@ -43,14 +44,15 @@ func (r repository) Create(ctx context.Context, orgnization entity.Organization)
 		stmt, err := tx.Prepare(`INSERT INTO org(org_key,name) VALUES($1, $2) RETURNING org_id`)
 
 		if err != nil {
+			println(err.Error())
 			return err
 		}
 
 		defer stmt.Close()
 
 		err = stmt.QueryRow(orgnization.Key, orgnization.Name).Scan(&org_id)
-
 		if err != nil {
+			println(err.Error())
 			return err
 		}
 	}
@@ -60,17 +62,20 @@ func (r repository) Create(ctx context.Context, orgnization entity.Organization)
 		err := tx.Commit()
 
 		if err != nil {
+			println(err.Error())
 			return err
 		}
 	}
+	println("trans end...")
 	orgnization.ID = org_id
+	println(orgnization.ID)
 	return nil
 
 }
 
 // Update saves the changes to an organization in the database.
 func (r repository) Update(ctx context.Context, orgnization entity.Organization) error {
-	stmt, err := r.db.Prepare("UPDATE organization SET name = $1 WHERE org_id = $2")
+	stmt, err := r.db.Prepare("UPDATE org SET name = $1 WHERE org_id = $2")
 	if err != nil {
 		return err
 	}
@@ -83,7 +88,7 @@ func (r repository) Update(ctx context.Context, orgnization entity.Organization)
 
 // Delete deletes an organization with the specified ID from the database.
 func (r repository) Delete(ctx context.Context, id string) error {
-	stmt, err := r.db.Prepare("DELETE FROM organization WHERE org_id = $1")
+	stmt, err := r.db.Prepare("DELETE FROM org WHERE org_id = $1")
 	if err != nil {
 		return err
 	}
@@ -96,7 +101,7 @@ func (r repository) Delete(ctx context.Context, id string) error {
 
 // Query retrieves the organization records with the specified offset and limit from the database.
 func (r repository) Query(ctx context.Context) ([]entity.Organization, error) {
-	var orgnizations []entity.Organization
-	err := r.db.Select(orgnizations, "SELECT * FROM organization")
+	orgnizations := []entity.Organization{}
+	err := r.db.Select(&orgnizations, "SELECT * FROM org")
 	return orgnizations, err
 }

@@ -67,6 +67,7 @@ func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Org
 		Name: req.Name,
 	})
 	if err != nil {
+		println(err.Error())
 		return Organization{}, err
 	}
 	return s.Get(ctx, id)

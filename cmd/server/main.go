@@ -4,7 +4,6 @@ import (
 	"cronuseo/internal/config"
 	"cronuseo/internal/organization"
 	"flag"
-	"fmt"
 	"os"
 
 	_ "cronuseo/docs"
@@ -48,10 +47,16 @@ func main() {
 	if err != nil {
 		os.Exit(-1)
 	}
+	print("start server")
+	e := echo.New()
+	e.GET("/swagger/*", echoSwagger.WrapHandler)
+	e.Use(middleware.CORS())
+	apiV1 := e.Group("/api/v1")
+	organization.RegisterHandlers(apiV1, organization.NewService(organization.NewRepository(db)))
+	e.Logger.Fatal(e.Start(":8080"))
 
-	handler := buildHandler(db, cfg)
-	address := fmt.Sprintf(":%v", cfg.ServerPort)
-	handler.Logger.Fatal(handler.Start(address))
+	// address := fmt.Sprintf(":%v", cfg.ServerPort)
+	// e.Logger.Fatal(e.Start(address))
 
 }
 
