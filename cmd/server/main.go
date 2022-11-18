@@ -2,10 +2,14 @@ package main
 
 import (
 	"cronuseo/internal/config"
+	"cronuseo/internal/organization"
 	"flag"
+	"fmt"
 	"os"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 )
 
@@ -23,9 +27,23 @@ func main() {
 	}
 
 	//connect db
-	_, err = sqlx.Connect("postgres", cfg.DSN)
+	db, err := sqlx.Connect("postgres", cfg.DSN)
 	if err != nil {
 		os.Exit(-1)
 	}
 
+	handler := buildHandler(db, cfg)
+	address := fmt.Sprintf(":%v", cfg.ServerPort)
+	handler.Logger.Fatal(handler.Start(address))
+
+}
+
+func buildHandler(db *sqlx.DB, cfg *config.Config) *echo.Echo {
+	router := echo.New()
+	router.Use(middleware.CORS())
+
+	rg := router.Group("/api/v1")
+
+	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
+	return router
 }
