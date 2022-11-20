@@ -25,13 +25,12 @@ func NewRepository(db *sqlx.DB) Repository {
 }
 
 func (r repository) Get(ctx context.Context, id string) (entity.Organization, error) {
-	orgnization := entity.Organization{}
-	println("trans starting...")
-	err := r.db.Get(&orgnization, "SELECT * FROM org WHERE org_id = $1", id)
-	return orgnization, err
+	organization := entity.Organization{}
+	err := r.db.Get(&organization, "SELECT * FROM org WHERE org_id = $1", id)
+	return organization, err
 }
 
-func (r repository) Create(ctx context.Context, orgnization entity.Organization) error {
+func (r repository) Create(ctx context.Context, organization entity.Organization) error {
 
 	var org_id string
 	tx, err := r.db.Begin()
@@ -44,15 +43,13 @@ func (r repository) Create(ctx context.Context, orgnization entity.Organization)
 		stmt, err := tx.Prepare(`INSERT INTO org(org_key,name) VALUES($1, $2) RETURNING org_id`)
 
 		if err != nil {
-			println(err.Error())
 			return err
 		}
 
 		defer stmt.Close()
 
-		err = stmt.QueryRow(orgnization.Key, orgnization.Name).Scan(&org_id)
+		err = stmt.QueryRow(organization.Key, organization.Name).Scan(&org_id)
 		if err != nil {
-			println(err.Error())
 			return err
 		}
 	}
@@ -62,23 +59,20 @@ func (r repository) Create(ctx context.Context, orgnization entity.Organization)
 		err := tx.Commit()
 
 		if err != nil {
-			println(err.Error())
 			return err
 		}
 	}
-	println("trans end...")
-	orgnization.ID = org_id
-	println(orgnization.ID)
+	organization.ID = org_id
 	return nil
 
 }
 
-func (r repository) Update(ctx context.Context, orgnization entity.Organization) error {
+func (r repository) Update(ctx context.Context, organization entity.Organization) error {
 	stmt, err := r.db.Prepare("UPDATE org SET name = $1 WHERE org_id = $2")
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(orgnization.Name, orgnization.ID)
+	_, err = stmt.Exec(organization.Name, organization.ID)
 	if err != nil {
 		return err
 	}
@@ -98,9 +92,9 @@ func (r repository) Delete(ctx context.Context, id string) error {
 }
 
 func (r repository) Query(ctx context.Context) ([]entity.Organization, error) {
-	orgnizations := []entity.Organization{}
-	err := r.db.Select(&orgnizations, "SELECT * FROM org")
-	return orgnizations, err
+	organizations := []entity.Organization{}
+	err := r.db.Select(&organizations, "SELECT * FROM org")
+	return organizations, err
 }
 
 func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {
