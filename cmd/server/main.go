@@ -4,6 +4,8 @@ import (
 	"cronuseo/internal/config"
 	"cronuseo/internal/organization"
 	"flag"
+	"fmt"
+	"log"
 	"os"
 
 	_ "cronuseo/docs"
@@ -17,7 +19,8 @@ import (
 
 var Version = "1.0.0"
 
-var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
+// var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
+var flagConfig = flag.String("config", "/Users/thilinashashimal/Desktop/Cronuseo/config/local.yml", "path to the config file")
 
 // @title          Cronuseo API
 // @version        1.0
@@ -35,28 +38,22 @@ var flagConfig = flag.String("config", "./config/local.yml", "path to the config
 // @BasePath /api/v1
 func main() {
 	flag.Parse()
-
 	// load application configurations
 	cfg, err := config.Load(*flagConfig)
 	if err != nil {
+		log.Fatal("error loading config")
 		os.Exit(-1)
 	}
 
 	//connect db
 	db, err := sqlx.Connect("postgres", cfg.DSN)
 	if err != nil {
+		log.Fatalln("error connecting databse")
 		os.Exit(-1)
 	}
-	print("start server")
-	e := echo.New()
-	e.GET("/swagger/*", echoSwagger.WrapHandler)
-	e.Use(middleware.CORS())
-	apiV1 := e.Group("/api/v1")
-	organization.RegisterHandlers(apiV1, organization.NewService(organization.NewRepository(db)))
-	e.Logger.Fatal(e.Start(":8080"))
-
-	// address := fmt.Sprintf(":%v", cfg.ServerPort)
-	// e.Logger.Fatal(e.Start(address))
+	e := buildHandler(db, cfg)
+	address := fmt.Sprintf(":%v", cfg.ServerPort)
+	e.Logger.Fatal(e.Start(address))
 
 }
 
@@ -65,7 +62,6 @@ func buildHandler(db *sqlx.DB, cfg *config.Config) *echo.Echo {
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	rg := router.Group("/api/v1")
-
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	return router
 }

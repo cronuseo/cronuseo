@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	log "github.com/sirupsen/logrus"
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
@@ -45,7 +46,7 @@ func (r resource) get(c echo.Context) error {
 func (r resource) query(c echo.Context) error {
 	organizations, err := r.service.Query(c.Request().Context())
 	if err != nil {
-
+		log.Debug(err.Error())
 		return err
 	}
 	return c.JSON(http.StatusOK, organizations)
@@ -66,6 +67,7 @@ func (r resource) create(c echo.Context) error {
 	}
 	organization, err := r.service.Create(c.Request().Context(), input)
 	if err != nil {
+		log.Debug(err.Error())
 		return err
 	}
 
@@ -89,6 +91,7 @@ func (r resource) update(c echo.Context) error {
 
 	organization, err := r.service.Update(c.Request().Context(), c.Param("id"), input)
 	if err != nil {
+		log.Debug(err.Error())
 		return err
 	}
 	return c.JSON(http.StatusCreated, organization)
@@ -104,6 +107,7 @@ func (r resource) update(c echo.Context) error {
 func (r resource) delete(c echo.Context) error {
 	_, err := r.service.Delete(c.Request().Context(), c.Param("id"))
 	if err != nil {
+		log.Debug(err.Error())
 		return err
 	}
 	return c.JSON(http.StatusNoContent, "")

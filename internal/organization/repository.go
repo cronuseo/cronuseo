@@ -13,6 +13,7 @@ type Repository interface {
 	Create(ctx context.Context, organization entity.Organization) error
 	Update(ctx context.Context, organization entity.Organization) error
 	Delete(ctx context.Context, id string) error
+	ExistByID(ctx context.Context, id string) (bool, error)
 }
 
 type repository struct {
@@ -25,6 +26,7 @@ func NewRepository(db *sqlx.DB) Repository {
 
 func (r repository) Get(ctx context.Context, id string) (entity.Organization, error) {
 	orgnization := entity.Organization{}
+	println("trans starting...")
 	err := r.db.Get(&orgnization, "SELECT * FROM org WHERE org_id = $1", id)
 	return orgnization, err
 }
@@ -32,11 +34,9 @@ func (r repository) Get(ctx context.Context, id string) (entity.Organization, er
 func (r repository) Create(ctx context.Context, orgnization entity.Organization) error {
 
 	var org_id string
-	println("trans starting...")
 	tx, err := r.db.Begin()
 
 	if err != nil {
-		println(err.Error())
 		return err
 	}
 	// add group
@@ -73,7 +73,6 @@ func (r repository) Create(ctx context.Context, orgnization entity.Organization)
 
 }
 
-// Update saves the changes to an organization in the database.
 func (r repository) Update(ctx context.Context, orgnization entity.Organization) error {
 	stmt, err := r.db.Prepare("UPDATE org SET name = $1 WHERE org_id = $2")
 	if err != nil {
@@ -86,7 +85,6 @@ func (r repository) Update(ctx context.Context, orgnization entity.Organization)
 	return nil
 }
 
-// Delete deletes an organization with the specified ID from the database.
 func (r repository) Delete(ctx context.Context, id string) error {
 	stmt, err := r.db.Prepare("DELETE FROM org WHERE org_id = $1")
 	if err != nil {
@@ -99,9 +97,14 @@ func (r repository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// Query retrieves the organization records with the specified offset and limit from the database.
 func (r repository) Query(ctx context.Context) ([]entity.Organization, error) {
 	orgnizations := []entity.Organization{}
 	err := r.db.Select(&orgnizations, "SELECT * FROM org")
 	return orgnizations, err
+}
+
+func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {
+	exists := false
+	err := r.db.QueryRow("SELECT exists (SELECT org_id FROM org WHERE org_id = $1)", id).Scan(&exists)
+	return exists, err
 }
