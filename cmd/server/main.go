@@ -1,16 +1,18 @@
 package main
 
 import (
-	"cronuseo/internal/config"
-	"cronuseo/internal/organization"
-	"cronuseo/internal/resource"
-	"cronuseo/internal/user"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 
-	_ "cronuseo/docs"
+	"github.com/shashimalcse/cronuseo/internal/config"
+	"github.com/shashimalcse/cronuseo/internal/organization"
+	"github.com/shashimalcse/cronuseo/internal/resource"
+	"github.com/shashimalcse/cronuseo/internal/role"
+	"github.com/shashimalcse/cronuseo/internal/user"
+
+	_ "github.com/shashimalcse/cronuseo/docs"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
@@ -67,5 +69,6 @@ func buildHandler(db *sqlx.DB, cfg *config.Config) *echo.Echo {
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
+	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db)))
 	return router
 }

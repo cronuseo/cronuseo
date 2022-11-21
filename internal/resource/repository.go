@@ -2,7 +2,8 @@ package resource
 
 import (
 	"context"
-	"cronuseo/internal/entity"
+
+	"github.com/shashimalcse/cronuseo/internal/entity"
 
 	"github.com/jmoiron/sqlx"
 )

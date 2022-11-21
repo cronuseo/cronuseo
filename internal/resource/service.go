@@ -2,7 +2,8 @@ package resource
 
 import (
 	"context"
-	"cronuseo/internal/entity"
+
+	"github.com/shashimalcse/cronuseo/internal/entity"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )

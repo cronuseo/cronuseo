@@ -14,14 +14,13 @@ CREATE TABLE if not exists ORG(
    CONSTRAINT FK_ORG_ORG_USER FOREIGN KEY(org_id) REFERENCES ORG(org_id)
    );
  
---  CREATE TABLE if not exists ORG_ROLE(
---    role_id uuid DEFAULT uuid_generate_v4 (),
---    role_key VARCHAR(40) NOT NULL,
---    name VARCHAR(40) NOT NULL,
---    org_id uuid,
---    PRIMARY KEY ( role_id ),
---    CONSTRAINT FK_ORG_ORG_ROLE FOREIGN KEY(org_id) REFERENCES ORG(org_id)
---    );
+ CREATE TABLE if not exists ORG_ROLE(
+   role_id uuid PRIMARY KEY,
+   role_key VARCHAR(40) NOT NULL,
+   name VARCHAR(40) NOT NULL,
+   org_id uuid,
+   CONSTRAINT FK_ORG_ORG_ROLE FOREIGN KEY(org_id) REFERENCES ORG(org_id)
+   );
 
  CREATE TABLE if not exists ORG_RESOURCE(
    resource_id uuid PRIMARY KEY,
