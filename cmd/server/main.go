@@ -3,6 +3,7 @@ package main
 import (
 	"cronuseo/internal/config"
 	"cronuseo/internal/organization"
+	"cronuseo/internal/resource"
 	"cronuseo/internal/user"
 	"flag"
 	"fmt"
@@ -65,5 +66,6 @@ func buildHandler(db *sqlx.DB, cfg *config.Config) *echo.Echo {
 	rg := router.Group("/api/v1")
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
+	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
 	return router
 }
