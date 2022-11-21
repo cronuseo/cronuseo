@@ -9,6 +9,17 @@ definitions:
       org_key:
         type: string
     type: object
+  entity.Permission:
+    properties:
+      name:
+        type: string
+      permission_id:
+        type: string
+      permission_key:
+        type: string
+      resource_id:
+        type: string
+    type: object
   entity.Resource:
     properties:
       name:
@@ -18,6 +29,17 @@ definitions:
       resource_id:
         type: string
       resource_key:
+        type: string
+    type: object
+  entity.Role:
+    properties:
+      name:
+        type: string
+      org_id:
+        type: string
+      role_id:
+        type: string
+      role_key:
         type: string
     type: object
   entity.User:
@@ -45,6 +67,20 @@ definitions:
       name:
         type: string
     type: object
+  permission.CreateResourceRequest:
+    properties:
+      name:
+        type: string
+      permission_key:
+        type: string
+      resource_id:
+        type: string
+    type: object
+  permission.UpdateResourceRequest:
+    properties:
+      name:
+        type: string
+    type: object
   resource.CreateResourceRequest:
     properties:
       name:
@@ -53,6 +89,18 @@ definitions:
         type: string
     type: object
   resource.UpdateResourceRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  role.CreateRoleRequest:
+    properties:
+      name:
+        type: string
+      role_key:
+        type: string
+    type: object
+  role.UpdateRoleRequest:
     properties:
       name:
         type: string
@@ -229,6 +277,148 @@ paths:
           description: Internal Server Error
       tags:
       - Resource
+  /{org_id}/role:
+    get:
+      description: Get all roles.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Role'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Role
+    post:
+      consumes:
+      - application/json
+      description: Create role.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/role.CreateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Role'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Role
+  /{org_id}/role/{id}:
+    delete:
+      description: Delete role.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Role
+    get:
+      description: Get role by ID.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Role'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Role
+    put:
+      consumes:
+      - application/json
+      description: Update role.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/role.UpdateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Role'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Role
   /{org_id}/user:
     get:
       description: Get all users.
@@ -371,6 +561,148 @@ paths:
           description: Internal Server Error
       tags:
       - User
+  /{resource_id}/permission:
+    get:
+      description: Get all resources.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: resource_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Permission'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+    post:
+      consumes:
+      - application/json
+      description: Create permission.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: resource_id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission.CreateResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Permission'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+  /{resource_id}/permission/{id}:
+    delete:
+      description: Delete permission.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: resource_id
+        required: true
+        type: string
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+    get:
+      description: Get permission by ID.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: resource_id
+        required: true
+        type: string
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Permission'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+    put:
+      consumes:
+      - application/json
+      description: Update permission.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: resource_id
+        required: true
+        type: string
+      - description: Permission ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission.UpdateResourceRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Permission'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
   /organization:
     get:
       description: Get all organizations.
