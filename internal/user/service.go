@@ -21,8 +21,8 @@ type User struct {
 
 type CreateUserRequest struct {
 	Username  string `json:"username" db:"username"`
-	FirstName string `json:"first_name" db:"firstname"`
-	LastName  string `json:"last_name" db:"lastname"`
+	FirstName string `json:"firstname" db:"firstname"`
+	LastName  string `json:"lastname" db:"lastname"`
 	OrgID     string `json:"-" db:"org_id"`
 }
 
@@ -33,8 +33,8 @@ func (m CreateUserRequest) Validate() error {
 }
 
 type UpdateUserRequest struct {
-	FirstName string `json:"first_name" db:"firstname"`
-	LastName  string `json:"last_name" db:"lastname"`
+	FirstName string `json:"firstname" db:"firstname"`
+	LastName  string `json:"lastname" db:"lastname"`
 }
 
 func (m UpdateUserRequest) Validate() error {

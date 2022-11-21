@@ -32,37 +32,14 @@ func (r repository) Get(ctx context.Context, id string) (entity.Organization, er
 
 func (r repository) Create(ctx context.Context, organization entity.Organization) error {
 
-	var org_id string
-	tx, err := r.db.Begin()
-
+	stmt, err := r.db.Prepare("INSERT INTO org(org_key,name,org_id) VALUES($1, $2, $3)")
 	if err != nil {
 		return err
 	}
-	// add group
-	{
-		stmt, err := tx.Prepare(`INSERT INTO org(org_key,name) VALUES($1, $2) RETURNING org_id`)
-
-		if err != nil {
-			return err
-		}
-
-		defer stmt.Close()
-
-		err = stmt.QueryRow(organization.Key, organization.Name).Scan(&org_id)
-		if err != nil {
-			return err
-		}
+	_, err = stmt.Exec(organization.Key, organization.Name, organization.ID)
+	if err != nil {
+		return err
 	}
-
-	// commit changes
-	{
-		err := tx.Commit()
-
-		if err != nil {
-			return err
-		}
-	}
-	organization.ID = org_id
 	return nil
 
 }

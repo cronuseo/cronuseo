@@ -31,37 +31,14 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (entity.U
 
 func (r repository) Create(ctx context.Context, org_id string, user entity.User) error {
 
-	var user_id string
-	tx, err := r.db.Begin()
-
+	stmt, err := r.db.Prepare("INSERT INTO org_user(username,firstname,lastname,org_id,user_id) VALUES($1, $2, $3, $4, $5)")
 	if err != nil {
 		return err
 	}
-	// add group
-	{
-		stmt, err := tx.Prepare(`INSERT INTO org_user(username,firstname,lastname,org_id) VALUES($1, $2, $3, $4) RETURNING user_id`)
-
-		if err != nil {
-			return err
-		}
-
-		defer stmt.Close()
-
-		err = stmt.QueryRow(user.Username, user.FirstName, user.LastName, user.OrgID).Scan(&user_id)
-		if err != nil {
-			return err
-		}
+	_, err = stmt.Exec(user.Username, user.FirstName, user.LastName, org_id, user.ID)
+	if err != nil {
+		return err
 	}
-
-	// commit changes
-	{
-		err := tx.Commit()
-
-		if err != nil {
-			return err
-		}
-	}
-	user.ID = user_id
 	return nil
 
 }

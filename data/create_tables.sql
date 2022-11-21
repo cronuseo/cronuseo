@@ -1,18 +1,18 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 SELECT uuid_generate_v4();
 CREATE TABLE if not exists ORG(
-   org_id uuid DEFAULT uuid_generate_v4 (),
+   org_id uuid PRIMARY KEY,
    org_key VARCHAR(40) NOT NULL,
-   name VARCHAR(40) NOT NULL,
-   PRIMARY KEY ( org_id ));
+   name VARCHAR(40) NOT NULL);
    
---  CREATE TABLE if not exists ORG_USER(
---    user_id uuid DEFAULT uuid_generate_v4 (),
---    username VARCHAR(40) NOT NULL,
---    org_id uuid,
---    PRIMARY KEY ( user_id ),
---    CONSTRAINT FK_ORG_ORG_USER FOREIGN KEY(org_id) REFERENCES ORG(org_id)
---    );
+ CREATE TABLE if not exists ORG_USER(
+   user_id uuid PRIMARY KEY,
+   username VARCHAR(40) NOT NULL,
+   firstname VARCHAR(40),
+   lastname VARCHAR(40),
+   org_id uuid,
+   CONSTRAINT FK_ORG_ORG_USER FOREIGN KEY(org_id) REFERENCES ORG(org_id)
+   );
  
 --  CREATE TABLE if not exists ORG_ROLE(
 --    role_id uuid DEFAULT uuid_generate_v4 (),
