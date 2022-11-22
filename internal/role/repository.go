@@ -2,6 +2,7 @@ package role
 
 import (
 	"context"
+	"log"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
 
@@ -31,14 +32,43 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (entity.R
 }
 
 func (r repository) Create(ctx context.Context, org_id string, role entity.Role) error {
+	tx, err := r.db.DB.Begin()
 
-	stmt, err := r.db.Prepare("INSERT INTO org_role(role_key,name,org_id,role_id) VALUES($1, $2, $3, $4)")
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(role.Key, role.Name, org_id, role.ID)
-	if err != nil {
-		return err
+	{
+		stmt, err := tx.Prepare("INSERT INTO org_role(role_key,name,org_id,role_id) VALUES($1, $2, $3, $4)")
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		_, err = stmt.Exec(role.Key, role.Name, org_id, role.ID)
+		if err != nil {
+			return err
+		}
+	}
+	// add users
+	if len(role.Users) > 0 {
+		stmt, err := tx.Prepare("INSERT INTO user_role(user_id,role_id) VALUES($1, $2)")
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		for _, user := range role.Users {
+			_, err = stmt.Exec(user.ID, role.ID)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+		}
+	}
+	{
+		err := tx.Commit()
+
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 
@@ -57,13 +87,41 @@ func (r repository) Update(ctx context.Context, org_id string, role entity.Role)
 }
 
 func (r repository) Delete(ctx context.Context, org_id string, id string) error {
-	stmt, err := r.db.Prepare("DELETE FROM org_role WHERE org_id = $3 AND role_id = $1")
+	tx, err := r.db.DB.Begin()
+
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(org_id, id)
-	if err != nil {
-		return err
+	{
+		stmt, err := tx.Prepare("DELETE FROM org_role WHERE org_id = $3 AND role_id = $1")
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		_, err = stmt.Exec(org_id, id)
+		if err != nil {
+			return err
+		}
+	}
+	{
+		stmt, err := tx.Prepare(`DELETE FROM org_role WHERE role_id = $1`)
+
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		_, err = stmt.Exec(id)
+
+		if err != nil {
+			return err
+		}
+	}
+	{
+		err := tx.Commit()
+
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

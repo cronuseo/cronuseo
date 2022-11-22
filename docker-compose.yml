@@ -15,7 +15,6 @@ services:
       - POSTGRES_DB=${DB_NAME}
     networks:
       - "api.network" 
-
 volumes:
   data:
 

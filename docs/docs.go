@@ -860,7 +860,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -895,7 +895,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -941,7 +941,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -983,7 +983,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -1037,7 +1037,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -1127,6 +1127,12 @@ const docTemplate = `{
                 },
                 "role_key": {
                     "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserID"
+                    }
                 }
             }
         },
@@ -1146,6 +1152,14 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserID": {
+            "type": "object",
+            "properties": {
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -1176,9 +1190,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "permission_key": {
-                    "type": "string"
-                },
-                "resource_id": {
                     "type": "string"
                 }
             }
@@ -1218,6 +1229,12 @@ const docTemplate = `{
                 },
                 "role_key": {
                     "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserID"
+                    }
                 }
             }
         },

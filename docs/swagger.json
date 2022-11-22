@@ -853,7 +853,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -888,7 +888,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -934,7 +934,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -976,7 +976,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -1030,7 +1030,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization ID",
+                        "description": "Resource ID",
                         "name": "resource_id",
                         "in": "path",
                         "required": true
@@ -1120,6 +1120,12 @@
                 },
                 "role_key": {
                     "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserID"
+                    }
                 }
             }
         },
@@ -1139,6 +1145,14 @@
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserID": {
+            "type": "object",
+            "properties": {
+                "user_id": {
                     "type": "string"
                 }
             }
@@ -1169,9 +1183,6 @@
                     "type": "string"
                 },
                 "permission_key": {
-                    "type": "string"
-                },
-                "resource_id": {
                     "type": "string"
                 }
             }
@@ -1211,6 +1222,12 @@
                 },
                 "role_key": {
                     "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserID"
+                    }
                 }
             }
         },

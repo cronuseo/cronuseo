@@ -21,9 +21,10 @@ type Role struct {
 }
 
 type CreateRoleRequest struct {
-	Key   string `json:"role_key" db:"role_key"`
-	Name  string `json:"name" db:"name"`
-	OrgID string `json:"-" db:"org_id"`
+	Key   string          `json:"role_key" db:"role_key"`
+	Name  string          `json:"name" db:"name"`
+	OrgID string          `json:"-" db:"org_id"`
+	Users []entity.UserID `json:"users"`
 }
 
 func (m CreateRoleRequest) Validate() error {
@@ -62,9 +63,10 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 	}
 	id := entity.GenerateID()
 	err := s.repo.Create(ctx, org_id, entity.Role{
-		ID:   id,
-		Key:  req.Key,
-		Name: req.Name,
+		ID:    id,
+		Key:   req.Key,
+		Name:  req.Name,
+		Users: req.Users,
 	})
 	if err != nil {
 		return Role{}, err

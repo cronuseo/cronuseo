@@ -41,6 +41,10 @@ definitions:
         type: string
       role_key:
         type: string
+      users:
+        items:
+          $ref: '#/definitions/entity.UserID'
+        type: array
     type: object
   entity.User:
     properties:
@@ -53,6 +57,11 @@ definitions:
       user_id:
         type: string
       username:
+        type: string
+    type: object
+  entity.UserID:
+    properties:
+      user_id:
         type: string
     type: object
   organization.CreateOrganizationRequest:
@@ -72,8 +81,6 @@ definitions:
       name:
         type: string
       permission_key:
-        type: string
-      resource_id:
         type: string
     type: object
   permission.UpdateResourceRequest:
@@ -99,6 +106,10 @@ definitions:
         type: string
       role_key:
         type: string
+      users:
+        items:
+          $ref: '#/definitions/entity.UserID'
+        type: array
     type: object
   role.UpdateRoleRequest:
     properties:
@@ -565,7 +576,7 @@ paths:
     get:
       description: Get all resources.
       parameters:
-      - description: Organization ID
+      - description: Resource ID
         in: path
         name: resource_id
         required: true
@@ -588,7 +599,7 @@ paths:
       - application/json
       description: Create permission.
       parameters:
-      - description: Organization ID
+      - description: Resource ID
         in: path
         name: resource_id
         required: true
@@ -618,7 +629,7 @@ paths:
     delete:
       description: Delete permission.
       parameters:
-      - description: Organization ID
+      - description: Resource ID
         in: path
         name: resource_id
         required: true
@@ -642,7 +653,7 @@ paths:
     get:
       description: Get permission by ID.
       parameters:
-      - description: Organization ID
+      - description: Resource ID
         in: path
         name: resource_id
         required: true
@@ -670,7 +681,7 @@ paths:
       - application/json
       description: Update permission.
       parameters:
-      - description: Organization ID
+      - description: Resource ID
         in: path
         name: resource_id
         required: true
