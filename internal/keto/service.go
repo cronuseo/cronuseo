@@ -5,7 +5,7 @@ import (
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
 
-	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
+	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 )
 
 type Service interface {
@@ -20,15 +20,15 @@ type Tuple struct {
 }
 
 type service struct {
-	writeClient acl.WriteServiceClient
-	readClient  acl.ReadServiceClient
-	checkClient acl.CheckServiceClient
+	writeClient rts.WriteServiceClient
+	readClient  rts.ReadServiceClient
+	checkClient rts.CheckServiceClient
 }
 
 type KetoClients struct {
-	WriteClient acl.WriteServiceClient
-	ReadClient  acl.ReadServiceClient
-	CheckClient acl.CheckServiceClient
+	WriteClient rts.WriteServiceClient
+	ReadClient  rts.ReadServiceClient
+	CheckClient rts.CheckServiceClient
 }
 
 func NewService(ketoClients KetoClients) Service {
@@ -36,8 +36,29 @@ func NewService(ketoClients KetoClients) Service {
 }
 
 func (s service) CreateTuple(ctx context.Context, namespace string, tuple entity.Tuple) error {
-	println("hi")
-	//do the create operation
+	_, err := s.writeClient.TransactRelationTuples(context.Background(), &rts.TransactRelationTuplesRequest{
+		RelationTupleDeltas: []*rts.RelationTupleDelta{
+			{
+				Action: rts.RelationTupleDelta_ACTION_INSERT,
+				RelationTuple: &rts.RelationTuple{
+					Namespace: namespace,
+					Object:    tuple.Object,
+					Relation:  tuple.Relation,
+					Subject:   rts.NewSubjectID(tuple.SubjectId),
+				},
+			},
+		},
+	})
+	if err != nil {
+		panic("Encountered error: " + err.Error())
+	}
+	check, err := s.checkClient.Check(context.Background(), &rts.CheckRequest{
+		Namespace: namespace,
+		Object:    tuple.Object,
+		Relation:  tuple.Relation,
+		Subject:   rts.NewSubjectID(tuple.SubjectId),
+	})
+	println(check.Allowed)
 	return nil
 }
 

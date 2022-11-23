@@ -73,6 +73,7 @@ github.com/mattn/go-isatty
 ## explicit; go 1.13
 # github.com/ory/keto/proto v0.10.0-alpha.0
 ## explicit; go 1.16
+github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2
 # github.com/ory/keto/proto/ory/keto/acl/v1alpha1 v0.0.0-20210616104402-80e043246cf9
 ## explicit; go 1.16
 github.com/ory/keto/proto/ory/keto/acl/v1alpha1

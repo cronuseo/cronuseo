@@ -1,5 +1,5 @@
 .env
-src/vendor/*
+vendor/*
 .vscode
 src/.idea/*
 postgres-data

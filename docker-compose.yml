@@ -1,3 +1,5 @@
+
+
 version: '3.8'
 services:
   db:
@@ -14,17 +16,6 @@ services:
       - POSTGRES_DB=${DB_NAME}
     networks:
       - "api.network" 
-  keto:
-    image: oryd/keto:v0.10.0-alpha.0
-    ports:
-      - "4466:4466"
-      - "4467:4467"
-    command: serve -c /home/ory/keto.yml
-    restart: on-failure
-    volumes:
-      - type: bind
-        source: .
-        target: /home/ory
   keto-db:
     image: postgres
     restart: always
@@ -36,9 +27,19 @@ services:
       - POSTGRES_DB=keto
     networks:
       - "api.network" 
+  keto:
+    image: oryd/keto:v0.10.0-alpha.0
+    ports:
+      - "4466:4466"
+      - "4467:4467"
+    command: serve -c /home/ory/keto.yml
+    restart: on-failure
+    volumes:
+      - type: bind
+        source: .
+        target: /home/ory
 volumes:
   data:
 
 networks:
   api.network:
-    

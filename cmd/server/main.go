@@ -21,7 +21,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
+	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
@@ -67,19 +67,19 @@ func main() {
 		panic("Encountered error: " + err.Error())
 	}
 
-	writeClient := acl.NewWriteServiceClient(conn)
+	writeClient := rts.NewWriteServiceClient(conn)
 
 	conn, err = grpc.Dial("127.0.0.1:4466", grpc.WithInsecure())
 	if err != nil {
 		panic("Encountered error: " + err.Error())
 	}
-	readClient := acl.NewReadServiceClient(conn)
+	readClient := rts.NewReadServiceClient(conn)
 
 	conn, err = grpc.Dial("127.0.0.1:4466", grpc.WithInsecure())
 	if err != nil {
 		panic("Encountered error: " + err.Error())
 	}
-	checkClient := acl.NewCheckServiceClient(conn)
+	checkClient := rts.NewCheckServiceClient(conn)
 
 	clients := keto.KetoClients{WriteClient: writeClient, ReadClient: readClient, CheckClient: checkClient}
 

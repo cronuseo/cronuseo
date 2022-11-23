@@ -1,6 +1,7 @@
 package keto
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -31,7 +32,7 @@ func (r keto) create(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	err := r.service.CreateTuple(c.Request().Context(), "permission", input)
+	err := r.service.CreateTuple(context.Background(), "permission", input)
 	if err != nil {
 		return err
 	}
