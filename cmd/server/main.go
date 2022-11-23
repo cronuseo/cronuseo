@@ -7,11 +7,13 @@ import (
 	"os"
 
 	"github.com/shashimalcse/cronuseo/internal/config"
+	"github.com/shashimalcse/cronuseo/internal/keto"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/permission"
 	"github.com/shashimalcse/cronuseo/internal/resource"
 	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/user"
+	"google.golang.org/grpc"
 
 	_ "github.com/shashimalcse/cronuseo/docs"
 
@@ -19,6 +21,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	acl "github.com/ory/keto/proto/ory/keto/acl/v1alpha1"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
@@ -56,13 +59,37 @@ func main() {
 		log.Fatalln("error connecting databse")
 		os.Exit(-1)
 	}
-	e := buildHandler(db, cfg)
+
+	//keto clients
+
+	conn, err := grpc.Dial("127.0.0.1:4467", grpc.WithInsecure())
+	if err != nil {
+		panic("Encountered error: " + err.Error())
+	}
+
+	writeClient := acl.NewWriteServiceClient(conn)
+
+	conn, err = grpc.Dial("127.0.0.1:4466", grpc.WithInsecure())
+	if err != nil {
+		panic("Encountered error: " + err.Error())
+	}
+	readClient := acl.NewReadServiceClient(conn)
+
+	conn, err = grpc.Dial("127.0.0.1:4466", grpc.WithInsecure())
+	if err != nil {
+		panic("Encountered error: " + err.Error())
+	}
+	checkClient := acl.NewCheckServiceClient(conn)
+
+	clients := keto.KetoClients{WriteClient: writeClient, ReadClient: readClient, CheckClient: checkClient}
+
+	e := buildHandler(db, cfg, clients)
 	address := fmt.Sprintf(":%v", cfg.ServerPort)
 	e.Logger.Fatal(e.Start(address))
 
 }
 
-func buildHandler(db *sqlx.DB, cfg *config.Config) *echo.Echo {
+func buildHandler(db *sqlx.DB, cfg *config.Config, clients keto.KetoClients) *echo.Echo {
 	router := echo.New()
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -72,5 +99,6 @@ func buildHandler(db *sqlx.DB, cfg *config.Config) *echo.Echo {
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db)))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(db)))
+	keto.RegisterHandlers(rg, keto.NewService(clients))
 	return router
 }

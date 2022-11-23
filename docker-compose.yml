@@ -2,7 +2,6 @@ version: '3.8'
 services:
   db:
     image: postgres
-    container_name: postgres
     restart: always
     volumes: 
       - ./postgres-data:/var/lib/postgresql/data
@@ -13,6 +12,28 @@ services:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
+    networks:
+      - "api.network" 
+  keto:
+    image: oryd/keto:v0.10.0-alpha.0
+    ports:
+      - "4466:4466"
+      - "4467:4467"
+    command: serve -c /home/ory/keto.yml
+    restart: on-failure
+    volumes:
+      - type: bind
+        source: .
+        target: /home/ory
+  keto-db:
+    image: postgres
+    restart: always
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=keto
+      - POSTGRES_PASSWORD=keto
+      - POSTGRES_DB=keto
     networks:
       - "api.network" 
 volumes:
