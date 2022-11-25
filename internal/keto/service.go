@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
-	"google.golang.org/protobuf/internal/errors"
 )
 
 type Service interface {
