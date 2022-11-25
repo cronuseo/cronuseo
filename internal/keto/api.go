@@ -62,3 +62,25 @@ func (r keto) check(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, allow)
 }
+
+// @Description Create tuple.
+// @Tags        Keto
+// @Accept      json
+// @Param org path string true "Organization"
+// @Param request body Tuple true "body"
+// @Produce     json
+// @Success     201
+// @failure     400,403,500
+// @Router      /org/keto/delete [post]
+func (r keto) delete(c echo.Context) error {
+	var input entity.Tuple
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, allow)
+}

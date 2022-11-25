@@ -2,15 +2,16 @@ package keto
 
 import (
 	"context"
+	"errors"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
-
-	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
+	"google.golang.org/protobuf/internal/errors"
 )
 
 type Service interface {
 	CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
 	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
+	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
 	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 }
@@ -20,57 +21,55 @@ type Tuple struct {
 }
 
 type service struct {
-	writeClient rts.WriteServiceClient
-	readClient  rts.ReadServiceClient
-	checkClient rts.CheckServiceClient
+	repo Repository
 }
 
-type KetoClients struct {
-	WriteClient rts.WriteServiceClient
-	ReadClient  rts.ReadServiceClient
-	CheckClient rts.CheckServiceClient
-}
-
-func NewService(ketoClients KetoClients) Service {
-	return service{writeClient: ketoClients.WriteClient, readClient: ketoClients.ReadClient, checkClient: ketoClients.CheckClient}
+func NewService(repo Repository) Service {
+	return service{repo: repo}
 }
 
 func (s service) CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
-	_, err := s.writeClient.TransactRelationTuples(context.Background(), &rts.TransactRelationTuplesRequest{
-		RelationTupleDeltas: []*rts.RelationTupleDelta{
-			{
-				Action: rts.RelationTupleDelta_ACTION_INSERT,
-				RelationTuple: &rts.RelationTuple{
-					Namespace: namespace,
-					Object:    tuple.Object,
-					Relation:  tuple.Relation,
-					Subject:   rts.NewSubjectID(tuple.SubjectId),
-				},
-			},
-		},
-	})
-	if err != nil {
-		panic("Encountered error: " + err.Error())
+
+	exists, err := s.repo.CheckTuple(ctx, org, namespace, tuple)
+	if exists {
+		return errors.New("")
 	}
-	return nil
+	if err != nil {
+		return errors.New("")
+	}
+
+	tuple = qualifiedTuple(org, tuple)
+	return s.repo.CreateTuple(ctx, org, namespace, tuple)
 }
 
 func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
-	check, err := s.checkClient.Check(context.Background(), &rts.CheckRequest{
-		Namespace: namespace,
-		Object:    tuple.Object,
-		Relation:  tuple.Relation,
-		Subject:   rts.NewSubjectID(tuple.SubjectId),
-	})
-	return check.Allowed, err
-}
 
+	tuple = qualifiedTuple(org, tuple)
+	return s.repo.CheckTuple(ctx, org, namespace, tuple)
+
+}
 func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
-	//do the list operation
-	return []string{}, nil
+
+	tuple = qualifiedTuple(org, tuple)
+	return s.repo.GetObjectListBySubject(ctx, org, namespace, tuple)
+
 }
 
 func (s service) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
-	//do the list operation
-	return []string{}, nil
+
+	tuple = qualifiedTuple(org, tuple)
+	return s.repo.GetSubjectListByObject(ctx, org, namespace, tuple)
+
+}
+func (s service) DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
+
+	tuple = qualifiedTuple(org, tuple)
+	return s.repo.DeleteTuple(ctx, org, namespace, tuple)
+}
+
+func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {
+
+	tuple.Object = org + "/" + tuple.Object
+	tuple.SubjectId = org + "/" + tuple.SubjectId
+	return tuple
 }
