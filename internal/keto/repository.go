@@ -34,7 +34,7 @@ func NewRepository(ketoClients KetoClients) Service {
 
 func (r repo) CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
 
-	_, err := r.writeClient.TransactRelationTuples(context.Background(), &rts.TransactRelationTuplesRequest{
+	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
 		RelationTupleDeltas: []*rts.RelationTupleDelta{
 			{
 				Action: rts.RelationTupleDelta_ACTION_INSERT,
@@ -55,7 +55,7 @@ func (r repo) CreateTuple(ctx context.Context, org string, namespace string, tup
 
 func (r repo) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
 
-	check, err := r.checkClient.Check(context.Background(), &rts.CheckRequest{
+	check, err := r.checkClient.Check(ctx, &rts.CheckRequest{
 		Namespace: namespace,
 		Object:    tuple.Object,
 		Relation:  tuple.Relation,
@@ -66,17 +66,45 @@ func (r repo) CheckTuple(ctx context.Context, org string, namespace string, tupl
 
 func (r repo) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 
-	return []string{}, nil
+	res, err := r.readClient.ListRelationTuples(ctx, &rts.ListRelationTuplesRequest{
+		Query: &rts.ListRelationTuplesRequest_Query{
+			Namespace: namespace,
+			Relation:  tuple.Relation,
+			Subject:   rts.NewSubjectID(tuple.SubjectId),
+		},
+	})
+	if err != nil {
+		return []string{}, err
+	}
+	obejcts := []string{}
+	for _, rt := range res.RelationTuples {
+		obejcts = append(obejcts, rt.Object)
+	}
+	return obejcts, nil
 }
 
 func (r repo) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 
-	return []string{}, nil
+	res, err := r.readClient.ListRelationTuples(ctx, &rts.ListRelationTuplesRequest{
+		Query: &rts.ListRelationTuplesRequest_Query{
+			Namespace: namespace,
+			Object:    tuple.Object,
+			Relation:  tuple.Relation,
+		},
+	})
+	if err != nil {
+		return []string{}, err
+	}
+	obejcts := []string{}
+	for _, rt := range res.RelationTuples {
+		obejcts = append(obejcts, rt.GetSubject().String())
+	}
+	return obejcts, nil
 }
 
 func (r repo) DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
 
-	_, err := r.writeClient.TransactRelationTuples(context.Background(), &rts.TransactRelationTuplesRequest{
+	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
 		RelationTupleDeltas: []*rts.RelationTupleDelta{
 			{
 				Action: rts.RelationTupleDelta_ACTION_DELETE,
