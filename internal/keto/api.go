@@ -11,7 +11,8 @@ import (
 func RegisterHandlers(r *echo.Group, service Service) {
 	res := keto{service}
 	router := r.Group("/:org/keto")
-	router.POST("", res.create)
+	router.POST("/create", res.create)
+	router.POST("/check", res.check)
 }
 
 type keto struct {
@@ -21,21 +22,43 @@ type keto struct {
 // @Description Create tuple.
 // @Tags        Keto
 // @Accept      json
-// @Param org path string true "Organization ID"
+// @Param org path string true "Organization"
 // @Param request body Tuple true "body"
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /org_id/keto [post]
+// @Router      /org/keto/create [post]
 func (r keto) create(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	err := r.service.CreateTuple(context.Background(), "permission", input)
+	err := r.service.CreateTuple(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
 		return err
 	}
 
 	return c.JSON(http.StatusOK, "")
+}
+
+// @Description Create tuple.
+// @Tags        Keto
+// @Accept      json
+// @Param org path string true "Organization"
+// @Param request body Tuple true "body"
+// @Produce     json
+// @Success     201
+// @failure     400,403,500
+// @Router      /org/keto/check [post]
+func (r keto) check(c echo.Context) error {
+	var input entity.Tuple
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input)
+	if err != nil {
+		return err
+	}
+
+	return c.JSON(http.StatusOK, allow)
 }

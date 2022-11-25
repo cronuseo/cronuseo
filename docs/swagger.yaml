@@ -723,13 +723,43 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /org_id/keto:
+  /org/keto/check:
     post:
       consumes:
       - application/json
       description: Create tuple.
       parameters:
-      - description: Organization ID
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/keto.Tuple'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Keto
+  /org/keto/create:
+    post:
+      consumes:
+      - application/json
+      description: Create tuple.
+      parameters:
+      - description: Organization
         in: path
         name: org
         required: true

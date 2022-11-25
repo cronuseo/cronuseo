@@ -9,10 +9,10 @@ import (
 )
 
 type Service interface {
-	CreateTuple(ctx context.Context, namespace string, tuple entity.Tuple) error
-	CheckTuple(ctx context.Context, namespace string, tuple entity.Tuple) (bool, error)
-	GetObjectListBySubject(ctx context.Context, namespace string, tuple entity.Tuple) ([]string, error)
-	GetSubjectListByObject(ctx context.Context, namespace string, tuple entity.Tuple) ([]string, error)
+	CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
+	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
+	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
+	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 }
 
 type Tuple struct {
@@ -35,7 +35,7 @@ func NewService(ketoClients KetoClients) Service {
 	return service{writeClient: ketoClients.WriteClient, readClient: ketoClients.ReadClient, checkClient: ketoClients.CheckClient}
 }
 
-func (s service) CreateTuple(ctx context.Context, namespace string, tuple entity.Tuple) error {
+func (s service) CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
 	_, err := s.writeClient.TransactRelationTuples(context.Background(), &rts.TransactRelationTuplesRequest{
 		RelationTupleDeltas: []*rts.RelationTupleDelta{
 			{
@@ -52,27 +52,25 @@ func (s service) CreateTuple(ctx context.Context, namespace string, tuple entity
 	if err != nil {
 		panic("Encountered error: " + err.Error())
 	}
+	return nil
+}
+
+func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
 	check, err := s.checkClient.Check(context.Background(), &rts.CheckRequest{
 		Namespace: namespace,
 		Object:    tuple.Object,
 		Relation:  tuple.Relation,
 		Subject:   rts.NewSubjectID(tuple.SubjectId),
 	})
-	println(check.Allowed)
-	return nil
+	return check.Allowed, err
 }
 
-func (s service) CheckTuple(ctx context.Context, namespace string, tuple entity.Tuple) (bool, error) {
-	//do the check operation
-	return false, nil
-}
-
-func (s service) GetObjectListBySubject(ctx context.Context, namespace string, tuple entity.Tuple) ([]string, error) {
+func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 	//do the list operation
 	return []string{}, nil
 }
 
-func (s service) GetSubjectListByObject(ctx context.Context, namespace string, tuple entity.Tuple) ([]string, error) {
+func (s service) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 	//do the list operation
 	return []string{}, nil
 }
