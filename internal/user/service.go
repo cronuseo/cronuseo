@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -53,15 +54,23 @@ func NewService(repo Repository) Service {
 func (s service) Get(ctx context.Context, org_id string, id string) (User, error) {
 	user, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
-		return User{}, err
+		return User{}, &util.NotFoundError{Path: "User"}
 	}
 	return User{user}, nil
 }
 
 func (s service) Create(ctx context.Context, org_id string, req CreateUserRequest) (User, error) {
+
 	if err := req.Validate(); err != nil {
-		return User{}, err
+		return User{}, &util.InvalidInputError{}
 	}
+
+	//check organixation exists
+	exists, _ := s.repo.ExistByKey(ctx, req.Username)
+	if exists {
+		return User{}, &util.AlreadyExistsError{Path: "User"}
+	}
+
 	id := entity.GenerateID()
 	err := s.repo.Create(ctx, org_id, entity.User{
 		ID:        id,
@@ -76,12 +85,12 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateUserRequest) (User, error) {
 	if err := req.Validate(); err != nil {
-		return User{}, err
+		return User{}, &util.InvalidInputError{}
 	}
 
 	user, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return user, err
+		return user, &util.NotFoundError{Path: "User"}
 	}
 	user.FirstName = req.FirstName
 	user.LastName = req.LastName
@@ -94,7 +103,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 func (s service) Delete(ctx context.Context, org_id string, id string) (User, error) {
 	user, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return User{}, err
+		return User{}, &util.NotFoundError{Path: "User"}
 	}
 	if err = s.repo.Delete(ctx, org_id, id); err != nil {
 		return User{}, err
