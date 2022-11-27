@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -52,15 +53,21 @@ func NewService(repo Repository) Service {
 func (s service) Get(ctx context.Context, org_id string, id string) (Role, error) {
 	role, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
-		return Role{}, err
+		return Role{}, &util.NotFoundError{Path: "Role"}
 	}
 	return Role{role}, nil
 }
 
 func (s service) Create(ctx context.Context, org_id string, req CreateRoleRequest) (Role, error) {
 	if err := req.Validate(); err != nil {
-		return Role{}, err
+		return Role{}, &util.InvalidInputError{}
 	}
+
+	exists, _ := s.repo.ExistByKey(ctx, req.Key)
+	if exists {
+		return Role{}, &util.AlreadyExistsError{Path: "Role"}
+	}
+
 	id := entity.GenerateID()
 	err := s.repo.Create(ctx, org_id, entity.Role{
 		ID:    id,
@@ -76,12 +83,12 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateRoleRequest) (Role, error) {
 	if err := req.Validate(); err != nil {
-		return Role{}, err
+		return Role{}, &util.InvalidInputError{}
 	}
 
 	role, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return role, err
+		return role, &util.NotFoundError{Path: "Role"}
 	}
 	role.Name = req.Name
 	if err := s.repo.Update(ctx, org_id, role.Role); err != nil {
@@ -93,7 +100,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 func (s service) Delete(ctx context.Context, org_id string, id string) (Role, error) {
 	role, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return Role{}, err
+		return Role{}, &util.NotFoundError{Path: "Role"}
 	}
 	if err = s.repo.Delete(ctx, org_id, id); err != nil {
 		return Role{}, err

@@ -65,7 +65,7 @@ func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Org
 		return Organization{}, &util.InvalidInputError{}
 	}
 
-	//check organixation exists
+	//check organization exists
 	exists, _ := s.repo.ExistByKey(ctx, req.Key)
 	if exists {
 		return Organization{}, &util.AlreadyExistsError{Path: "Organization"}

@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	log "github.com/sirupsen/logrus"
+	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
@@ -32,7 +32,7 @@ type role struct {
 func (r role) get(c echo.Context) error {
 	role, err := r.service.Get(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
-		return err
+		return util.HandleError(err)
 	}
 
 	return c.JSON(http.StatusOK, role)
@@ -48,8 +48,7 @@ func (r role) get(c echo.Context) error {
 func (r role) query(c echo.Context) error {
 	roles, err := r.service.Query(c.Request().Context(), c.Param("org_id"))
 	if err != nil {
-		log.Debug(err.Error())
-		return err
+		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusOK, roles)
 }
@@ -70,8 +69,7 @@ func (r role) create(c echo.Context) error {
 	}
 	role, err := r.service.Create(c.Request().Context(), c.Param("org_id"), input)
 	if err != nil {
-		log.Debug(err.Error())
-		return err
+		return util.HandleError(err)
 	}
 
 	return c.JSON(http.StatusCreated, role)
@@ -95,8 +93,7 @@ func (r role) update(c echo.Context) error {
 
 	role, err := r.service.Update(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
 	if err != nil {
-		log.Debug(err.Error())
-		return err
+		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusCreated, role)
 }
@@ -112,8 +109,7 @@ func (r role) update(c echo.Context) error {
 func (r role) delete(c echo.Context) error {
 	_, err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
-		log.Debug(err.Error())
-		return err
+		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusNoContent, "")
 }
