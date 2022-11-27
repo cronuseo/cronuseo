@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -17,9 +19,11 @@ import (
 
 	_ "github.com/shashimalcse/cronuseo/docs"
 
+	jwt "github.com/golang-jwt/jwt"
 	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	jwk "github.com/lestrrat-go/jwx/jwk"
 	_ "github.com/lib/pq"
 	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 	echoSwagger "github.com/swaggo/echo-swagger"
@@ -94,6 +98,10 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients keto.KetoClients) *ec
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	rg := router.Group("/api/v1")
+	config := middleware.JWTConfig{
+		KeyFunc: getKey,
+	}
+	rg.Use(middleware.JWTWithConfig(config))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
@@ -101,4 +109,30 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients keto.KetoClients) *ec
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(db)))
 	keto.RegisterHandlers(rg, keto.NewService(keto.NewRepository(clients)))
 	return router
+}
+
+func getKey(token *jwt.Token) (interface{}, error) {
+
+	keySet, err := jwk.Fetch(context.Background(), "https://api.asgardeo.io/t/shashimal/oauth2/jwks")
+	if err != nil {
+		return nil, err
+	}
+
+	keyID, ok := token.Header["kid"].(string)
+	if !ok {
+		return nil, errors.New("expecting JWT header to have a key ID in the kid field")
+	}
+
+	key, found := keySet.LookupKeyID(keyID)
+
+	if !found {
+		return nil, fmt.Errorf("unable to find key %q", keyID)
+	}
+
+	var pubkey interface{}
+	if err := key.Raw(&pubkey); err != nil {
+		return nil, fmt.Errorf("Unable to get the public key. Error: %s", err.Error())
+	}
+
+	return pubkey, nil
 }
