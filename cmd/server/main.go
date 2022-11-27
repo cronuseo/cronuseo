@@ -99,7 +99,7 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients keto.KetoClients) *ec
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	rg := router.Group("/api/v1")
 	config := middleware.JWTConfig{
-		KeyFunc: getKey,
+		KeyFunc: getKey(cfg),
 	}
 	rg.Use(middleware.JWTWithConfig(config))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
@@ -111,28 +111,30 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients keto.KetoClients) *ec
 	return router
 }
 
-func getKey(token *jwt.Token) (interface{}, error) {
+func getKey(cfg *config.Config) func(token *jwt.Token) (interface{}, error) {
+	return func(token *jwt.Token) (interface{}, error) {
 
-	keySet, err := jwk.Fetch(context.Background(), "https://api.asgardeo.io/t/shashimal/oauth2/jwks")
-	if err != nil {
-		return nil, err
+		keySet, err := jwk.Fetch(context.Background(), cfg.JWKS)
+		if err != nil {
+			return nil, err
+		}
+
+		keyID, ok := token.Header["kid"].(string)
+		if !ok {
+			return nil, errors.New("expecting JWT header to have a key ID in the kid field")
+		}
+
+		key, found := keySet.LookupKeyID(keyID)
+
+		if !found {
+			return nil, fmt.Errorf("unable to find key %q", keyID)
+		}
+
+		var pubkey interface{}
+		if err := key.Raw(&pubkey); err != nil {
+			return nil, fmt.Errorf("Unable to get the public key. Error: %s", err.Error())
+		}
+
+		return pubkey, nil
 	}
-
-	keyID, ok := token.Header["kid"].(string)
-	if !ok {
-		return nil, errors.New("expecting JWT header to have a key ID in the kid field")
-	}
-
-	key, found := keySet.LookupKeyID(keyID)
-
-	if !found {
-		return nil, fmt.Errorf("unable to find key %q", keyID)
-	}
-
-	var pubkey interface{}
-	if err := key.Raw(&pubkey); err != nil {
-		return nil, fmt.Errorf("Unable to get the public key. Error: %s", err.Error())
-	}
-
-	return pubkey, nil
 }

@@ -13,10 +13,9 @@ const (
 )
 
 type Config struct {
-	ServerPort    int    `yaml:"server_port" env:"SERVER_PORT"`
-	DSN           string `yaml:"dsn" env:"DSN,secret"`
-	JWTSigningKey string `yaml:"jwt_signing_key" env:"JWT_SIGNING_KEY,secret"`
-	JWTExpiration int    `yaml:"jwt_expiration" env:"JWT_EXPIRATION"`
+	ServerPort int    `yaml:"server_port" env:"SERVER_PORT"`
+	DSN        string `yaml:"dsn" env:"DSN,secret"`
+	JWKS       string `yaml:"jwks" env:"JWKS,secret"`
 }
 
 func (c Config) Validate() error {
@@ -27,8 +26,7 @@ func (c Config) Validate() error {
 
 func Load(file string) (*Config, error) {
 	c := Config{
-		ServerPort:    defaultServerPort,
-		JWTExpiration: defaultJWTExpirationHours,
+		ServerPort: defaultServerPort,
 	}
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
