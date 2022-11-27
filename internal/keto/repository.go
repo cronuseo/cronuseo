@@ -97,7 +97,7 @@ func (r repo) GetSubjectListByObject(ctx context.Context, org string, namespace 
 	}
 	obejcts := []string{}
 	for _, rt := range res.RelationTuples {
-		obejcts = append(obejcts, rt.GetSubject().String())
+		obejcts = append(obejcts, rt.Subject.Ref.(*rts.Subject_Id).Id)
 	}
 	return obejcts, nil
 }
