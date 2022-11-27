@@ -15,6 +15,7 @@ type Repository interface {
 	Update(ctx context.Context, organization entity.Organization) error
 	Delete(ctx context.Context, id string) error
 	ExistByID(ctx context.Context, id string) (bool, error)
+	ExistByKey(ctx context.Context, key string) (bool, error)
 }
 
 type repository struct {
@@ -78,5 +79,11 @@ func (r repository) Query(ctx context.Context) ([]entity.Organization, error) {
 func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {
 	exists := false
 	err := r.db.QueryRow("SELECT exists (SELECT org_id FROM org WHERE org_id = $1)", id).Scan(&exists)
+	return exists, err
+}
+
+func (r repository) ExistByKey(ctx context.Context, key string) (bool, error) {
+	exists := false
+	err := r.db.QueryRow("SELECT exists (SELECT org_id FROM org WHERE org_key = $1)", key).Scan(&exists)
 	return exists, err
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -52,15 +53,24 @@ func NewService(repo Repository) Service {
 func (s service) Get(ctx context.Context, id string) (Organization, error) {
 	organization, err := s.repo.Get(ctx, id)
 	if err != nil {
-		return Organization{}, err
+		return Organization{}, &util.NotFoundError{Path: "Organization"}
 	}
 	return Organization{organization}, nil
 }
 
 func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Organization, error) {
+
+	//validate organization
 	if err := req.Validate(); err != nil {
-		return Organization{}, err
+		return Organization{}, &util.InvalidInputError{}
 	}
+
+	//check organixation exists
+	exists, _ := s.repo.ExistByKey(ctx, req.Key)
+	if exists {
+		return Organization{}, &util.AlreadyExistsError{Path: "Organization"}
+	}
+
 	id := entity.GenerateID()
 	err := s.repo.Create(ctx, entity.Organization{
 		ID:   id,
@@ -68,20 +78,21 @@ func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Org
 		Name: req.Name,
 	})
 	if err != nil {
-
 		return Organization{}, err
 	}
 	return s.Get(ctx, id)
 }
 
 func (s service) Update(ctx context.Context, id string, req UpdateOrganizationRequest) (Organization, error) {
+
+	//validate organization
 	if err := req.Validate(); err != nil {
-		return Organization{}, err
+		return Organization{}, &util.InvalidInputError{}
 	}
 
 	organization, err := s.Get(ctx, id)
 	if err != nil {
-		return organization, err
+		return Organization{}, &util.NotFoundError{Path: "Organization"}
 	}
 	organization.Name = req.Name
 
@@ -94,7 +105,7 @@ func (s service) Update(ctx context.Context, id string, req UpdateOrganizationRe
 func (s service) Delete(ctx context.Context, id string) (Organization, error) {
 	organization, err := s.Get(ctx, id)
 	if err != nil {
-		return Organization{}, err
+		return Organization{}, &util.NotFoundError{Path: "Organization"}
 	}
 	if err = s.repo.Delete(ctx, id); err != nil {
 		return Organization{}, err
