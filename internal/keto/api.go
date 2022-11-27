@@ -6,6 +6,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
@@ -35,9 +36,10 @@ func (r keto) create(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
+
 	err := r.service.CreateTuple(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
-		return err
+		return util.HandleError(err)
 	}
 
 	return c.JSON(http.StatusOK, "")
@@ -59,7 +61,7 @@ func (r keto) check(c echo.Context) error {
 	}
 	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
-		return err
+		return util.HandleError(err)
 	}
 
 	return c.JSON(http.StatusOK, allow)
@@ -81,7 +83,7 @@ func (r keto) delete(c echo.Context) error {
 	}
 	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
-		return err
+		return util.HandleError(err)
 	}
 
 	return c.JSON(http.StatusOK, allow)
@@ -103,7 +105,7 @@ func (r keto) getobjectlist(c echo.Context) error {
 	}
 	allow, err := r.service.GetObjectListBySubject(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
-		return err
+		return util.HandleError(err)
 	}
 
 	return c.JSON(http.StatusOK, allow)
@@ -125,7 +127,7 @@ func (r keto) getsubjectlist(c echo.Context) error {
 	}
 	allow, err := r.service.GetSubjectListByObject(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
-		return err
+		return util.HandleError(err)
 	}
 
 	return c.JSON(http.StatusOK, allow)

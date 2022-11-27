@@ -2,9 +2,9 @@ package keto
 
 import (
 	"context"
-	"errors"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
 type Service interface {
@@ -31,10 +31,10 @@ func (s service) CreateTuple(ctx context.Context, org string, namespace string, 
 
 	exists, err := s.repo.CheckTuple(ctx, org, namespace, tuple)
 	if exists {
-		return errors.New("")
+		return &util.AlreadyExistsError{Path: "Tuple"}
 	}
 	if err != nil {
-		return errors.New("")
+		return err
 	}
 
 	tuple = qualifiedTuple(org, tuple)

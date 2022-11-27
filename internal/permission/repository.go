@@ -14,6 +14,8 @@ type Repository interface {
 	Create(ctx context.Context, resource_id string, permission entity.Permission) error
 	Update(ctx context.Context, resource_id string, permission entity.Permission) error
 	Delete(ctx context.Context, resource_id string, id string) error
+	ExistByID(ctx context.Context, id string) (bool, error)
+	ExistByKey(ctx context.Context, resource_id string, key string) (bool, error)
 }
 
 type repository struct {
@@ -72,4 +74,16 @@ func (r repository) Query(ctx context.Context, resource_id string) ([]entity.Per
 	resources := []entity.Permission{}
 	err := r.db.Select(&resources, "SELECT * FROM permission WHERE resource_id = $1", resource_id)
 	return resources, err
+}
+
+func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {
+	exists := false
+	err := r.db.QueryRow("SELECT exists (SELECT permission_id FROM permission WHERE permission_id = $1)", id).Scan(&exists)
+	return exists, err
+}
+
+func (r repository) ExistByKey(ctx context.Context, resource_id string, key string) (bool, error) {
+	exists := false
+	err := r.db.QueryRow("SELECT exists (SELECT permission_id FROM permission WHERE resource_id = $1 AND permission_key = $2)", resource_id, key).Scan(&exists)
+	return exists, err
 }
