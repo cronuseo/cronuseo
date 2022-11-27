@@ -2,6 +2,7 @@ package keto
 
 import (
 	"context"
+	"strings"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
@@ -50,14 +51,32 @@ func (s service) CheckTuple(ctx context.Context, org string, namespace string, t
 func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 
 	tuple = qualifiedTuple(org, tuple)
-	return s.repo.GetObjectListBySubject(ctx, org, namespace, tuple)
+	objects, err := s.repo.GetObjectListBySubject(ctx, org, namespace, tuple)
+	if err != nil {
+		return []string{}, err
+	}
+	values := []string{}
+	for _, val := range objects {
+		slc := strings.Split(val, "/")
+		values = append(values, strings.TrimSpace(slc[1]))
+	}
+	return values, nil
 
 }
 
 func (s service) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 
 	tuple = qualifiedTuple(org, tuple)
-	return s.repo.GetSubjectListByObject(ctx, org, namespace, tuple)
+	subjects, err := s.repo.GetSubjectListByObject(ctx, org, namespace, tuple)
+	if err != nil {
+		return []string{}, err
+	}
+	values := []string{}
+	for _, val := range subjects {
+		slc := strings.Split(val, "/")
+		values = append(values, strings.TrimSpace(slc[1]))
+	}
+	return values, nil
 
 }
 func (s service) DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
