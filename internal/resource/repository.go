@@ -14,6 +14,8 @@ type Repository interface {
 	Create(ctx context.Context, org_id string, resource entity.Resource) error
 	Update(ctx context.Context, org_id string, resource entity.Resource) error
 	Delete(ctx context.Context, org_id string, id string) error
+	ExistByID(ctx context.Context, id string) (bool, error)
+	ExistByKey(ctx context.Context, key string) (bool, error)
 }
 
 type repository struct {
@@ -72,4 +74,16 @@ func (r repository) Query(ctx context.Context, org_id string) ([]entity.Resource
 	resources := []entity.Resource{}
 	err := r.db.Select(&resources, "SELECT * FROM org_resource WHERE org_id = $1", org_id)
 	return resources, err
+}
+
+func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {
+	exists := false
+	err := r.db.QueryRow("SELECT exists (SELECT resource_id FROM org_resource WHERE resource_id = $1)", id).Scan(&exists)
+	return exists, err
+}
+
+func (r repository) ExistByKey(ctx context.Context, key string) (bool, error) {
+	exists := false
+	err := r.db.QueryRow("SELECT exists (SELECT resource_id FROM org_resource WHERE resource_key = $1)", key).Scan(&exists)
+	return exists, err
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -51,15 +52,24 @@ func NewService(repo Repository) Service {
 func (s service) Get(ctx context.Context, org_id string, id string) (Resource, error) {
 	resource, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
-		return Resource{}, err
+		return Resource{}, &util.NotFoundError{Path: "Organization"}
 	}
 	return Resource{resource}, nil
 }
 
 func (s service) Create(ctx context.Context, org_id string, req CreateResourceRequest) (Resource, error) {
+
+	//validate organization
 	if err := req.Validate(); err != nil {
-		return Resource{}, err
+		return Resource{}, &util.InvalidInputError{}
 	}
+
+	//check organixation exists
+	exists, _ := s.repo.ExistByKey(ctx, req.Key)
+	if exists {
+		return Resource{}, &util.AlreadyExistsError{Path: "Resource"}
+	}
+
 	id := entity.GenerateID()
 	err := s.repo.Create(ctx, org_id, entity.Resource{
 		ID:   id,
@@ -74,12 +84,12 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateResourceRequest) (Resource, error) {
 	if err := req.Validate(); err != nil {
-		return Resource{}, err
+		return Resource{}, &util.InvalidInputError{}
 	}
 
 	resource, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return resource, err
+		return resource, &util.NotFoundError{Path: "Resource"}
 	}
 	resource.Name = req.Name
 	if err := s.repo.Update(ctx, org_id, resource.Resource); err != nil {
@@ -91,7 +101,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 func (s service) Delete(ctx context.Context, org_id string, id string) (Resource, error) {
 	resource, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return Resource{}, err
+		return Resource{}, &util.NotFoundError{Path: "Resource"}
 	}
 	if err = s.repo.Delete(ctx, org_id, id); err != nil {
 		return Resource{}, err
