@@ -16,6 +16,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("/check", res.check)
 	router.POST("/list/object", res.getobjectlist)
 	router.POST("/list/subject", res.getsubjectlist)
+	router.POST("/checkbyusername", res.check)
 }
 
 type keto struct {
@@ -45,7 +46,7 @@ func (r keto) create(c echo.Context) error {
 	return c.JSON(http.StatusOK, "")
 }
 
-// @Description Create tuple.
+// @Description Check tuple.
 // @Tags        Keto
 // @Accept      json
 // @Param org path string true "Organization"
@@ -67,7 +68,7 @@ func (r keto) check(c echo.Context) error {
 	return c.JSON(http.StatusOK, allow)
 }
 
-// @Description Create tuple.
+// @Description Delete tuple.
 // @Tags        Keto
 // @Accept      json
 // @Param org path string true "Organization"
@@ -111,7 +112,7 @@ func (r keto) getobjectlist(c echo.Context) error {
 	return c.JSON(http.StatusOK, allow)
 }
 
-// @Description Get objects.
+// @Description Get subjects.
 // @Tags        Keto
 // @Accept      json
 // @Param org path string true "Organization"
@@ -126,6 +127,28 @@ func (r keto) getsubjectlist(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
 	allow, err := r.service.GetSubjectListByObject(context.Background(), c.Param("org"), "permission", input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+
+	return c.JSON(http.StatusOK, allow)
+}
+
+// @Description Check by username.
+// @Tags        Keto
+// @Accept      json
+// @Param org path string true "Organization"
+// @Param request body Tuple true "body"
+// @Produce     json
+// @Success     201
+// @failure     400,403,500
+// @Router      /org/keto/checkbyusername [post]
+func (r keto) checkbyusername(c echo.Context) error {
+	var input entity.Tuple
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	allow, err := r.service.CheckByUsername(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
 		return util.HandleError(err)
 	}

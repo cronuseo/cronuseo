@@ -727,7 +727,37 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create tuple.
+      description: Check tuple.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/keto.Tuple'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Keto
+  /org/keto/checkbyusername:
+    post:
+      consumes:
+      - application/json
+      description: Check by username.
       parameters:
       - description: Organization
         in: path
@@ -787,7 +817,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create tuple.
+      description: Delete tuple.
       parameters:
       - description: Organization
         in: path
@@ -847,7 +877,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Get objects.
+      description: Get subjects.
       parameters:
       - description: Organization
         in: path

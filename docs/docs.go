@@ -27,7 +27,53 @@ const docTemplate = `{
     "paths": {
         "/org/keto/check": {
             "post": {
-                "description": "Create tuple.",
+                "description": "Check tuple.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Keto"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization",
+                        "name": "org",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/keto.Tuple"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/org/keto/checkbyusername": {
+            "post": {
+                "description": "Check by username.",
                 "consumes": [
                     "application/json"
                 ],
@@ -119,7 +165,7 @@ const docTemplate = `{
         },
         "/org/keto/delete": {
             "post": {
-                "description": "Create tuple.",
+                "description": "Delete tuple.",
                 "consumes": [
                     "application/json"
                 ],
@@ -211,7 +257,7 @@ const docTemplate = `{
         },
         "/org/keto/list/subject": {
             "post": {
-                "description": "Get objects.",
+                "description": "Get subjects.",
                 "consumes": [
                     "application/json"
                 ],

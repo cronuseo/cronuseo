@@ -14,6 +14,8 @@ type Service interface {
 	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
 	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
+	GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error)
+	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
 }
 
 type Tuple struct {
@@ -48,6 +50,27 @@ func (s service) CheckTuple(ctx context.Context, org string, namespace string, t
 	return s.repo.CheckTuple(ctx, org, namespace, tuple)
 
 }
+
+func (s service) CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
+
+	username := tuple.SubjectId
+	tuple = qualifiedTuple(org, tuple)
+	roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+	if err != nil {
+		return false, err
+	}
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, username)
+	if err != nil {
+		return false, err
+	}
+	for _, val := range roles_from_db {
+		if contains(roles_from_keto, val) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 
 	tuple = qualifiedTuple(org, tuple)
@@ -85,9 +108,24 @@ func (s service) DeleteTuple(ctx context.Context, org string, namespace string, 
 	return s.repo.DeleteTuple(ctx, org, namespace, tuple)
 }
 
+func (s service) GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error) {
+
+	return []string{}, nil
+}
+
 func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {
 
 	tuple.Object = org + "/" + tuple.Object
 	tuple.SubjectId = org + "/" + tuple.SubjectId
 	return tuple
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
 }

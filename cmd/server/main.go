@@ -107,7 +107,7 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients keto.KetoClients) *ec
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db)))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(db)))
-	keto.RegisterHandlers(rg, keto.NewService(keto.NewRepository(clients)))
+	keto.RegisterHandlers(rg, keto.NewService(keto.NewRepository(clients, db)))
 	return router
 }
 
