@@ -17,12 +17,12 @@ services:
     image: postgres
     restart: always
     ports:
-      - "5433:5432"
+      - "${KETO_DB_PORT}:${DB_PORT}"
     environment:
-      - POSTGRES_USER=keto
-      - POSTGRES_PASSWORD=keto
-      - POSTGRES_DB=keto
-      - DATABASE_HOST=${DB_HOST} 
+      - POSTGRES_USER=${KETO_DB_USERNAME}
+      - POSTGRES_PASSWORD=${KETO_DB_PASSWORD}
+      - POSTGRES_DB=${KETO_DB_NAME}
+      - DATABASE_HOST=${KETO_DB_HOST} 
   keto:
     image: oryd/keto:v0.10.0-alpha.0
     ports:
