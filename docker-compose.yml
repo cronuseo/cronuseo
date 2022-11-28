@@ -1,10 +1,7 @@
-
-
 version: '3.8'
 services:
-  db:
+  cronuseo-db:
     image: postgres
-    restart: always
     volumes: 
       - ./postgres-data:/var/lib/postgresql/data
       - ./data/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
@@ -14,8 +11,8 @@ services:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_NAME}
-    networks:
-      - "api.network" 
+      - DATABASE_HOST=${DB_HOST} 
+
   keto-db:
     image: postgres
     restart: always
@@ -25,8 +22,7 @@ services:
       - POSTGRES_USER=keto
       - POSTGRES_PASSWORD=keto
       - POSTGRES_DB=keto
-    networks:
-      - "api.network" 
+      - DATABASE_HOST=${DB_HOST} 
   keto:
     image: oryd/keto:v0.10.0-alpha.0
     ports:
@@ -36,10 +32,30 @@ services:
     restart: on-failure
     volumes:
       - type: bind
-        source: .
+        source: ./config
         target: /home/ory
-volumes:
-  data:
+    depends_on:
+      - keto-db
+  keto-migrate:
+    image: oryd/keto:v0.10.0-alpha.0
+    links:
+      - keto-db:keto-db
+    volumes:
+      - type: bind
+        source: ./config
+        target: /home/ory
+    environment:
+      - LOG_LEVEL=debug
+      - DSN=postgres://keto:keto@keto-db:5432/keto?sslmode=disable
+    command: ["migrate", "up", "-y"]
+    restart: on-failure
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    depends_on:
+      - cronuseo-db
 
-networks:
-  api.network:
+volumes:
+  api:
+  database_postgres:        

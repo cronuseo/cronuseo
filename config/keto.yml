@@ -14,4 +14,4 @@ serve:
     host: 0.0.0.0
     port: 4467
 
-dsn: postgres://docker.for.mac.localhost:5433/keto?sslmode=disable&user=keto&password=keto
+dsn: postgres://keto-db:5432/keto?sslmode=disable&user=keto&password=keto

@@ -8,19 +8,25 @@ import (
 )
 
 const (
-	defaultServerPort         = 8080
-	defaultJWTExpirationHours = 72
+	defaultServerPort = 8080
 )
 
 type Config struct {
 	ServerPort int    `yaml:"server_port" env:"SERVER_PORT"`
 	DSN        string `yaml:"dsn" env:"DSN,secret"`
 	JWKS       string `yaml:"jwks" env:"JWKS,secret"`
+	KetoRead   string `yaml:"keto_read" env:"KetoRead,secret"`
+	KetoWrite  string `yaml:"keto_write" env:"KetoWrite,secret"`
+	API        string `yaml:"api" env:"API,secret"`
 }
 
 func (c Config) Validate() error {
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.DSN, validation.Required),
+		validation.Field(&c.JWKS, validation.Required),
+		validation.Field(&c.KetoRead, validation.Required),
+		validation.Field(&c.KetoRead, validation.Required),
+		validation.Field(&c.API, validation.Required),
 	)
 }
 

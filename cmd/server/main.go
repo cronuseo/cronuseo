@@ -31,8 +31,9 @@ import (
 
 var Version = "1.0.0"
 
-// var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
-var flagConfig = flag.String("config", "/Users/thilinashashimal/Desktop/Cronuseo/config/local.yml", "path to the config file")
+var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
+
+// var flagConfig = flag.String("config", "/Users/thilinashashimal/Desktop/Cronuseo/config/local.yml", "path to the config file")
 
 // @title          Cronuseo API
 // @version        1.0
@@ -66,20 +67,20 @@ func main() {
 
 	//keto clients
 
-	conn, err := grpc.Dial("127.0.0.1:4467", grpc.WithInsecure())
+	conn, err := grpc.Dial(cfg.KetoWrite, grpc.WithInsecure())
 	if err != nil {
 		panic("Encountered error: " + err.Error())
 	}
 
 	writeClient := rts.NewWriteServiceClient(conn)
 
-	conn, err = grpc.Dial("127.0.0.1:4466", grpc.WithInsecure())
+	conn, err = grpc.Dial(cfg.KetoRead, grpc.WithInsecure())
 	if err != nil {
 		panic("Encountered error: " + err.Error())
 	}
 	readClient := rts.NewReadServiceClient(conn)
 
-	conn, err = grpc.Dial("127.0.0.1:4466", grpc.WithInsecure())
+	conn, err = grpc.Dial(cfg.KetoRead, grpc.WithInsecure())
 	if err != nil {
 		panic("Encountered error: " + err.Error())
 	}
@@ -88,8 +89,7 @@ func main() {
 	clients := keto.KetoClients{WriteClient: writeClient, ReadClient: readClient, CheckClient: checkClient}
 
 	e := buildHandler(db, cfg, clients)
-	address := fmt.Sprintf(":%v", cfg.ServerPort)
-	e.Logger.Fatal(e.Start(address))
+	e.Logger.Fatal(e.Start(cfg.API))
 
 }
 
