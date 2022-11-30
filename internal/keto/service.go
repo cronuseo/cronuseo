@@ -14,7 +14,6 @@ type Service interface {
 	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
 	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
-	GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error)
 	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
 }
 
@@ -106,11 +105,6 @@ func (s service) DeleteTuple(ctx context.Context, org string, namespace string, 
 
 	tuple = qualifiedTuple(org, tuple)
 	return s.repo.DeleteTuple(ctx, org, namespace, tuple)
-}
-
-func (s service) GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error) {
-
-	return []string{}, nil
 }
 
 func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {

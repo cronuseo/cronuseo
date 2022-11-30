@@ -15,7 +15,6 @@ type Repository interface {
 	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
 	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
-	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
 	GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error)
 }
 
@@ -32,7 +31,7 @@ type KetoClients struct {
 	CheckClient rts.CheckServiceClient
 }
 
-func NewRepository(ketoClients KetoClients, db *sqlx.DB) Service {
+func NewRepository(ketoClients KetoClients, db *sqlx.DB) Repository {
 	return repo{writeClient: ketoClients.WriteClient, readClient: ketoClients.ReadClient, checkClient: ketoClients.CheckClient, db: db}
 }
 
@@ -131,9 +130,4 @@ func (r repo) GetRolesByUsername(ctx context.Context, org string, username strin
 	role := []string{}
 	err := r.db.Get(&role, "select role_key from org_role where role_id in (select role_id from user_role where user_id in (select user_id from org_user inner join org on org_user.org_id = org.org_id where org_user.username = $1 AND org.org_key = $2));", username, org)
 	return role, err
-}
-
-func (r repo) CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
-
-	return false, nil
 }
