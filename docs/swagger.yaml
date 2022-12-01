@@ -1,5 +1,16 @@
 basePath: /api/v1
 definitions:
+  entity.CheckRequestWithPermissions:
+    properties:
+      object:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/entity.Relation'
+        type: array
+      subject:
+        type: string
+    type: object
   entity.Organization:
     properties:
       name:
@@ -18,6 +29,11 @@ definitions:
       permission_key:
         type: string
       resource_id:
+        type: string
+    type: object
+  entity.Relation:
+    properties:
+      permission:
         type: string
     type: object
   entity.Resource:
@@ -627,7 +643,37 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/keto.Tuple'
+          $ref: '#/definitions/entity.CheckRequestWithPermissions'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Keto
+  /{org}/keto/checkpermissions:
+    post:
+      consumes:
+      - application/json
+      description: Check by username.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CheckRequestWithPermissions'
       produces:
       - application/json
       responses:

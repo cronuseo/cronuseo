@@ -17,6 +17,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("/list/object", res.getobjectlist)
 	router.POST("/list/subject", res.getsubjectlist)
 	router.POST("/checkbyusername", res.checkbyusername)
+	router.POST("/checkpermissions", res.checkpermissions)
 }
 
 type keto struct {
@@ -138,7 +139,7 @@ func (r keto) getsubjectlist(c echo.Context) error {
 // @Tags        Keto
 // @Accept      json
 // @Param org path string true "Organization"
-// @Param request body Tuple true "body"
+// @Param request body entity.CheckRequestWithPermissions true "body"
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
@@ -149,6 +150,28 @@ func (r keto) checkbyusername(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
 	allow, err := r.service.CheckByUsername(context.Background(), c.Param("org"), "permission", input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+
+	return c.JSON(http.StatusOK, allow)
+}
+
+// @Description Check by username.
+// @Tags        Keto
+// @Accept      json
+// @Param org path string true "Organization"
+// @Param request body entity.CheckRequestWithPermissions true "body"
+// @Produce     json
+// @Success     201
+// @failure     400,403,500
+// @Router      /{org}/keto/checkpermissions [post]
+func (r keto) checkpermissions(c echo.Context) error {
+	var input entity.CheckRequestWithPermissions
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	allow, err := r.service.CheckPermissions(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
 		return util.HandleError(err)
 	}

@@ -15,6 +15,7 @@ type Service interface {
 	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
+	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions) ([]string, error)
 }
 
 type Tuple struct {
@@ -66,6 +67,28 @@ func (s service) CheckByUsername(ctx context.Context, org string, namespace stri
 		}
 	}
 	return false, nil
+}
+
+func (s service) CheckPermissions(ctx context.Context, org string, namespace string, permissions entity.CheckRequestWithPermissions) ([]string, error) {
+
+	allowedPermissions := []string{}
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, permissions.SubjectId)
+	if err != nil {
+		return []string{}, err
+	}
+	for _, permission := range permissions.Relations {
+		tuple := entity.Tuple{Object: permissions.Object, Relation: permission.Relation}
+		roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+		if err != nil {
+			return []string{}, err
+		}
+		for _, val := range roles_from_db {
+			if contains(roles_from_keto, val) {
+				allowedPermissions = append(allowedPermissions, permission.Relation)
+			}
+		}
+	}
+	return allowedPermissions, nil
 }
 
 func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
