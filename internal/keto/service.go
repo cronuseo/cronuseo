@@ -52,13 +52,11 @@ func (s service) CheckTuple(ctx context.Context, org string, namespace string, t
 
 func (s service) CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
 
-	username := tuple.SubjectId
-	tuple = qualifiedTuple(org, tuple)
 	roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
 	if err != nil {
 		return false, err
 	}
-	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, username)
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.SubjectId)
 	if err != nil {
 		return false, err
 	}

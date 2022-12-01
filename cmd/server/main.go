@@ -31,9 +31,9 @@ import (
 
 var Version = "1.0.0"
 
-var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
+// var flagConfig = flag.String("config", "./config/local-debug.yml", "path to the config file")
 
-// var flagConfig = flag.String("config", "/Users/thilinashashimal/Desktop/Cronuseo/config/local.yml", "path to the config file")
+var flagConfig = flag.String("config", "/Users/thilinashashimal/Desktop/Cronuseo/config/local-debug.yml", "path to the config file")
 
 // @title          Cronuseo API
 // @version        1.0

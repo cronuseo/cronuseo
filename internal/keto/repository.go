@@ -127,7 +127,7 @@ func (r repo) DeleteTuple(ctx context.Context, org string, namespace string, tup
 }
 
 func (r repo) GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error) {
-	role := []string{}
-	err := r.db.Get(&role, "select role_key from org_role where role_id in (select role_id from user_role where user_id in (select user_id from org_user inner join org on org_user.org_id = org.org_id where org_user.username = $1 AND org.org_key = $2));", username, org)
-	return role, err
+	var roles entity.Roles
+	err := r.db.Select(&roles, "select * from org_role where role_id in (select role_id from user_role where user_id in (select user_id from org_user inner join org on org_user.org_id = org.org_id where org_user.username = $1 AND org.org_key = $2))", username, org)
+	return roles.RoleKeys(), err
 }

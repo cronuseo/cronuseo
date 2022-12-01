@@ -11,3 +11,13 @@ type Role struct {
 type UserID struct {
 	ID string `json:"user_id" db:"user_id"`
 }
+
+type Roles []Role
+
+func (r Roles) RoleKeys() []string {
+	var list []string
+	for _, role := range r {
+		list = append(list, role.Key)
+	}
+	return list
+}

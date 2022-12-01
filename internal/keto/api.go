@@ -16,7 +16,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("/check", res.check)
 	router.POST("/list/object", res.getobjectlist)
 	router.POST("/list/subject", res.getsubjectlist)
-	router.POST("/checkbyusername", res.check)
+	router.POST("/checkbyusername", res.checkbyusername)
 }
 
 type keto struct {
@@ -31,7 +31,7 @@ type keto struct {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /org/keto/create [post]
+// @Router      /{org}/keto/create [post]
 func (r keto) create(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
@@ -54,7 +54,7 @@ func (r keto) create(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /org/keto/check [post]
+// @Router      /{org}/keto/check [post]
 func (r keto) check(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
@@ -76,7 +76,7 @@ func (r keto) check(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /org/keto/delete [post]
+// @Router      /{org}/keto/delete [post]
 func (r keto) delete(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
@@ -98,7 +98,7 @@ func (r keto) delete(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /org/keto/list/object [post]
+// @Router      /{org}/keto/list/object [post]
 func (r keto) getobjectlist(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
@@ -120,7 +120,7 @@ func (r keto) getobjectlist(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /org/keto/list/subject [post]
+// @Router      /{org}/keto/list/subject [post]
 func (r keto) getsubjectlist(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
@@ -142,7 +142,7 @@ func (r keto) getsubjectlist(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /org/keto/checkbyusername [post]
+// @Router      /{org}/keto/checkbyusername [post]
 func (r keto) checkbyusername(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
