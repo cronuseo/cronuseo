@@ -8,8 +8,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/shashimalcse/cronuseo/internal/action"
 	"github.com/shashimalcse/cronuseo/internal/config"
-	"github.com/shashimalcse/cronuseo/internal/keto"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/permission"
 	"github.com/shashimalcse/cronuseo/internal/resource"
@@ -86,14 +86,14 @@ func main() {
 	}
 	checkClient := rts.NewCheckServiceClient(conn)
 
-	clients := keto.KetoClients{WriteClient: writeClient, ReadClient: readClient, CheckClient: checkClient}
+	clients := permission.KetoClients{WriteClient: writeClient, ReadClient: readClient, CheckClient: checkClient}
 
 	e := buildHandler(db, cfg, clients)
 	e.Logger.Fatal(e.Start(cfg.API))
 
 }
 
-func buildHandler(db *sqlx.DB, cfg *config.Config, clients keto.KetoClients) *echo.Echo {
+func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClients) *echo.Echo {
 	router := echo.New()
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -106,8 +106,8 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients keto.KetoClients) *ec
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db)))
-	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(db)))
-	keto.RegisterHandlers(rg, keto.NewService(keto.NewRepository(clients, db)))
+	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
+	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db)))
 	return router
 }
 

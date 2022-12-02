@@ -1,5 +1,28 @@
 basePath: /api/v1
 definitions:
+  action.CreateActionRequest:
+    properties:
+      action_key:
+        type: string
+      name:
+        type: string
+    type: object
+  action.UpdateActionRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  entity.Action:
+    properties:
+      action_id:
+        type: string
+      action_key:
+        type: string
+      name:
+        type: string
+      resource_id:
+        type: string
+    type: object
   entity.CheckRequestAll:
     properties:
       resources:
@@ -36,17 +59,6 @@ definitions:
       org_id:
         type: string
       org_key:
-        type: string
-    type: object
-  entity.Permission:
-    properties:
-      name:
-        type: string
-      permission_id:
-        type: string
-      permission_key:
-        type: string
-      resource_id:
         type: string
     type: object
   entity.Relation:
@@ -98,15 +110,6 @@ definitions:
       user_id:
         type: string
     type: object
-  keto.Tuple:
-    properties:
-      object:
-        type: string
-      relation:
-        type: string
-      subject:
-        type: string
-    type: object
   organization.CreateOrganizationRequest:
     properties:
       name:
@@ -119,16 +122,13 @@ definitions:
       name:
         type: string
     type: object
-  permission.CreateResourceRequest:
+  permission.Tuple:
     properties:
-      name:
+      object:
         type: string
-      permission_key:
+      relation:
         type: string
-    type: object
-  permission.UpdateResourceRequest:
-    properties:
-      name:
+      subject:
         type: string
     type: object
   resource.CreateResourceRequest:
@@ -615,7 +615,7 @@ paths:
           description: Internal Server Error
       tags:
       - User
-  /{org}/keto/check:
+  /{org}/permission/check:
     post:
       consumes:
       - application/json
@@ -631,7 +631,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/keto.Tuple'
+          $ref: '#/definitions/permission.Tuple'
       produces:
       - application/json
       responses:
@@ -644,8 +644,68 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Keto
-  /{org}/keto/checkall:
+      - Permission
+  /{org}/permission/check_by_username:
+    post:
+      consumes:
+      - application/json
+      description: Check by username.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CheckRequestWithPermissions'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+  /{org}/permission/check_multi_actions:
+    post:
+      consumes:
+      - application/json
+      description: Check by username.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CheckRequestWithPermissions'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+  /{org}/permission/check_multi_resources:
     post:
       consumes:
       - application/json
@@ -674,68 +734,8 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Keto
-  /{org}/keto/checkbyusername:
-    post:
-      consumes:
-      - application/json
-      description: Check by username.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.CheckRequestWithPermissions'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Keto
-  /{org}/keto/checkpermissions:
-    post:
-      consumes:
-      - application/json
-      description: Check by username.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.CheckRequestWithPermissions'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Keto
-  /{org}/keto/create:
+      - Permission
+  /{org}/permission/create:
     post:
       consumes:
       - application/json
@@ -751,7 +751,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/keto.Tuple'
+          $ref: '#/definitions/permission.Tuple'
       produces:
       - application/json
       responses:
@@ -764,8 +764,8 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Keto
-  /{org}/keto/delete:
+      - Permission
+  /{org}/permission/delete:
     post:
       consumes:
       - application/json
@@ -781,7 +781,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/keto.Tuple'
+          $ref: '#/definitions/permission.Tuple'
       produces:
       - application/json
       responses:
@@ -794,8 +794,8 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Keto
-  /{org}/keto/list/object:
+      - Permission
+  /{org}/permission/list/object:
     post:
       consumes:
       - application/json
@@ -811,7 +811,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/keto.Tuple'
+          $ref: '#/definitions/permission.Tuple'
       produces:
       - application/json
       responses:
@@ -824,8 +824,8 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Keto
-  /{org}/keto/list/subject:
+      - Permission
+  /{org}/permission/list/subject:
     post:
       consumes:
       - application/json
@@ -841,7 +841,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/keto.Tuple'
+          $ref: '#/definitions/permission.Tuple'
       produces:
       - application/json
       responses:
@@ -854,8 +854,8 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Keto
-  /{resource_id}/permission:
+      - Permission
+  /{resource_id}/action:
     get:
       description: Get all resources.
       parameters:
@@ -871,16 +871,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.Permission'
+              $ref: '#/definitions/entity.Action'
             type: array
         "500":
           description: Internal Server Error
       tags:
-      - Permission
+      - Action
     post:
       consumes:
       - application/json
-      description: Create permission.
+      description: Create action.
       parameters:
       - description: Resource ID
         in: path
@@ -892,14 +892,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/permission.CreateResourceRequest'
+          $ref: '#/definitions/action.CreateActionRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.Permission'
+            $ref: '#/definitions/entity.Action'
         "400":
           description: Bad Request
         "403":
@@ -907,17 +907,17 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Permission
-  /{resource_id}/permission/{id}:
+      - Action
+  /{resource_id}/action/{id}:
     delete:
-      description: Delete permission.
+      description: Delete action.
       parameters:
       - description: Resource ID
         in: path
         name: resource_id
         required: true
         type: string
-      - description: Permission ID
+      - description: Action ID
         in: path
         name: id
         required: true
@@ -932,16 +932,16 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Permission
+      - Action
     get:
-      description: Get permission by ID.
+      description: Get action by ID.
       parameters:
       - description: Resource ID
         in: path
         name: resource_id
         required: true
         type: string
-      - description: Permission ID
+      - description: Action ID
         in: path
         name: id
         required: true
@@ -952,24 +952,24 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.Permission'
+            $ref: '#/definitions/entity.Action'
         "404":
           description: Not Found
         "500":
           description: Internal Server Error
       tags:
-      - Permission
+      - Action
     put:
       consumes:
       - application/json
-      description: Update permission.
+      description: Update action.
       parameters:
       - description: Resource ID
         in: path
         name: resource_id
         required: true
         type: string
-      - description: Permission ID
+      - description: Action ID
         in: path
         name: id
         required: true
@@ -979,14 +979,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/permission.UpdateResourceRequest'
+          $ref: '#/definitions/action.UpdateActionRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.Permission'
+            $ref: '#/definitions/entity.Action'
         "400":
           description: Bad Request
         "403":
@@ -996,7 +996,7 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Permission
+      - Action
   /organization:
     get:
       description: Get all organizations.

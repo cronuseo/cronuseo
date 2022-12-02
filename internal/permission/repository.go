@@ -3,87 +3,131 @@ package permission
 import (
 	"context"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/shashimalcse/cronuseo/internal/entity"
 
-	"github.com/jmoiron/sqlx"
+	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 )
 
 type Repository interface {
-	Get(ctx context.Context, resource_id string, id string) (entity.Permission, error)
-	Query(ctx context.Context, resource_id string) ([]entity.Permission, error)
-	Create(ctx context.Context, resource_id string, permission entity.Permission) error
-	Update(ctx context.Context, resource_id string, permission entity.Permission) error
-	Delete(ctx context.Context, resource_id string, id string) error
-	ExistByID(ctx context.Context, id string) (bool, error)
-	ExistByKey(ctx context.Context, resource_id string, key string) (bool, error)
+	CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
+	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
+	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
+	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
+	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
+	GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error)
 }
 
-type repository struct {
-	db *sqlx.DB
+type repo struct {
+	writeClient rts.WriteServiceClient
+	readClient  rts.ReadServiceClient
+	checkClient rts.CheckServiceClient
+	db          *sqlx.DB
 }
 
-func NewRepository(db *sqlx.DB) Repository {
-	return repository{db: db}
+type KetoClients struct {
+	WriteClient rts.WriteServiceClient
+	ReadClient  rts.ReadServiceClient
+	CheckClient rts.CheckServiceClient
 }
 
-func (r repository) Get(ctx context.Context, resource_id string, id string) (entity.Permission, error) {
-	permission := entity.Permission{}
-	err := r.db.Get(&permission, "SELECT * FROM permission WHERE resource_id = $1 AND permission_id = $2", resource_id, id)
-	return permission, err
+func NewRepository(ketoClients KetoClients, db *sqlx.DB) Repository {
+	return repo{writeClient: ketoClients.WriteClient, readClient: ketoClients.ReadClient, checkClient: ketoClients.CheckClient, db: db}
 }
 
-func (r repository) Create(ctx context.Context, resource_id string, permission entity.Permission) error {
+func (r repo) CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
 
-	stmt, err := r.db.Prepare("INSERT INTO permission(permission_key,name,resource_id,permission_id) VALUES($1, $2, $3, $4)")
+	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
+		RelationTupleDeltas: []*rts.RelationTupleDelta{
+			{
+				Action: rts.RelationTupleDelta_ACTION_INSERT,
+				RelationTuple: &rts.RelationTuple{
+					Namespace: namespace,
+					Object:    tuple.Object,
+					Relation:  tuple.Relation,
+					Subject:   rts.NewSubjectID(tuple.SubjectId),
+				},
+			},
+		},
+	})
 	if err != nil {
-		return err
-	}
-	_, err = stmt.Exec(permission.Key, permission.Name, resource_id, permission.ID)
-	if err != nil {
-		return err
-	}
-	return nil
-
-}
-
-func (r repository) Update(ctx context.Context, resource_id string, permission entity.Permission) error {
-	stmt, err := r.db.Prepare("UPDATE permission SET name = $1 HERE resource_id = $2 AND permission_id = $3")
-	if err != nil {
-		return err
-	}
-	_, err = stmt.Exec(permission.Name, resource_id, permission.ID)
-	if err != nil {
-		return err
+		panic("Encountered error: " + err.Error())
 	}
 	return nil
 }
 
-func (r repository) Delete(ctx context.Context, resource_id string, id string) error {
-	stmt, err := r.db.Prepare("DELETE FROM permission WHERE resource_id = $3 AND permission_id = $1")
+func (r repo) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
+
+	check, err := r.checkClient.Check(ctx, &rts.CheckRequest{
+		Namespace: namespace,
+		Object:    tuple.Object,
+		Relation:  tuple.Relation,
+		Subject:   rts.NewSubjectID(tuple.SubjectId),
+	})
+	return check.Allowed, err
+}
+
+func (r repo) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
+
+	res, err := r.readClient.ListRelationTuples(ctx, &rts.ListRelationTuplesRequest{
+		Query: &rts.ListRelationTuplesRequest_Query{
+			Namespace: namespace,
+			Relation:  tuple.Relation,
+			Subject:   rts.NewSubjectID(tuple.SubjectId),
+		},
+	})
 	if err != nil {
-		return err
+		return []string{}, err
 	}
-	_, err = stmt.Exec(resource_id, id)
+	obejcts := []string{}
+	for _, rt := range res.RelationTuples {
+		obejcts = append(obejcts, rt.Object)
+	}
+	return obejcts, nil
+}
+
+func (r repo) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
+
+	res, err := r.readClient.ListRelationTuples(ctx, &rts.ListRelationTuplesRequest{
+		Query: &rts.ListRelationTuplesRequest_Query{
+			Namespace: namespace,
+			Object:    tuple.Object,
+			Relation:  tuple.Relation,
+		},
+	})
 	if err != nil {
-		return err
+		return []string{}, err
+	}
+	obejcts := []string{}
+	for _, rt := range res.RelationTuples {
+		obejcts = append(obejcts, rt.Subject.Ref.(*rts.Subject_Id).Id)
+	}
+	return obejcts, nil
+}
+
+func (r repo) DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
+
+	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
+		RelationTupleDeltas: []*rts.RelationTupleDelta{
+			{
+				Action: rts.RelationTupleDelta_ACTION_DELETE,
+				RelationTuple: &rts.RelationTuple{
+					Namespace: namespace,
+					Object:    tuple.Object,
+					Relation:  tuple.Relation,
+					Subject:   rts.NewSubjectID(tuple.SubjectId),
+				},
+			},
+		},
+	})
+	if err != nil {
+		panic("Encountered error: " + err.Error())
 	}
 	return nil
 }
 
-func (r repository) Query(ctx context.Context, resource_id string) ([]entity.Permission, error) {
-	resources := []entity.Permission{}
-	err := r.db.Select(&resources, "SELECT * FROM permission WHERE resource_id = $1", resource_id)
-	return resources, err
-}
-
-func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {
-	exists := false
-	err := r.db.QueryRow("SELECT exists (SELECT permission_id FROM permission WHERE permission_id = $1)", id).Scan(&exists)
-	return exists, err
-}
-
-func (r repository) ExistByKey(ctx context.Context, resource_id string, key string) (bool, error) {
-	exists := false
-	err := r.db.QueryRow("SELECT exists (SELECT permission_id FROM permission WHERE resource_id = $1 AND permission_key = $2)", resource_id, key).Scan(&exists)
-	return exists, err
+func (r repo) GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error) {
+	var roles entity.Roles
+	err := r.db.Select(&roles, "select * from org_role where role_id in (select role_id from user_role where user_id in (select user_id from org_user inner join org on org_user.org_id = org.org_id where org_user.username = $1 AND org.org_key = $2))", username, org)
+	return roles.RoleKeys(), err
 }

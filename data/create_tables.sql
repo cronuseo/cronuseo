@@ -37,9 +37,9 @@ CREATE TABLE if not exists ORG(
    CONSTRAINT FK_ORG_USER_USER_ROLE FOREIGN KEY(user_id) REFERENCES ORG_USER(user_id)
    );
 
- CREATE TABLE if not exists PERMISSION(
-   permission_id uuid PRIMARY KEY,
-   permission_key VARCHAR(40) NOT NULL,
+ CREATE TABLE if not exists RES_ACTION(
+   action_id uuid PRIMARY KEY,
+   action_key VARCHAR(40) NOT NULL,
    name VARCHAR(40) NOT NULL,
    resource_id uuid,
    CONSTRAINT FK_ORG_RESOURCE_PERMISSION FOREIGN KEY(resource_id) REFERENCES ORG_RESOURCE(resource_id)

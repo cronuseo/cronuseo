@@ -848,7 +848,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/keto/check": {
+        "/{org}/permission/check": {
             "post": {
                 "description": "Check tuple.",
                 "consumes": [
@@ -858,7 +858,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Keto"
+                    "Permission"
                 ],
                 "parameters": [
                     {
@@ -874,7 +874,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/keto.Tuple"
+                            "$ref": "#/definitions/permission.Tuple"
                         }
                     }
                 ],
@@ -894,7 +894,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/keto/checkall": {
+        "/{org}/permission/check_by_username": {
             "post": {
                 "description": "Check by username.",
                 "consumes": [
@@ -904,7 +904,99 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Keto"
+                    "Permission"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization",
+                        "name": "org",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.CheckRequestWithPermissions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{org}/permission/check_multi_actions": {
+            "post": {
+                "description": "Check by username.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization",
+                        "name": "org",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.CheckRequestWithPermissions"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{org}/permission/check_multi_resources": {
+            "post": {
+                "description": "Check by username.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
                 ],
                 "parameters": [
                     {
@@ -940,99 +1032,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/keto/checkbyusername": {
-            "post": {
-                "description": "Check by username.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Keto"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.CheckRequestWithPermissions"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/keto/checkpermissions": {
-            "post": {
-                "description": "Check by username.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Keto"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.CheckRequestWithPermissions"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/keto/create": {
+        "/{org}/permission/create": {
             "post": {
                 "description": "Create tuple.",
                 "consumes": [
@@ -1042,7 +1042,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Keto"
+                    "Permission"
                 ],
                 "parameters": [
                     {
@@ -1058,7 +1058,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/keto.Tuple"
+                            "$ref": "#/definitions/permission.Tuple"
                         }
                     }
                 ],
@@ -1078,7 +1078,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/keto/delete": {
+        "/{org}/permission/delete": {
             "post": {
                 "description": "Delete tuple.",
                 "consumes": [
@@ -1088,7 +1088,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Keto"
+                    "Permission"
                 ],
                 "parameters": [
                     {
@@ -1104,7 +1104,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/keto.Tuple"
+                            "$ref": "#/definitions/permission.Tuple"
                         }
                     }
                 ],
@@ -1124,7 +1124,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/keto/list/object": {
+        "/{org}/permission/list/object": {
             "post": {
                 "description": "Get objects.",
                 "consumes": [
@@ -1134,7 +1134,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Keto"
+                    "Permission"
                 ],
                 "parameters": [
                     {
@@ -1150,7 +1150,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/keto.Tuple"
+                            "$ref": "#/definitions/permission.Tuple"
                         }
                     }
                 ],
@@ -1170,7 +1170,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/keto/list/subject": {
+        "/{org}/permission/list/subject": {
             "post": {
                 "description": "Get subjects.",
                 "consumes": [
@@ -1180,7 +1180,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Keto"
+                    "Permission"
                 ],
                 "parameters": [
                     {
@@ -1196,7 +1196,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/keto.Tuple"
+                            "$ref": "#/definitions/permission.Tuple"
                         }
                     }
                 ],
@@ -1216,14 +1216,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/{resource_id}/permission": {
+        "/{resource_id}/action": {
             "get": {
                 "description": "Get all resources.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Permission"
+                    "Action"
                 ],
                 "parameters": [
                     {
@@ -1240,7 +1240,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.Permission"
+                                "$ref": "#/definitions/entity.Action"
                             }
                         }
                     },
@@ -1250,7 +1250,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create permission.",
+                "description": "Create action.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1258,7 +1258,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Permission"
+                    "Action"
                 ],
                 "parameters": [
                     {
@@ -1274,7 +1274,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/permission.CreateResourceRequest"
+                            "$ref": "#/definitions/action.CreateActionRequest"
                         }
                     }
                 ],
@@ -1282,7 +1282,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.Permission"
+                            "$ref": "#/definitions/entity.Action"
                         }
                     },
                     "400": {
@@ -1297,14 +1297,14 @@ const docTemplate = `{
                 }
             }
         },
-        "/{resource_id}/permission/{id}": {
+        "/{resource_id}/action/{id}": {
             "get": {
-                "description": "Get permission by ID.",
+                "description": "Get action by ID.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Permission"
+                    "Action"
                 ],
                 "parameters": [
                     {
@@ -1316,7 +1316,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Permission ID",
+                        "description": "Action ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1326,7 +1326,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.Permission"
+                            "$ref": "#/definitions/entity.Action"
                         }
                     },
                     "404": {
@@ -1338,7 +1338,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update permission.",
+                "description": "Update action.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1346,7 +1346,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Permission"
+                    "Action"
                 ],
                 "parameters": [
                     {
@@ -1358,7 +1358,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Permission ID",
+                        "description": "Action ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1369,7 +1369,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/permission.UpdateResourceRequest"
+                            "$ref": "#/definitions/action.UpdateActionRequest"
                         }
                     }
                 ],
@@ -1377,7 +1377,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.Permission"
+                            "$ref": "#/definitions/entity.Action"
                         }
                     },
                     "400": {
@@ -1395,12 +1395,12 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete permission.",
+                "description": "Delete action.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Permission"
+                    "Action"
                 ],
                 "parameters": [
                     {
@@ -1412,7 +1412,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Permission ID",
+                        "description": "Action ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -1433,6 +1433,42 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "action.CreateActionRequest": {
+            "type": "object",
+            "properties": {
+                "action_key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "action.UpdateActionRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Action": {
+            "type": "object",
+            "properties": {
+                "action_id": {
+                    "type": "string"
+                },
+                "action_key": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "resource_id": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.CheckRequestAll": {
             "type": "object",
             "properties": {
@@ -1488,23 +1524,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "org_key": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Permission": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "permission_id": {
-                    "type": "string"
-                },
-                "permission_key": {
-                    "type": "string"
-                },
-                "resource_id": {
                     "type": "string"
                 }
             }
@@ -1585,20 +1604,6 @@ const docTemplate = `{
                 }
             }
         },
-        "keto.Tuple": {
-            "type": "object",
-            "properties": {
-                "object": {
-                    "type": "string"
-                },
-                "relation": {
-                    "type": "string"
-                },
-                "subject": {
-                    "type": "string"
-                }
-            }
-        },
         "organization.CreateOrganizationRequest": {
             "type": "object",
             "properties": {
@@ -1618,21 +1623,16 @@ const docTemplate = `{
                 }
             }
         },
-        "permission.CreateResourceRequest": {
+        "permission.Tuple": {
             "type": "object",
             "properties": {
-                "name": {
+                "object": {
                     "type": "string"
                 },
-                "permission_key": {
+                "relation": {
                     "type": "string"
-                }
-            }
-        },
-        "permission.UpdateResourceRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
+                },
+                "subject": {
                     "type": "string"
                 }
             }

@@ -2,43 +2,25 @@ package permission
 
 import (
 	"context"
+	"strings"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
-
-	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type Service interface {
-	Get(ctx context.Context, resource_id string, id string) (Permission, error)
-	Query(ctx context.Context, resource_id string) ([]Permission, error)
-	Create(ctx context.Context, resource_id string, input CreateResourceRequest) (Permission, error)
-	Update(ctx context.Context, resource_id string, id string, input UpdateResourceRequest) (Permission, error)
-	Delete(ctx context.Context, resource_id string, id string) (Permission, error)
+	CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
+	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
+	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
+	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
+	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
+	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
+	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions) ([]string, error)
+	CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll) (entity.CheckAllResponse, error)
 }
 
-type Permission struct {
-	entity.Permission
-}
-
-type CreateResourceRequest struct {
-	Key        string `json:"permission_key" db:"permission_key"`
-	Name       string `json:"name" db:"name"`
-	ResourceID string `json:"-" db:"resource_id"`
-}
-
-func (m CreateResourceRequest) Validate() error {
-	return validation.ValidateStruct(&m,
-		validation.Field(&m.Key, validation.Required),
-	)
-}
-
-type UpdateResourceRequest struct {
-	Name string `json:"name" db:"name"`
-}
-
-func (m UpdateResourceRequest) Validate() error {
-	return validation.ValidateStruct(&m)
+type Tuple struct {
+	entity.Tuple
 }
 
 type service struct {
@@ -49,70 +31,145 @@ func NewService(repo Repository) Service {
 	return service{repo: repo}
 }
 
-func (s service) Get(ctx context.Context, resource_id string, id string) (Permission, error) {
-	resource, err := s.repo.Get(ctx, resource_id, id)
-	if err != nil {
-		return Permission{}, &util.NotFoundError{Path: "Permission"}
-	}
-	return Permission{resource}, nil
-}
+func (s service) CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
 
-func (s service) Create(ctx context.Context, resource_id string, req CreateResourceRequest) (Permission, error) {
-	if err := req.Validate(); err != nil {
-		return Permission{}, &util.InvalidInputError{}
-	}
-
-	exists, _ := s.repo.ExistByKey(ctx, resource_id, req.Key)
+	exists, err := s.repo.CheckTuple(ctx, org, namespace, tuple)
 	if exists {
-		return Permission{}, &util.AlreadyExistsError{Path: "Permission"}
+		return &util.AlreadyExistsError{Path: "Tuple"}
 	}
-	id := entity.GenerateID()
-	err := s.repo.Create(ctx, resource_id, entity.Permission{
-		ID:   id,
-		Key:  req.Key,
-		Name: req.Name,
-	})
 	if err != nil {
-		return Permission{}, err
+		return err
 	}
-	return s.Get(ctx, resource_id, id)
+
+	tuple = qualifiedTuple(org, tuple)
+	return s.repo.CreateTuple(ctx, org, namespace, tuple)
 }
 
-func (s service) Update(ctx context.Context, resource_id string, id string, req UpdateResourceRequest) (Permission, error) {
-	if err := req.Validate(); err != nil {
-		return Permission{}, &util.InvalidInputError{}
-	}
+func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
 
-	resource, err := s.Get(ctx, resource_id, id)
-	if err != nil {
-		return Permission{}, &util.NotFoundError{Path: "Permission"}
-	}
-	resource.Name = req.Name
-	if err := s.repo.Update(ctx, resource_id, resource.Permission); err != nil {
-		return resource, err
-	}
-	return resource, nil
+	tuple = qualifiedTuple(org, tuple)
+	return s.repo.CheckTuple(ctx, org, namespace, tuple)
+
 }
 
-func (s service) Delete(ctx context.Context, resource_id string, id string) (Permission, error) {
-	resource, err := s.Get(ctx, resource_id, id)
+func (s service) CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
+
+	roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
 	if err != nil {
-		return Permission{}, &util.NotFoundError{Path: "Permission"}
+		return false, err
 	}
-	if err = s.repo.Delete(ctx, resource_id, id); err != nil {
-		return Permission{}, err
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.SubjectId)
+	if err != nil {
+		return false, err
 	}
-	return resource, nil
+	for _, val := range roles_from_db {
+		if contains(roles_from_keto, val) {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 
-func (s service) Query(ctx context.Context, resource_id string) ([]Permission, error) {
-	items, err := s.repo.Query(ctx, resource_id)
+func (s service) CheckPermissions(ctx context.Context, org string, namespace string, permissions entity.CheckRequestWithPermissions) ([]string, error) {
+
+	allowedPermissions := []string{}
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, permissions.SubjectId)
 	if err != nil {
-		return nil, err
+		return []string{}, err
 	}
-	result := []Permission{}
-	for _, item := range items {
-		result = append(result, Permission{item})
+	for _, permission := range permissions.Relations {
+		tuple := entity.Tuple{Object: permissions.Object, Relation: permission.Relation}
+		roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+		if err != nil {
+			return []string{}, err
+		}
+		for _, val := range roles_from_db {
+			if contains(roles_from_keto, val) {
+				allowedPermissions = append(allowedPermissions, permission.Relation)
+			}
+		}
 	}
-	return result, nil
+	return allowedPermissions, nil
+}
+
+func (s service) CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll) (entity.CheckAllResponse, error) {
+	response := entity.CheckAllResponse{}
+
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.SubjectId)
+	if err != nil {
+		return response, err
+	}
+	for _, resource := range tuple.Objects {
+		res_name := resource.Object
+		allowedPermissions := []string{}
+		for _, permission := range resource.Relations {
+			tuple := entity.Tuple{Object: res_name, Relation: permission.Relation}
+			roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+			if err != nil {
+				return response, err
+			}
+			for _, val := range roles_from_db {
+				if contains(roles_from_keto, val) {
+					allowedPermissions = append(allowedPermissions, permission.Relation)
+				}
+			}
+		}
+		response.Values = append(response.Values, entity.CheckAllResult{Resource: res_name, Permissions: allowedPermissions})
+
+	}
+	return response, nil
+}
+
+func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
+
+	tuple = qualifiedTuple(org, tuple)
+	objects, err := s.repo.GetObjectListBySubject(ctx, org, namespace, tuple)
+	if err != nil {
+		return []string{}, err
+	}
+	values := []string{}
+	for _, val := range objects {
+		slc := strings.Split(val, "/")
+		values = append(values, strings.TrimSpace(slc[1]))
+	}
+	return values, nil
+
+}
+
+func (s service) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
+
+	tuple = qualifiedTuple(org, tuple)
+	subjects, err := s.repo.GetSubjectListByObject(ctx, org, namespace, tuple)
+	if err != nil {
+		return []string{}, err
+	}
+	values := []string{}
+	for _, val := range subjects {
+		slc := strings.Split(val, "/")
+		values = append(values, strings.TrimSpace(slc[1]))
+	}
+	return values, nil
+
+}
+func (s service) DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
+
+	tuple = qualifiedTuple(org, tuple)
+	return s.repo.DeleteTuple(ctx, org, namespace, tuple)
+}
+
+func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {
+
+	tuple.Object = org + "/" + tuple.Object
+	tuple.SubjectId = org + "/" + tuple.SubjectId
+	return tuple
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
 }
