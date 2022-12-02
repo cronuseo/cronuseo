@@ -18,6 +18,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("/list/subject", res.getsubjectlist)
 	router.POST("/checkbyusername", res.checkbyusername)
 	router.POST("/checkpermissions", res.checkpermissions)
+	router.POST("/checkall", res.checkall)
 }
 
 type keto struct {
@@ -172,6 +173,28 @@ func (r keto) checkpermissions(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
 	allow, err := r.service.CheckPermissions(context.Background(), c.Param("org"), "permission", input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+
+	return c.JSON(http.StatusOK, allow)
+}
+
+// @Description Check by username.
+// @Tags        Keto
+// @Accept      json
+// @Param org path string true "Organization"
+// @Param request body entity.CheckRequestAll true "body"
+// @Produce     json
+// @Success     201
+// @failure     400,403,500
+// @Router      /{org}/keto/checkall [post]
+func (r keto) checkall(c echo.Context) error {
+	var input entity.CheckRequestAll
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	allow, err := r.service.CheckAll(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
 		return util.HandleError(err)
 	}

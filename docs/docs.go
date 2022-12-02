@@ -894,6 +894,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/{org}/keto/checkall": {
+            "post": {
+                "description": "Check by username.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Keto"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization",
+                        "name": "org",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.CheckRequestAll"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/{org}/keto/checkbyusername": {
             "post": {
                 "description": "Check by username.",
@@ -1387,6 +1433,20 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "entity.CheckRequestAll": {
+            "type": "object",
+            "properties": {
+                "resources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Object"
+                    }
+                },
+                "subject": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.CheckRequestWithPermissions": {
             "type": "object",
             "properties": {
@@ -1400,6 +1460,20 @@ const docTemplate = `{
                     }
                 },
                 "subject": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Object": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Relation"
+                    }
+                },
+                "resource": {
                     "type": "string"
                 }
             }

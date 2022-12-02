@@ -16,6 +16,7 @@ type Service interface {
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
 	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions) ([]string, error)
+	CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll) (entity.CheckAllResponse, error)
 }
 
 type Tuple struct {
@@ -89,6 +90,34 @@ func (s service) CheckPermissions(ctx context.Context, org string, namespace str
 		}
 	}
 	return allowedPermissions, nil
+}
+
+func (s service) CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll) (entity.CheckAllResponse, error) {
+	response := entity.CheckAllResponse{}
+
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.SubjectId)
+	if err != nil {
+		return response, err
+	}
+	for _, resource := range tuple.Objects {
+		res_name := resource.Object
+		allowedPermissions := []string{}
+		for _, permission := range resource.Relations {
+			tuple := entity.Tuple{Object: res_name, Relation: permission.Relation}
+			roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+			if err != nil {
+				return response, err
+			}
+			for _, val := range roles_from_db {
+				if contains(roles_from_keto, val) {
+					allowedPermissions = append(allowedPermissions, permission.Relation)
+				}
+			}
+		}
+		response.Values = append(response.Values, entity.CheckAllResult{Resource: res_name, Permissions: allowedPermissions})
+
+	}
+	return response, nil
 }
 
 func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {

@@ -1,5 +1,14 @@
 basePath: /api/v1
 definitions:
+  entity.CheckRequestAll:
+    properties:
+      resources:
+        items:
+          $ref: '#/definitions/entity.Object'
+        type: array
+      subject:
+        type: string
+    type: object
   entity.CheckRequestWithPermissions:
     properties:
       object:
@@ -9,6 +18,15 @@ definitions:
           $ref: '#/definitions/entity.Relation'
         type: array
       subject:
+        type: string
+    type: object
+  entity.Object:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/entity.Relation'
+        type: array
+      resource:
         type: string
     type: object
   entity.Organization:
@@ -614,6 +632,36 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/keto.Tuple'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Keto
+  /{org}/keto/checkall:
+    post:
+      consumes:
+      - application/json
+      description: Check by username.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/entity.CheckRequestAll'
       produces:
       - application/json
       responses:
