@@ -1,6 +1,7 @@
 .env
-src/vendor/*
+vendor/*
 .vscode
 src/.idea/*
 postgres-data
-
+.DS_Store
+keto_0.10.0-alpha.0-macOS_64bit
