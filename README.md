@@ -2,29 +2,22 @@
 <img width="467" alt="Screenshot 2022-11-05 at 14 41 11" src="https://user-images.githubusercontent.com/43197743/201187748-a5af0870-8e49-4313-b01d-cc59d08f76c6.png">
 </p>
 
+<h1 align="center">Authorization as a Service</h1>
+<h2 align="center">Let's make auth-z easy!</h2>
 
-## Let's make authorization easy!
+## What is cronuseo (**c6o**)?
 
+Cronuseo is an open-source authorization solution that allows developers to easily integrate permissions and access control into their products within minutes.
 
-![lint](https://github.com/shashimalcse/cronuseo/actions/workflows/golangci-lint.yml/badge.svg)
+> Example: A developer can call the c6o and get a clear answer if User A has the permissions to create Resource B.
 
+cronuseo is based on modern, open-source foundation which includes Open Policy Agent (OPA), Zanzibar.
 
-Lets start again!
+## Main features:
 
+* Role-based Access Control (RBAC)
+* Relationship-based Access Control (ReBAC) (Coming Soon)
+* Attribute-based Access Control (ABAC) (Coming Soon)
 
+## Get started
 
-- Organization is kind of similar to tenant
-- Each an every organization has users 
-- Users can add to a group that is under a organiztion
-- Each user or group has a role which is under a organiztion
-- Resource can be create under the organization 
-- Each resource hold actions (pernissions)
-- Customer can create roles and assign them to users and groups
-- Each reosurce has attributes 
-- Each user or group has attributes 
-- We only keep control plain 
-
-### phase 1
- - design database
- - build all entity cruds (without attribute/groups)
- - keto/openfga connect
