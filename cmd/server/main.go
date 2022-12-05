@@ -59,7 +59,7 @@ func main() {
 	//connect db
 	db, err := sqlx.Connect("postgres", cfg.DSN)
 	if err != nil {
-		log.Fatalln("error connecting databse")
+		log.Fatalln("error connecting database")
 		os.Exit(-1)
 	}
 
