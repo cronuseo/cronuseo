@@ -1,5 +1,5 @@
 <p align="center">
-<img width="467" alt="Screenshot 2022-11-05 at 14 41 11" src="https://user-images.githubusercontent.com/43197743/201187748-a5af0870-8e49-4313-b01d-cc59d08f76c6.png">
+<img alt="Screenshot 2022-11-05 at 14 41 11" src="https://user-images.githubusercontent.com/43197743/205511091-bed0ace7-705d-4372-8980-872bcd71a200.png">
 </p>
 
 <h1 align="center">Authorization as a Service</h1>
