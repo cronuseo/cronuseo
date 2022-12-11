@@ -18,9 +18,13 @@ definitions:
         type: string
       action_key:
         type: string
+      created_at:
+        type: string
       name:
         type: string
       resource_id:
+        type: string
+      updated_at:
         type: string
     type: object
   entity.CheckRequestAll:
@@ -54,11 +58,15 @@ definitions:
     type: object
   entity.Organization:
     properties:
+      created_at:
+        type: string
       name:
         type: string
       org_id:
         type: string
       org_key:
+        type: string
+      updated_at:
         type: string
     type: object
   entity.Relation:
@@ -68,6 +76,8 @@ definitions:
     type: object
   entity.Resource:
     properties:
+      created_at:
+        type: string
       name:
         type: string
       org_id:
@@ -76,9 +86,13 @@ definitions:
         type: string
       resource_key:
         type: string
+      updated_at:
+        type: string
     type: object
   entity.Role:
     properties:
+      created_at:
+        type: string
       name:
         type: string
       org_id:
@@ -87,6 +101,8 @@ definitions:
         type: string
       role_key:
         type: string
+      updated_at:
+        type: string
       users:
         items:
           $ref: '#/definitions/entity.UserID'
@@ -94,11 +110,15 @@ definitions:
     type: object
   entity.User:
     properties:
+      created_at:
+        type: string
       firstname:
         type: string
       lastname:
         type: string
       org_id:
+        type: string
+      updated_at:
         type: string
       user_id:
         type: string
@@ -198,6 +218,18 @@ paths:
         name: org_id
         required: true
         type: string
+      - description: name
+        in: query
+        name: name
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: cursor
+        in: query
+        name: cursor
+        type: integer
       produces:
       - application/json
       responses:

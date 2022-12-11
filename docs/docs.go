@@ -219,6 +219,24 @@ const docTemplate = `{
                         "name": "org_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1461,10 +1479,16 @@ const docTemplate = `{
                 "action_key": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
                 "resource_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -1517,6 +1541,9 @@ const docTemplate = `{
         "entity.Organization": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1524,6 +1551,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "org_key": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -1539,6 +1569,9 @@ const docTemplate = `{
         "entity.Resource": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1550,12 +1583,18 @@ const docTemplate = `{
                 },
                 "resource_key": {
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
         "entity.Role": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1566,6 +1605,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "role_key": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "users": {
@@ -1579,6 +1621,9 @@ const docTemplate = `{
         "entity.User": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "firstname": {
                     "type": "string"
                 },
@@ -1586,6 +1631,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "org_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user_id": {

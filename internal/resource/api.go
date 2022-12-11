@@ -41,12 +41,20 @@ func (r resource) get(c echo.Context) error {
 // @Description Get all resources.
 // @Tags        Resource
 // @Param org_id path string true "Organization ID"
+// @Param name query string false "name"
+// @Param limit query integer false "limit"
+// @Param cursor query integer false "cursor"
 // @Produce     json
 // @Success     200 {array}  entity.Resource
 // @failure     500
 // @Router      /{org_id}/resource [get]
 func (r resource) query(c echo.Context) error {
-	resources, err := r.service.Query(c.Request().Context(), c.Param("org_id"))
+	org_id := c.Param("org_id")
+	var filter Filter
+	if err := c.Bind(&filter); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	resources, err := r.service.Query(c.Request().Context(), org_id, filter)
 	if err != nil {
 		return util.HandleError(err)
 	}
