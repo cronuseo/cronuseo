@@ -59,7 +59,7 @@ func main() {
 	//connect db
 	db, err := sqlx.Connect("postgres", cfg.DSN)
 	if err != nil {
-		log.Fatalln("error connecting databse")
+		log.Fatalln("error connecting database")
 		os.Exit(-1)
 	}
 
@@ -96,10 +96,10 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClient
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	rg := router.Group("/api/v1")
-	// config := middleware.JWTConfig{
-	// 	KeyFunc: getKey(cfg),
-	// }
-	// rg.Use(middleware.JWTWithConfig(config))
+	config := middleware.JWTConfig{
+		KeyFunc: getKey(cfg),
+	}
+	rg.Use(middleware.JWTWithConfig(config))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
