@@ -11,7 +11,7 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, resource_id string, id string) (Action, error)
-	Query(ctx context.Context, resource_id string) ([]Action, error)
+	Query(ctx context.Context, resource_id string, filter Filter) ([]Action, error)
 	Create(ctx context.Context, resource_id string, input CreateActionRequest) (Action, error)
 	Update(ctx context.Context, resource_id string, id string, input UpdateActionRequest) (Action, error)
 	Delete(ctx context.Context, resource_id string, id string) (Action, error)
@@ -105,8 +105,18 @@ func (s service) Delete(ctx context.Context, resource_id string, id string) (Act
 	return resource, nil
 }
 
-func (s service) Query(ctx context.Context, resource_id string) ([]Action, error) {
-	items, err := s.repo.Query(ctx, resource_id)
+type Filter struct {
+	Cursor int    `json:"cursor" query:"cursor"`
+	Limit  int    `json:"limit" query:"limit"`
+	Name   string `json:"name" query:"name"`
+}
+
+func (s service) Query(ctx context.Context, resource_id string, filter Filter) ([]Action, error) {
+
+	if filter.Limit == 0 {
+		filter.Limit = 10
+	}
+	items, err := s.repo.Query(ctx, resource_id, filter)
 	if err != nil {
 		return nil, err
 	}
