@@ -121,9 +121,6 @@ type Filter struct {
 
 func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error) {
 
-	if filter.Limit == 0 {
-		filter.Limit = 10
-	}
 	items, err := s.repo.Query(ctx, org_id, filter)
 	if err != nil {
 		log.Println(err.Error())

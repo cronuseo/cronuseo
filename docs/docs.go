@@ -245,7 +245,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.Resource"
+                                "$ref": "#/definitions/entity.ResourceQueryResponse"
                             }
                         }
                     },
@@ -1250,6 +1250,24 @@ const docTemplate = `{
                         "name": "resource_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1524,6 +1542,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.Links": {
+            "type": "object",
+            "properties": {
+                "next": {
+                    "type": "string"
+                },
+                "prev": {
+                    "type": "string"
+                },
+                "self": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Object": {
             "type": "object",
             "properties": {
@@ -1569,6 +1601,63 @@ const docTemplate = `{
         "entity.Resource": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "org_id": {
+                    "type": "string"
+                },
+                "resource_id": {
+                    "type": "string"
+                },
+                "resource_key": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceLinks": {
+            "type": "object",
+            "properties": {
+                "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceQueryResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.Links"
+                },
+                "cursor": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.ResourceResult"
+                    }
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.ResourceResult": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.ResourceLinks"
+                },
                 "created_at": {
                     "type": "string"
                 },
