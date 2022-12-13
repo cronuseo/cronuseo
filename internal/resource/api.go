@@ -65,6 +65,7 @@ func (r resource) query(c echo.Context) error {
 	}
 	response := entity.ResourceQueryResponse{}
 	maxResourceID := -1
+	minResourceID := 10000
 	for _, resource := range resources {
 		newResource := entity.ResourceResult{ID: resource.ID, Name: resource.Name, Key: resource.Key,
 			OrgID: resource.OrgID, CreatedAt: resource.CreatedAt, UpdatedAt: resource.UpdatedAt}
@@ -73,6 +74,9 @@ func (r resource) query(c echo.Context) error {
 		if i, err := strconv.Atoi(resource.LogicalKey); err == nil {
 			if maxResourceID < i {
 				maxResourceID = i
+			}
+			if minResourceID > i {
+				minResourceID = i
 			}
 		}
 
@@ -87,16 +91,15 @@ func (r resource) query(c echo.Context) error {
 	if filter.Name != "" {
 		links.Self += "?name=" + filter.Name
 		links.Next += "?name=" + filter.Name
-		links.Prev += "?name=" + filter.Name
 	}
 	links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
 	links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-	if filter.Cursor != 0 {
+	if filter.Cursor != 0 && minResourceID != response.Cursor {
 		links.Prev = "/" + org_id + "/resource/"
 		if filter.Name != "" {
 			links.Prev += "?name=" + filter.Name
 		}
-		links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
+		links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(minResourceID-1)
 	}
 	response.Links = links
 	return c.JSON(http.StatusOK, response)
