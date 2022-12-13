@@ -2,8 +2,10 @@ package action
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
@@ -54,11 +56,51 @@ func (r action) query(c echo.Context) error {
 	if err := c.Bind(&filter); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	resources, err := r.service.Query(c.Request().Context(), c.Param("resource_id"), filter)
+	resource_id := c.Param("resource_id")
+	actions, err := r.service.Query(c.Request().Context(), resource_id, filter)
 	if err != nil {
 		return util.HandleError(err)
 	}
-	return c.JSON(http.StatusOK, resources)
+	response := entity.ActionQueryResponse{}
+	maxActionID := -1
+	minActionID := 10000
+	for _, action := range actions {
+		newAction := entity.ActionResult{ID: action.ID, Name: action.Name, Key: action.Key,
+			ResourceID: action.ResourceID, CreatedAt: action.CreatedAt, UpdatedAt: action.UpdatedAt}
+		newAction.Links = entity.ActionLinks{Self: "/" + action.ResourceID + "/action/" + action.ID}
+		response.Results = append(response.Results, newAction)
+		if i, err := strconv.Atoi(action.LogicalKey); err == nil {
+			if maxActionID < i {
+				maxActionID = i
+			}
+			if minActionID > i {
+				minActionID = i
+			}
+		}
+
+	}
+	response.Size = len(actions)
+	response.Limit = filter.Limit
+	response.Cursor = maxActionID
+	links := entity.Links{}
+	links.Self = "/" + resource_id + "/action/"
+	links.Next = "/" + resource_id + "/action/"
+
+	if filter.Name != "" {
+		links.Self += "?name=" + filter.Name
+		links.Next += "?name=" + filter.Name
+	}
+	links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
+	links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
+	if filter.Cursor != 0 && minActionID != response.Cursor {
+		links.Prev = "/" + resource_id + "/action/"
+		if filter.Name != "" {
+			links.Prev += "?name=" + filter.Name
+		}
+		links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(minActionID-1)
+	}
+	response.Links = links
+	return c.JSON(http.StatusOK, response)
 }
 
 // @Description Create action.
