@@ -56,6 +56,9 @@ func (r action) query(c echo.Context) error {
 	if err := c.Bind(&filter); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
+	if filter.Limit == 0 {
+		filter.Limit = 10
+	}
 	resource_id := c.Param("resource_id")
 	actions, err := r.service.Query(c.Request().Context(), resource_id, filter)
 	if err != nil {
@@ -81,25 +84,30 @@ func (r action) query(c echo.Context) error {
 	}
 	response.Size = len(actions)
 	response.Limit = filter.Limit
-	response.Cursor = maxActionID
-	links := entity.Links{}
-	links.Self = "/" + resource_id + "/action/"
-	links.Next = "/" + resource_id + "/action/"
-
-	if filter.Name != "" {
-		links.Self += "?name=" + filter.Name
-		links.Next += "?name=" + filter.Name
-	}
-	links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
-	links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-	if filter.Cursor != 0 && minActionID != response.Cursor {
-		links.Prev = "/" + resource_id + "/action/"
+	if len(actions) > 0 {
+		response.Cursor = maxActionID
+		links := entity.Links{}
+		links.Self = "/" + resource_id + "/action/"
 		if filter.Name != "" {
-			links.Prev += "?name=" + filter.Name
+			links.Self += "?name=" + filter.Name
 		}
-		links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(minActionID-1)
+		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
+		if len(actions) == filter.Limit {
+			links.Next = "/" + resource_id + "/action/"
+			if filter.Name != "" {
+				links.Next += "?name=" + filter.Name
+			}
+			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
+		}
+		if filter.Cursor != 0 {
+			links.Prev = "/" + resource_id + "/action/"
+			if filter.Name != "" {
+				links.Prev += "?name=" + filter.Name
+			}
+			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
+		}
+		response.Links = links
 	}
-	response.Links = links
 	return c.JSON(http.StatusOK, response)
 }
 

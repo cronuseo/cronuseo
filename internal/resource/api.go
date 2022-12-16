@@ -83,25 +83,30 @@ func (r resource) query(c echo.Context) error {
 	}
 	response.Size = len(resources)
 	response.Limit = filter.Limit
-	response.Cursor = maxResourceID
-	links := entity.Links{}
-	links.Self = "/" + org_id + "/resource/"
-	links.Next = "/" + org_id + "/resource/"
-
-	if filter.Name != "" {
-		links.Self += "?name=" + filter.Name
-		links.Next += "?name=" + filter.Name
-	}
-	links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
-	links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-	if filter.Cursor != 0 && minResourceID != response.Cursor {
-		links.Prev = "/" + org_id + "/resource/"
+	if len(resources) > 0 {
+		response.Cursor = maxResourceID
+		links := entity.Links{}
+		links.Self = "/" + org_id + "/resource/"
 		if filter.Name != "" {
-			links.Prev += "?name=" + filter.Name
+			links.Self += "?name=" + filter.Name
 		}
-		links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(minResourceID-1)
+		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
+		if len(resources) == filter.Limit {
+			links.Next = "/" + org_id + "/resource/"
+			if filter.Name != "" {
+				links.Next += "?name=" + filter.Name
+			}
+			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
+		}
+		if filter.Cursor != 0 {
+			links.Prev = "/" + org_id + "/resource/"
+			if filter.Name != "" {
+				links.Prev += "?name=" + filter.Name
+			}
+			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
+		}
+		response.Links = links
 	}
-	response.Links = links
 	return c.JSON(http.StatusOK, response)
 }
 
