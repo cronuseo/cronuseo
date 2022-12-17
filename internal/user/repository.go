@@ -10,7 +10,7 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (entity.User, error)
-	Query(ctx context.Context, org_id string) ([]entity.User, error)
+	Query(ctx context.Context, org_id string, filter Filter) ([]entity.User, error)
 	Create(ctx context.Context, org_id string, user entity.User) error
 	Update(ctx context.Context, org_id string, user entity.User) error
 	Delete(ctx context.Context, org_id string, id string) error
@@ -70,9 +70,10 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 	return nil
 }
 
-func (r repository) Query(ctx context.Context, org_id string) ([]entity.User, error) {
+func (r repository) Query(ctx context.Context, org_id string, filter Filter) ([]entity.User, error) {
 	users := []entity.User{}
-	err := r.db.Select(&users, "SELECT * FROM org_user WHERE org_id = $1", org_id)
+	name := filter.Name + "%"
+	err := r.db.Select(&users, "SELECT * FROM org_user WHERE org_id = $1 AND username LIKE $2 AND id > $3 ORDER BY id LIMIT $4", org_id, name, filter.Cursor, filter.Limit)
 	return users, err
 }
 

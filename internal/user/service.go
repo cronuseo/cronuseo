@@ -11,7 +11,7 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (User, error)
-	Query(ctx context.Context, org_id string) ([]User, error)
+	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) (User, error)
@@ -76,6 +76,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		ID:        id,
 		Username:  req.Username,
 		FirstName: req.FirstName,
+		LastName:  req.LastName,
 	})
 	if err != nil {
 		return User{}, err
@@ -111,8 +112,14 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (User, er
 	return user, nil
 }
 
-func (s service) Query(ctx context.Context, org_id string) ([]User, error) {
-	items, err := s.repo.Query(ctx, org_id)
+type Filter struct {
+	Cursor int    `json:"cursor" query:"cursor"`
+	Limit  int    `json:"limit" query:"limit"`
+	Name   string `json:"name" query:"name"`
+}
+
+func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]User, error) {
+	items, err := s.repo.Query(ctx, org_id, filter)
 	if err != nil {
 		return nil, err
 	}

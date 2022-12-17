@@ -2,8 +2,10 @@ package user
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
@@ -41,16 +43,70 @@ func (r resource) get(c echo.Context) error {
 // @Description Get all users.
 // @Tags        User
 // @Param org_id path string true "Organization ID"
+// @Param name query string false "name"
+// @Param limit query integer false "limit"
+// @Param cursor query integer false "cursor"
 // @Produce     json
-// @Success     200 {array}  entity.User
+// @Success     200 {array}  entity.UserQueryResponse
 // @failure     500
 // @Router      /{org_id}/user [get]
 func (r resource) query(c echo.Context) error {
-	users, err := r.service.Query(c.Request().Context(), c.Param("org_id"))
+	var filter Filter
+	org_id := c.Param("org_id")
+	if err := c.Bind(&filter); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	if filter.Limit == 0 {
+		filter.Limit = 10
+	}
+	users, err := r.service.Query(c.Request().Context(), org_id, filter)
 	if err != nil {
 		return util.HandleError(err)
 	}
-	return c.JSON(http.StatusOK, users)
+	response := entity.UserQueryResponse{}
+	maxUserID := -1
+	minUserID := 10000
+	for _, user := range users {
+		newUser := entity.UserResult{ID: user.ID, Username: user.Username, FirstName: user.FirstName, LastName: user.LastName,
+			OrgID: user.OrgID, CreatedAt: user.CreatedAt, UpdatedAt: user.UpdatedAt}
+		newUser.Links = entity.UserLinks{Self: "/" + org_id + "/user/" + user.ID}
+		response.Results = append(response.Results, newUser)
+		if i, err := strconv.Atoi(user.LogicalKey); err == nil {
+			if maxUserID < i {
+				maxUserID = i
+			}
+			if minUserID > i {
+				minUserID = i
+			}
+		}
+	}
+	response.Size = len(users)
+	response.Limit = filter.Limit
+	if len(users) > 0 {
+		response.Cursor = maxUserID
+		links := entity.Links{}
+		links.Self = "/" + org_id + "/user/"
+		if filter.Name != "" {
+			links.Self += "?name=" + filter.Name
+		}
+		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
+		if len(users) == filter.Limit {
+			links.Next = "/" + org_id + "/user/"
+			if filter.Name != "" {
+				links.Next += "?name=" + filter.Name
+			}
+			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
+		}
+		if filter.Cursor != 0 {
+			links.Prev = "/" + org_id + "/user/"
+			if filter.Name != "" {
+				links.Prev += "?name=" + filter.Name
+			}
+			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
+		}
+		response.Links = links
+	}
+	return c.JSON(http.StatusOK, response)
 }
 
 // @Description Create user.
