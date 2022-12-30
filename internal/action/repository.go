@@ -59,7 +59,7 @@ func (r repository) Update(ctx context.Context, resource_id string, action entit
 }
 
 func (r repository) Delete(ctx context.Context, resource_id string, id string) error {
-	stmt, err := r.db.Prepare("DELETE FROM res_action WHERE resource_id = $3 AND action_id = $1")
+	stmt, err := r.db.Prepare("DELETE FROM res_action WHERE resource_id = $1 AND action_id = $2")
 	if err != nil {
 		return err
 	}
