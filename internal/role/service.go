@@ -12,6 +12,7 @@ import (
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (Role, error)
 	Query(ctx context.Context, org_id string) ([]Role, error)
+	QueryByUserID(ctx context.Context, org_id string, user_id string) ([]Role, error)
 	Create(ctx context.Context, org_id string, input CreateRoleRequest) (Role, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateRoleRequest) (Role, error)
 	Delete(ctx context.Context, org_id string, id string) (Role, error)
@@ -110,6 +111,18 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Role, er
 
 func (s service) Query(ctx context.Context, org_id string) ([]Role, error) {
 	items, err := s.repo.Query(ctx, org_id)
+	if err != nil {
+		return nil, err
+	}
+	result := []Role{}
+	for _, item := range items {
+		result = append(result, Role{item})
+	}
+	return result, nil
+}
+
+func (s service) QueryByUserID(ctx context.Context, org_id string, user_id string) ([]Role, error) {
+	items, err := s.repo.QueryByUserID(ctx, org_id, user_id)
 	if err != nil {
 		return nil, err
 	}

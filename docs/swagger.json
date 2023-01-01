@@ -238,7 +238,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.Resource"
+                                "$ref": "#/definitions/entity.ResourceQueryResponse"
                             }
                         }
                     },
@@ -644,6 +644,47 @@
                 }
             }
         },
+        "/{org_id}/role/{user_id}": {
+            "get": {
+                "description": "Get all roles.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Role"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/{org_id}/user": {
             "get": {
                 "description": "Get all users.",
@@ -660,6 +701,24 @@
                         "name": "org_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -668,7 +727,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.User"
+                                "$ref": "#/definitions/entity.UserQueryResponse"
                             }
                         }
                     },
@@ -1243,6 +1302,24 @@
                         "name": "resource_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1517,6 +1594,20 @@
                 }
             }
         },
+        "entity.Links": {
+            "type": "object",
+            "properties": {
+                "next": {
+                    "type": "string"
+                },
+                "prev": {
+                    "type": "string"
+                },
+                "self": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Object": {
             "type": "object",
             "properties": {
@@ -1562,6 +1653,63 @@
         "entity.Resource": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "org_id": {
+                    "type": "string"
+                },
+                "resource_id": {
+                    "type": "string"
+                },
+                "resource_key": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceLinks": {
+            "type": "object",
+            "properties": {
+                "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceQueryResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.Links"
+                },
+                "cursor": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.ResourceResult"
+                    }
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.ResourceResult": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.ResourceLinks"
+                },
                 "created_at": {
                     "type": "string"
                 },
@@ -1641,6 +1789,66 @@
             "type": "object",
             "properties": {
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserLinks": {
+            "type": "object",
+            "properties": {
+                "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserQueryResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.Links"
+                },
+                "cursor": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserResult"
+                    }
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.UserResult": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.UserLinks"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "org_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

@@ -15,6 +15,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
+	router.GET("/:user_id", res.QueryByUserID)
 }
 
 type role struct {
@@ -112,4 +113,20 @@ func (r role) delete(c echo.Context) error {
 		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusNoContent, "")
+}
+
+// @Description Get all roles.
+// @Tags        Role
+// @Param org_id path string true "Organization ID"
+// @Param user_id path string true "User ID"
+// @Produce     json
+// @Success     200 {array}  entity.Role
+// @failure     500
+// @Router      /{org_id}/role/{user_id} [get]
+func (r role) QueryByUserID(c echo.Context) error {
+	roles, err := r.service.Query(c.Request().Context(), c.Param("org_id"))
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusOK, roles)
 }
