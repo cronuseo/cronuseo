@@ -11,8 +11,8 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (entity.Role, error)
-	Query(ctx context.Context, org_id string) ([]entity.Role, error)
-	QueryByUserID(ctx context.Context, org_id string, user_id string) ([]entity.Role, error)
+	Query(ctx context.Context, org_id string, filter Filter) ([]entity.Role, error)
+	QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]entity.Role, error)
 	Create(ctx context.Context, org_id string, role entity.Role) error
 	Update(ctx context.Context, org_id string, role entity.Role) error
 	Delete(ctx context.Context, org_id string, id string) error
@@ -129,15 +129,17 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 	return nil
 }
 
-func (r repository) Query(ctx context.Context, org_id string) ([]entity.Role, error) {
+func (r repository) Query(ctx context.Context, org_id string, filter Filter) ([]entity.Role, error) {
 	roles := []entity.Role{}
-	err := r.db.Select(&roles, "SELECT * FROM org_role WHERE org_id = $1", org_id)
+	name := filter.Name + "%"
+	err := r.db.Select(&roles, "SELECT * FROM org_role WHERE org_id = $1 AND name LIKE $2 AND id > $3 ORDER BY id LIMIT $4", org_id, name, filter.Cursor, filter.Limit)
 	return roles, err
 }
 
-func (r repository) QueryByUserID(ctx context.Context, org_id string, user_id string) ([]entity.Role, error) {
+func (r repository) QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]entity.Role, error) {
 	roles := []entity.Role{}
-	err := r.db.Select(&roles, "SELECT org_role.id, org_role.role_id, org_role.role_key, org_role.name, org_role.org_id, org_role.created_at, org_role.updated_at FROM org_role INNER JOIN user_role ON org_role.role_id = user_role.role_id WHERE org_role.org_id = $1 AND user_role.user_id = $2", org_id, user_id)
+	name := filter.Name + "%"
+	err := r.db.Select(&roles, "SELECT org_role.id, org_role.role_id, org_role.role_key, org_role.name, org_role.org_id, org_role.created_at, org_role.updated_at FROM org_role INNER JOIN user_role ON org_role.role_id = user_role.role_id WHERE org_role.org_id = $1 AND user_role.user_id = $2 AND org_role.name LIKE $3 AND org_role.id > $4 ORDER BY org_role.id LIMIT $5", org_id, user_id, name, filter.Cursor, filter.Limit)
 	return roles, err
 }
 

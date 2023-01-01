@@ -11,8 +11,8 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (Role, error)
-	Query(ctx context.Context, org_id string) ([]Role, error)
-	QueryByUserID(ctx context.Context, org_id string, user_id string) ([]Role, error)
+	Query(ctx context.Context, org_id string, filter Filter) ([]Role, error)
+	QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]Role, error)
 	Create(ctx context.Context, org_id string, input CreateRoleRequest) (Role, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateRoleRequest) (Role, error)
 	Delete(ctx context.Context, org_id string, id string) (Role, error)
@@ -109,8 +109,14 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Role, er
 	return role, nil
 }
 
-func (s service) Query(ctx context.Context, org_id string) ([]Role, error) {
-	items, err := s.repo.Query(ctx, org_id)
+type Filter struct {
+	Cursor int    `json:"cursor" query:"cursor"`
+	Limit  int    `json:"limit" query:"limit"`
+	Name   string `json:"name" query:"name"`
+}
+
+func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Role, error) {
+	items, err := s.repo.Query(ctx, org_id, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -121,8 +127,8 @@ func (s service) Query(ctx context.Context, org_id string) ([]Role, error) {
 	return result, nil
 }
 
-func (s service) QueryByUserID(ctx context.Context, org_id string, user_id string) ([]Role, error) {
-	items, err := s.repo.QueryByUserID(ctx, org_id, user_id)
+func (s service) QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]Role, error) {
+	items, err := s.repo.QueryByUserID(ctx, org_id, user_id, filter)
 	if err != nil {
 		return nil, err
 	}
