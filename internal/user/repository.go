@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"log"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
 
@@ -33,15 +34,44 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (entity.U
 }
 
 func (r repository) Create(ctx context.Context, org_id string, user entity.User) error {
+	tx, err := r.db.DB.Begin()
 
-	stmt, err := r.db.Prepare("INSERT INTO org_user(username,firstname,lastname,org_id,user_id) VALUES($1, $2, $3, $4, $5)")
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(user.Username, user.FirstName, user.LastName, org_id, user.ID)
-	if err != nil {
-		return err
+	{
+		stmt, err := tx.Prepare("INSERT INTO org_user(username,firstname,lastname,org_id,user_id) VALUES($1, $2, $3, $4, $5)")
+		if err != nil {
+			return err
+		}
+		_, err = stmt.Exec(user.Username, user.FirstName, user.LastName, org_id, user.ID)
+		if err != nil {
+			return err
+		}
 	}
+	// add roles
+	if len(user.Roles) > 0 {
+		stmt, err := tx.Prepare("INSERT INTO user_role(user_id,role_id) VALUES($1, $2)")
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		for _, role := range user.Roles {
+			_, err = stmt.Exec(user.ID, role.ID)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+		}
+	}
+	{
+		err := tx.Commit()
+
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 
 }

@@ -183,13 +183,14 @@ func (r role) delete(c echo.Context) error {
 func (r role) QueryByUserID(c echo.Context) error {
 	var filter Filter
 	org_id := c.Param("org_id")
+	user_id := c.Param("user_id")
 	if err := c.Bind(&filter); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
 	if filter.Limit == 0 {
 		filter.Limit = 10
 	}
-	roles, err := r.service.Query(c.Request().Context(), org_id, filter)
+	roles, err := r.service.QueryByUserID(c.Request().Context(), org_id, user_id, filter)
 	if err != nil {
 		return util.HandleError(err)
 	}

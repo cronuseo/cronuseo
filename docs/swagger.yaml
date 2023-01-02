@@ -154,6 +154,11 @@ definitions:
           $ref: '#/definitions/entity.UserID'
         type: array
     type: object
+  entity.RoleID:
+    properties:
+      role_id:
+        type: string
+    type: object
   entity.User:
     properties:
       created_at:
@@ -164,6 +169,10 @@ definitions:
         type: string
       org_id:
         type: string
+      roles:
+        items:
+          $ref: '#/definitions/entity.RoleID'
+        type: array
       updated_at:
         type: string
       user_id:
@@ -270,6 +279,10 @@ definitions:
         type: string
       lastname:
         type: string
+      roles:
+        items:
+          $ref: '#/definitions/entity.RoleID'
+        type: array
       username:
         type: string
     type: object
@@ -457,6 +470,18 @@ paths:
         name: org_id
         required: true
         type: string
+      - description: name
+        in: query
+        name: name
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: cursor
+        in: query
+        name: cursor
+        type: integer
       produces:
       - application/json
       responses:

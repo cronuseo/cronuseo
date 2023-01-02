@@ -6,7 +6,7 @@ type Role struct {
 	Key        string   `json:"role_key" db:"role_key"`
 	Name       string   `json:"name" db:"name"`
 	OrgID      string   `json:"org_id" db:"org_id"`
-	Users      []UserID `json:"users"`
+	Users      []UserID `json:"users,omitempty"`
 	CreatedAt  string   `json:"created_at" db:"created_at"`
 	UpdatedAt  string   `json:"updated_at" db:"updated_at"`
 }

@@ -22,10 +22,11 @@ type User struct {
 }
 
 type CreateUserRequest struct {
-	Username  string `json:"username" db:"username"`
-	FirstName string `json:"firstname" db:"firstname"`
-	LastName  string `json:"lastname" db:"lastname"`
-	OrgID     string `json:"-" db:"org_id"`
+	Username  string          `json:"username" db:"username"`
+	FirstName string          `json:"firstname" db:"firstname"`
+	LastName  string          `json:"lastname" db:"lastname"`
+	OrgID     string          `json:"-" db:"org_id"`
+	Roles     []entity.RoleID `json:"roles"`
 }
 
 func (m CreateUserRequest) Validate() error {
@@ -65,7 +66,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		return User{}, &util.InvalidInputError{}
 	}
 
-	//check organixation exists
+	//check organization exists
 	exists, _ := s.repo.ExistByKey(ctx, req.Username)
 	if exists {
 		return User{}, &util.AlreadyExistsError{Path: "User"}
@@ -77,10 +78,12 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		Username:  req.Username,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
+		Roles:     req.Roles,
 	})
 	if err != nil {
 		return User{}, err
 	}
+
 	return s.Get(ctx, org_id, id)
 }
 
