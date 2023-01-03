@@ -96,7 +96,7 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 		return err
 	}
 	{
-		stmt, err := tx.Prepare("DELETE FROM org_role WHERE org_id = $3 AND role_id = $1")
+		stmt, err := tx.Prepare("DELETE FROM org_role WHERE org_id = $1 AND role_id = $2")
 		if err != nil {
 			return err
 		}
