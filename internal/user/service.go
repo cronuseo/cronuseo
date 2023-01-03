@@ -132,3 +132,28 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Use
 	}
 	return result, nil
 }
+
+type UserPatchRequest struct {
+	Operations []UserPatchOperation `json:"operations"`
+}
+
+type UserPatchOperation struct {
+	Operation string  `json:"op"`
+	Path      string  `json:"path"`
+	Values    []Value `json:"values"`
+}
+
+type Value struct {
+	Value string `json:"value"`
+}
+
+func (s service) Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error) {
+	user, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		return user, &util.NotFoundError{Path: "User"}
+	}
+	if err := s.repo.Patch(ctx, org_id, id, req); err != nil {
+		return user, err
+	}
+	return user, nil
+}

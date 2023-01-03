@@ -14,6 +14,7 @@ type Repository interface {
 	Query(ctx context.Context, org_id string, filter Filter) ([]entity.User, error)
 	Create(ctx context.Context, org_id string, user entity.User) error
 	Update(ctx context.Context, org_id string, user entity.User) error
+	Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) error
 	Delete(ctx context.Context, org_id string, id string) error
 	ExistByID(ctx context.Context, id string) (bool, error)
 	ExistByKey(ctx context.Context, username string) (bool, error)
@@ -105,6 +106,84 @@ func (r repository) Query(ctx context.Context, org_id string, filter Filter) ([]
 	name := filter.Name + "%"
 	err := r.db.Select(&users, "SELECT * FROM org_user WHERE org_id = $1 AND username LIKE $2 AND id > $3 ORDER BY id LIMIT $4", org_id, name, filter.Cursor, filter.Limit)
 	return users, err
+}
+
+func (r repository) Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) error {
+	tx, err := r.db.DB.Begin()
+
+	if err != nil {
+		return err
+	}
+
+	{
+		for _, operation := range req.Operations {
+			switch operation.Path {
+			case "roles":
+				{
+					switch operation.Operation {
+					case "add":
+						if len(operation.Values) > 0 {
+							stmt, err := tx.Prepare("INSERT INTO user_role(user_id,role_id) VALUES($1, $2)")
+							if err != nil {
+								return err
+							}
+							defer stmt.Close()
+							for _, roleId := range operation.Values {
+								exists, err := r.isRoleAlreadyAssigned(roleId.Value, id)
+								if exists {
+									continue
+								}
+								if err != nil {
+									return err
+								}
+								_, err = stmt.Exec(id, roleId.Value)
+								if err != nil {
+									return err
+								}
+							}
+						}
+					case "remove":
+						if len(operation.Values) > 0 {
+							stmt, err := tx.Prepare("DELETE FROM user_role WHERE user_id = $1 AND role_id = $2)")
+							if err != nil {
+								return err
+							}
+							defer stmt.Close()
+							for _, roleId := range operation.Values {
+								exists, err := r.isRoleAlreadyAssigned(roleId.Value, id)
+								if !exists {
+									continue
+								}
+								if err != nil {
+									return err
+								}
+								_, err = stmt.Exec(id, roleId.Value)
+								if err != nil {
+									return err
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	{
+		err := tx.Commit()
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r repository) isRoleAlreadyAssigned(roleId string, userId string) (bool, error) {
+	exists := false
+	err := r.db.QueryRow("SELECT exists (SELECT role_id FROM user_role WHERE role_id = $1 AND user_id = $2)", roleId, userId).Scan(&exists)
+	return exists, err
 }
 
 func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {
