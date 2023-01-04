@@ -78,7 +78,7 @@ func (r repository) Create(ctx context.Context, org_id string, user entity.User)
 }
 
 func (r repository) Update(ctx context.Context, org_id string, user entity.User) error {
-	stmt, err := r.db.Prepare("UPDATE org_user SET firstname = $1, lastname = $2, WHERE org_id = $3 AND user_id = $4")
+	stmt, err := r.db.Prepare("UPDATE org_user SET firstname = $1, lastname = $2 WHERE org_id = $3 AND user_id = $4")
 	if err != nil {
 		return err
 	}
