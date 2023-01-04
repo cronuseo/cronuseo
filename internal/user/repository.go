@@ -144,7 +144,7 @@ func (r repository) Patch(ctx context.Context, org_id string, id string, req Use
 						}
 					case "remove":
 						if len(operation.Values) > 0 {
-							stmt, err := tx.Prepare("DELETE FROM user_role WHERE user_id = $1 AND role_id = $2)")
+							stmt, err := tx.Prepare("DELETE FROM user_role WHERE user_id = $1 AND role_id = $2")
 							if err != nil {
 								return err
 							}

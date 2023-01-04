@@ -15,6 +15,7 @@ type Service interface {
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) (User, error)
+	Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error)
 }
 
 type User struct {
