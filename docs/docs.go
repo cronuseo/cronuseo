@@ -535,6 +535,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/{org_id}/role/user/{user_id}": {
+            "get": {
+                "description": "Get all roles.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Role"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/{org_id}/role/{id}": {
             "get": {
                 "description": "Get role by ID.",
@@ -662,47 +703,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org_id}/role/{user_id}": {
-            "get": {
-                "description": "Get all roles.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Role"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization ID",
-                        "name": "org_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Role"
-                            }
-                        }
                     },
                     "500": {
                         "description": "Internal Server Error"

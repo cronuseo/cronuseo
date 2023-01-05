@@ -17,7 +17,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
-	router.GET("/:user_id", res.QueryByUserID)
+	router.GET("/user/:user_id", res.QueryByUserID)
 }
 
 type role struct {
@@ -179,7 +179,7 @@ func (r role) delete(c echo.Context) error {
 // @Produce     json
 // @Success     200 {array}  entity.Role
 // @failure     500
-// @Router      /{org_id}/role/{user_id} [get]
+// @Router      /{org_id}/role/user/{user_id} [get]
 func (r role) QueryByUserID(c echo.Context) error {
 	var filter Filter
 	org_id := c.Param("org_id")

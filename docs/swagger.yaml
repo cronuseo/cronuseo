@@ -638,7 +638,7 @@ paths:
           description: Internal Server Error
       tags:
       - Role
-  /{org_id}/role/{user_id}:
+  /{org_id}/role/user/{user_id}:
     get:
       description: Get all roles.
       parameters:
