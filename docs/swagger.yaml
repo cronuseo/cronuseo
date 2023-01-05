@@ -1037,7 +1037,7 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /{org}/permission/list/object:
+  /{org}/permission/list/resource:
     post:
       consumes:
       - application/json
@@ -1067,7 +1067,7 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /{org}/permission/list/subject:
+  /{org}/permission/list/role:
     post:
       consumes:
       - application/json

@@ -1276,7 +1276,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/permission/list/object": {
+        "/{org}/permission/list/resource": {
             "post": {
                 "description": "Get objects.",
                 "consumes": [
@@ -1322,7 +1322,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/permission/list/subject": {
+        "/{org}/permission/list/role": {
             "post": {
                 "description": "Get subjects.",
                 "consumes": [

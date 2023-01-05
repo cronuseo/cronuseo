@@ -100,7 +100,7 @@ func (r permission) delete(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /{org}/permission/list/object [post]
+// @Router      /{org}/permission/list/resource [post]
 func (r permission) getobjectlist(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
@@ -122,7 +122,7 @@ func (r permission) getobjectlist(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /{org}/permission/list/subject [post]
+// @Router      /{org}/permission/list/role [post]
 func (r permission) getsubjectlist(c echo.Context) error {
 	var input entity.Tuple
 	if err := c.Bind(&input); err != nil {
