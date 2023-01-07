@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/shashimalcse/cronuseo/internal/action"
@@ -96,10 +97,10 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClient
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	rg := router.Group("/api/v1")
-	config := middleware.JWTConfig{
-		KeyFunc: getKey(cfg),
-	}
-	rg.Use(middleware.JWTWithConfig(config))
+	// Define the health endpoint
+	rg.GET("/health", func(c echo.Context) error {
+		return c.String(http.StatusOK, "OK")
+	})
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
