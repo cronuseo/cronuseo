@@ -5,11 +5,11 @@
 <h1 align="center">Authorization as a Service</h1>
 <h2 align="center">Let's make auth-z easy!</h2>
 
-## What is cronuseo (**c6o**)?
+## What is cronuseo ?
 
 Cronuseo is an open-source authorization solution that allows developers to easily integrate permissions and access control into their products within minutes.
 
-> Example: A developer can call the c6o and get a clear answer if User A has the permissions to create Resource B.
+> Example: A developer can call the cronuseo and get a clear answer if User A has the permissions to create Resource B.
 
 cronuseo is based on modern, open-source foundation which includes Open Policy Agent (OPA), Zanzibar.
 
@@ -24,8 +24,8 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 > Note : cronuseo still in the experimental stage. Only tested in the local environemnt.
 
 * ``` git clone https://github.com/shashimalcse/cronuseo ```
-* ``` docker compose up --build ```
-* Heading to http://localhost:8080/swagger/index.html to continue your c6o journey. (Admin UI will come soon)
+* ``` make run ```
+* Heading to http://localhost:8080/swagger/index.html to continue your cronuseo journey.
 
-> c6o uses environment variables for configuration, along with .env file support.
+> cronuseo uses environment variables for configuration, along with .env file support.
 
