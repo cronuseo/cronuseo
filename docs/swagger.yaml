@@ -78,6 +78,15 @@ definitions:
       updated_at:
         type: string
     type: object
+  entity.Permission:
+    properties:
+      action:
+        type: string
+      resource:
+        type: string
+      role:
+        type: string
+    type: object
   entity.Relation:
     properties:
       permission:
@@ -235,6 +244,33 @@ definitions:
     properties:
       name:
         type: string
+    type: object
+  permission.CheckActionsRequest:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+      resource:
+        type: string
+      role:
+        type: string
+    type: object
+  permission.PermissionPatchOperation:
+    properties:
+      op:
+        type: string
+      permisssions:
+        items:
+          $ref: '#/definitions/entity.Permission'
+        type: array
+    type: object
+  permission.PermissionPatchRequest:
+    properties:
+      operations:
+        items:
+          $ref: '#/definitions/permission.PermissionPatchOperation'
+        type: array
     type: object
   permission.Tuple:
     properties:
@@ -887,6 +923,36 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
+  /{org}/permission/check_actions:
+    post:
+      consumes:
+      - application/json
+      description: Check by username.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission.CheckActionsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
   /{org}/permission/check_by_username:
     post:
       consumes:
@@ -1084,6 +1150,36 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/permission.Tuple'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+  /{org}/permission/update:
+    patch:
+      consumes:
+      - application/json
+      description: Patch Permissions.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission.PermissionPatchRequest'
       produces:
       - application/json
       responses:

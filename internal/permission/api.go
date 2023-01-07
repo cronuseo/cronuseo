@@ -19,6 +19,8 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("/check_by_username", res.checkbyusername)
 	router.POST("/check_multi_actions", res.checkpermissions)
 	router.POST("/check_multi_resources", res.checkall)
+	router.POST("/check_actions", res.checkActions)
+	router.PATCH("/update", res.patchPermissions)
 }
 
 type permission struct {
@@ -200,4 +202,42 @@ func (r permission) checkall(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, allow)
+}
+
+// @Description Check by username.
+// @Tags        Permission
+// @Accept      json
+// @Param org path string true "Organization"
+// @Param request body CheckActionsRequest true "body"
+// @Produce     json
+// @Success     201
+// @failure     400,403,500
+// @Router      /{org}/permission/check_actions [post]
+func (r permission) checkActions(c echo.Context) error {
+	var input CheckActionsRequest
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	allow := r.service.CreateActions(context.Background(), c.Param("org"), "permission", input)
+
+	return c.JSON(http.StatusOK, allow)
+}
+
+// @Description Patch Permissions.
+// @Tags        Permission
+// @Accept      json
+// @Param org path string true "Organization"
+// @Param request body PermissionPatchRequest true "body"
+// @Produce     json
+// @Success     201
+// @failure     400,403,500
+// @Router      /{org}/permission/update [patch]
+func (r permission) patchPermissions(c echo.Context) error {
+	var input PermissionPatchRequest
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	_ = r.service.PatchPermissions(context.Background(), c.Param("org"), "permission", input)
+
+	return c.JSON(http.StatusOK, "")
 }
