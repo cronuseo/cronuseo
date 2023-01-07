@@ -11,10 +11,11 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (User, error)
-	Query(ctx context.Context, org_id string) ([]User, error)
+	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) (User, error)
+	Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error)
 }
 
 type User struct {
@@ -22,10 +23,11 @@ type User struct {
 }
 
 type CreateUserRequest struct {
-	Username  string `json:"username" db:"username"`
-	FirstName string `json:"firstname" db:"firstname"`
-	LastName  string `json:"lastname" db:"lastname"`
-	OrgID     string `json:"-" db:"org_id"`
+	Username  string          `json:"username" db:"username"`
+	FirstName string          `json:"firstname" db:"firstname"`
+	LastName  string          `json:"lastname" db:"lastname"`
+	OrgID     string          `json:"-" db:"org_id"`
+	Roles     []entity.RoleID `json:"roles"`
 }
 
 func (m CreateUserRequest) Validate() error {
@@ -65,7 +67,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		return User{}, &util.InvalidInputError{}
 	}
 
-	//check organixation exists
+	//check organization exists
 	exists, _ := s.repo.ExistByKey(ctx, req.Username)
 	if exists {
 		return User{}, &util.AlreadyExistsError{Path: "User"}
@@ -76,10 +78,13 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		ID:        id,
 		Username:  req.Username,
 		FirstName: req.FirstName,
+		LastName:  req.LastName,
+		Roles:     req.Roles,
 	})
 	if err != nil {
 		return User{}, err
 	}
+
 	return s.Get(ctx, org_id, id)
 }
 
@@ -111,8 +116,14 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (User, er
 	return user, nil
 }
 
-func (s service) Query(ctx context.Context, org_id string) ([]User, error) {
-	items, err := s.repo.Query(ctx, org_id)
+type Filter struct {
+	Cursor int    `json:"cursor" query:"cursor"`
+	Limit  int    `json:"limit" query:"limit"`
+	Name   string `json:"name" query:"name"`
+}
+
+func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]User, error) {
+	items, err := s.repo.Query(ctx, org_id, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -121,4 +132,29 @@ func (s service) Query(ctx context.Context, org_id string) ([]User, error) {
 		result = append(result, User{item})
 	}
 	return result, nil
+}
+
+type UserPatchRequest struct {
+	Operations []UserPatchOperation `json:"operations"`
+}
+
+type UserPatchOperation struct {
+	Operation string  `json:"op"`
+	Path      string  `json:"path"`
+	Values    []Value `json:"values"`
+}
+
+type Value struct {
+	Value string `json:"value"`
+}
+
+func (s service) Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error) {
+	user, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		return user, &util.NotFoundError{Path: "User"}
+	}
+	if err := s.repo.Patch(ctx, org_id, id, req); err != nil {
+		return user, err
+	}
+	return user, nil
 }

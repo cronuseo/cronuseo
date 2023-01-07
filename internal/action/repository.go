@@ -10,7 +10,7 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, resource_id string, id string) (entity.Action, error)
-	Query(ctx context.Context, resource_id string) ([]entity.Action, error)
+	Query(ctx context.Context, resource_id string, filter Filter) ([]entity.Action, error)
 	Create(ctx context.Context, resource_id string, action entity.Action) error
 	Update(ctx context.Context, resource_id string, action entity.Action) error
 	Delete(ctx context.Context, resource_id string, id string) error
@@ -59,7 +59,7 @@ func (r repository) Update(ctx context.Context, resource_id string, action entit
 }
 
 func (r repository) Delete(ctx context.Context, resource_id string, id string) error {
-	stmt, err := r.db.Prepare("DELETE FROM res_action WHERE resource_id = $3 AND action_id = $1")
+	stmt, err := r.db.Prepare("DELETE FROM res_action WHERE resource_id = $1 AND action_id = $2")
 	if err != nil {
 		return err
 	}
@@ -70,9 +70,10 @@ func (r repository) Delete(ctx context.Context, resource_id string, id string) e
 	return nil
 }
 
-func (r repository) Query(ctx context.Context, resource_id string) ([]entity.Action, error) {
+func (r repository) Query(ctx context.Context, resource_id string, filter Filter) ([]entity.Action, error) {
 	resources := []entity.Action{}
-	err := r.db.Select(&resources, "SELECT * FROM res_action WHERE resource_id = $1", resource_id)
+	name := filter.Name + "%"
+	err := r.db.Select(&resources, "SELECT * FROM res_action WHERE resource_id = $1 AND name LIKE $2 AND id > $3 ORDER BY id LIMIT $4", resource_id, name, filter.Cursor, filter.Limit)
 	return resources, err
 }
 

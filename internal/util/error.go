@@ -27,6 +27,14 @@ type InvalidInputError struct {
 	Path string
 }
 
+type SystemError struct {
+	Message string
+}
+
+func (e *SystemError) Error() string {
+	return e.Message
+}
+
 func (e *InvalidInputError) Error() string {
 	return "Invalid input."
 }
@@ -36,9 +44,11 @@ func HandleError(err error) *echo.HTTPError {
 	case *InvalidInputError:
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs.")
 	case *AlreadyExistsError:
-		return echo.NewHTTPError(http.StatusBadRequest, e.Error())
+		return echo.NewHTTPError(http.StatusConflict, e.Error())
 	case *NotFoundError:
-		return echo.NewHTTPError(http.StatusBadRequest, e.Error())
+		return echo.NewHTTPError(http.StatusNotFound, e.Error())
+	case *SystemError:
+		return echo.NewHTTPError(http.StatusInternalServerError, e.Error())
 	default:
 		return echo.NewHTTPError(http.StatusInternalServerError, "Server Error!")
 	}

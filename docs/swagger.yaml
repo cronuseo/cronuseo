@@ -18,9 +18,13 @@ definitions:
         type: string
       action_key:
         type: string
+      created_at:
+        type: string
       name:
         type: string
       resource_id:
+        type: string
+      updated_at:
         type: string
     type: object
   entity.CheckRequestAll:
@@ -43,6 +47,15 @@ definitions:
       subject:
         type: string
     type: object
+  entity.Links:
+    properties:
+      next:
+        type: string
+      prev:
+        type: string
+      self:
+        type: string
+    type: object
   entity.Object:
     properties:
       permissions:
@@ -54,11 +67,24 @@ definitions:
     type: object
   entity.Organization:
     properties:
+      created_at:
+        type: string
       name:
         type: string
       org_id:
         type: string
       org_key:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  entity.Permission:
+    properties:
+      action:
+        type: string
+      resource:
+        type: string
+      role:
         type: string
     type: object
   entity.Relation:
@@ -68,6 +94,8 @@ definitions:
     type: object
   entity.Resource:
     properties:
+      created_at:
+        type: string
       name:
         type: string
       org_id:
@@ -76,9 +104,50 @@ definitions:
         type: string
       resource_key:
         type: string
+      updated_at:
+        type: string
+    type: object
+  entity.ResourceLinks:
+    properties:
+      self:
+        type: string
+    type: object
+  entity.ResourceQueryResponse:
+    properties:
+      _links:
+        $ref: '#/definitions/entity.Links'
+      cursor:
+        type: integer
+      limit:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/entity.ResourceResult'
+        type: array
+      size:
+        type: integer
+    type: object
+  entity.ResourceResult:
+    properties:
+      _links:
+        $ref: '#/definitions/entity.ResourceLinks'
+      created_at:
+        type: string
+      name:
+        type: string
+      org_id:
+        type: string
+      resource_id:
+        type: string
+      resource_key:
+        type: string
+      updated_at:
+        type: string
     type: object
   entity.Role:
     properties:
+      created_at:
+        type: string
       name:
         type: string
       org_id:
@@ -87,18 +156,33 @@ definitions:
         type: string
       role_key:
         type: string
+      updated_at:
+        type: string
       users:
         items:
           $ref: '#/definitions/entity.UserID'
         type: array
     type: object
+  entity.RoleID:
+    properties:
+      role_id:
+        type: string
+    type: object
   entity.User:
     properties:
+      created_at:
+        type: string
       firstname:
         type: string
       lastname:
         type: string
       org_id:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/entity.RoleID'
+        type: array
+      updated_at:
         type: string
       user_id:
         type: string
@@ -108,6 +192,45 @@ definitions:
   entity.UserID:
     properties:
       user_id:
+        type: string
+    type: object
+  entity.UserLinks:
+    properties:
+      self:
+        type: string
+    type: object
+  entity.UserQueryResponse:
+    properties:
+      _links:
+        $ref: '#/definitions/entity.Links'
+      cursor:
+        type: integer
+      limit:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/entity.UserResult'
+        type: array
+      size:
+        type: integer
+    type: object
+  entity.UserResult:
+    properties:
+      _links:
+        $ref: '#/definitions/entity.UserLinks'
+      created_at:
+        type: string
+      firstname:
+        type: string
+      lastname:
+        type: string
+      org_id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: string
+      username:
         type: string
     type: object
   organization.CreateOrganizationRequest:
@@ -121,6 +244,33 @@ definitions:
     properties:
       name:
         type: string
+    type: object
+  permission.CheckActionsRequest:
+    properties:
+      actions:
+        items:
+          type: string
+        type: array
+      resource:
+        type: string
+      role:
+        type: string
+    type: object
+  permission.PermissionPatchOperation:
+    properties:
+      op:
+        type: string
+      permisssions:
+        items:
+          $ref: '#/definitions/entity.Permission'
+        type: array
+    type: object
+  permission.PermissionPatchRequest:
+    properties:
+      operations:
+        items:
+          $ref: '#/definitions/permission.PermissionPatchOperation'
+        type: array
     type: object
   permission.Tuple:
     properties:
@@ -165,6 +315,10 @@ definitions:
         type: string
       lastname:
         type: string
+      roles:
+        items:
+          $ref: '#/definitions/entity.RoleID'
+        type: array
       username:
         type: string
     type: object
@@ -173,6 +327,29 @@ definitions:
       firstname:
         type: string
       lastname:
+        type: string
+    type: object
+  user.UserPatchOperation:
+    properties:
+      op:
+        type: string
+      path:
+        type: string
+      values:
+        items:
+          $ref: '#/definitions/user.Value'
+        type: array
+    type: object
+  user.UserPatchRequest:
+    properties:
+      operations:
+        items:
+          $ref: '#/definitions/user.UserPatchOperation'
+        type: array
+    type: object
+  user.Value:
+    properties:
+      value:
         type: string
     type: object
 host: localhost:8080
@@ -198,6 +375,18 @@ paths:
         name: org_id
         required: true
         type: string
+      - description: name
+        in: query
+        name: name
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: cursor
+        in: query
+        name: cursor
+        type: integer
       produces:
       - application/json
       responses:
@@ -205,7 +394,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.Resource'
+              $ref: '#/definitions/entity.ResourceQueryResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -340,6 +529,18 @@ paths:
         name: org_id
         required: true
         type: string
+      - description: name
+        in: query
+        name: name
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: cursor
+        in: query
+        name: cursor
+        type: integer
       produces:
       - application/json
       responses:
@@ -473,13 +674,18 @@ paths:
           description: Internal Server Error
       tags:
       - Role
-  /{org_id}/user:
+  /{org_id}/role/user/{user_id}:
     get:
-      description: Get all users.
+      description: Get all roles.
       parameters:
       - description: Organization ID
         in: path
         name: org_id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: user_id
         required: true
         type: string
       produces:
@@ -489,7 +695,41 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.User'
+              $ref: '#/definitions/entity.Role'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Role
+  /{org_id}/user:
+    get:
+      description: Get all users.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: name
+        in: query
+        name: name
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: cursor
+        in: query
+        name: cursor
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.UserQueryResponse'
             type: array
         "500":
           description: Internal Server Error
@@ -577,6 +817,44 @@ paths:
           description: Internal Server Error
       tags:
       - User
+    patch:
+      consumes:
+      - application/json
+      description: Patch user.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/user.UserPatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.User'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - User
     put:
       consumes:
       - application/json
@@ -632,6 +910,36 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/permission.Tuple'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+  /{org}/permission/check_actions:
+    post:
+      consumes:
+      - application/json
+      description: Check by username.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission.CheckActionsRequest'
       produces:
       - application/json
       responses:
@@ -795,7 +1103,7 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /{org}/permission/list/object:
+  /{org}/permission/list/resource:
     post:
       consumes:
       - application/json
@@ -825,7 +1133,7 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /{org}/permission/list/subject:
+  /{org}/permission/list/role:
     post:
       consumes:
       - application/json
@@ -855,6 +1163,36 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
+  /{org}/permission/update:
+    patch:
+      consumes:
+      - application/json
+      description: Patch Permissions.
+      parameters:
+      - description: Organization
+        in: path
+        name: org
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission.PermissionPatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
   /{resource_id}/action:
     get:
       description: Get all resources.
@@ -864,6 +1202,18 @@ paths:
         name: resource_id
         required: true
         type: string
+      - description: name
+        in: query
+        name: name
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: cursor
+        in: query
+        name: cursor
+        type: integer
       produces:
       - application/json
       responses:

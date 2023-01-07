@@ -219,6 +219,24 @@ const docTemplate = `{
                         "name": "org_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -227,7 +245,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.Resource"
+                                "$ref": "#/definitions/entity.ResourceQueryResponse"
                             }
                         }
                     },
@@ -434,6 +452,24 @@ const docTemplate = `{
                         "name": "org_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -492,6 +528,47 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{org_id}/role/user/{user_id}": {
+            "get": {
+                "description": "Get all roles.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "user_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Role"
+                            }
+                        }
                     },
                     "500": {
                         "description": "Internal Server Error"
@@ -649,6 +726,24 @@ const docTemplate = `{
                         "name": "org_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -657,7 +752,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.User"
+                                "$ref": "#/definitions/entity.UserQueryResponse"
                             }
                         }
                     },
@@ -846,6 +941,63 @@ const docTemplate = `{
                         "description": "Internal Server Error"
                     }
                 }
+            },
+            "patch": {
+                "description": "Patch user.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/user.UserPatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/entity.User"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
             }
         },
         "/{org}/permission/check": {
@@ -875,6 +1027,52 @@ const docTemplate = `{
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/permission.Tuple"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{org}/permission/check_actions": {
+            "post": {
+                "description": "Check by username.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization",
+                        "name": "org",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/permission.CheckActionsRequest"
                         }
                     }
                 ],
@@ -1124,7 +1322,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/permission/list/object": {
+        "/{org}/permission/list/resource": {
             "post": {
                 "description": "Get objects.",
                 "consumes": [
@@ -1170,7 +1368,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/permission/list/subject": {
+        "/{org}/permission/list/role": {
             "post": {
                 "description": "Get subjects.",
                 "consumes": [
@@ -1216,6 +1414,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/{org}/permission/update": {
+            "patch": {
+                "description": "Patch Permissions.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization",
+                        "name": "org",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/permission.PermissionPatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/{resource_id}/action": {
             "get": {
                 "description": "Get all resources.",
@@ -1232,6 +1476,24 @@ const docTemplate = `{
                         "name": "resource_id",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -1461,10 +1723,16 @@ const docTemplate = `{
                 "action_key": {
                     "type": "string"
                 },
+                "created_at": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
                 "resource_id": {
+                    "type": "string"
+                },
+                "updated_at": {
                     "type": "string"
                 }
             }
@@ -1500,6 +1768,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.Links": {
+            "type": "object",
+            "properties": {
+                "next": {
+                    "type": "string"
+                },
+                "prev": {
+                    "type": "string"
+                },
+                "self": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Object": {
             "type": "object",
             "properties": {
@@ -1517,6 +1799,9 @@ const docTemplate = `{
         "entity.Organization": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1524,6 +1809,23 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "org_key": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.Permission": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                },
+                "role": {
                     "type": "string"
                 }
             }
@@ -1539,6 +1841,9 @@ const docTemplate = `{
         "entity.Resource": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1550,12 +1855,75 @@ const docTemplate = `{
                 },
                 "resource_key": {
                     "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceLinks": {
+            "type": "object",
+            "properties": {
+                "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceQueryResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.Links"
+                },
+                "cursor": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.ResourceResult"
+                    }
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.ResourceResult": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.ResourceLinks"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "org_id": {
+                    "type": "string"
+                },
+                "resource_id": {
+                    "type": "string"
+                },
+                "resource_key": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
         "entity.Role": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -1568,6 +1936,9 @@ const docTemplate = `{
                 "role_key": {
                     "type": "string"
                 },
+                "updated_at": {
+                    "type": "string"
+                },
                 "users": {
                     "type": "array",
                     "items": {
@@ -1576,9 +1947,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.RoleID": {
+            "type": "object",
+            "properties": {
+                "role_id": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.User": {
             "type": "object",
             "properties": {
+                "created_at": {
+                    "type": "string"
+                },
                 "firstname": {
                     "type": "string"
                 },
@@ -1586,6 +1968,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "org_id": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.RoleID"
+                    }
+                },
+                "updated_at": {
                     "type": "string"
                 },
                 "user_id": {
@@ -1600,6 +1991,66 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserLinks": {
+            "type": "object",
+            "properties": {
+                "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.UserQueryResponse": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.Links"
+                },
+                "cursor": {
+                    "type": "integer"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.UserResult"
+                    }
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "entity.UserResult": {
+            "type": "object",
+            "properties": {
+                "_links": {
+                    "$ref": "#/definitions/entity.UserLinks"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "firstname": {
+                    "type": "string"
+                },
+                "lastname": {
+                    "type": "string"
+                },
+                "org_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1620,6 +2071,48 @@ const docTemplate = `{
             "properties": {
                 "name": {
                     "type": "string"
+                }
+            }
+        },
+        "permission.CheckActionsRequest": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "resource": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "permission.PermissionPatchOperation": {
+            "type": "object",
+            "properties": {
+                "op": {
+                    "type": "string"
+                },
+                "permisssions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.Permission"
+                    }
+                }
+            }
+        },
+        "permission.PermissionPatchRequest": {
+            "type": "object",
+            "properties": {
+                "operations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/permission.PermissionPatchOperation"
+                    }
                 }
             }
         },
@@ -1690,6 +2183,12 @@ const docTemplate = `{
                 "lastname": {
                     "type": "string"
                 },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.RoleID"
+                    }
+                },
                 "username": {
                     "type": "string"
                 }
@@ -1702,6 +2201,42 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "lastname": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.UserPatchOperation": {
+            "type": "object",
+            "properties": {
+                "op": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                },
+                "values": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.Value"
+                    }
+                }
+            }
+        },
+        "user.UserPatchRequest": {
+            "type": "object",
+            "properties": {
+                "operations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.UserPatchOperation"
+                    }
+                }
+            }
+        },
+        "user.Value": {
+            "type": "object",
+            "properties": {
+                "value": {
                     "type": "string"
                 }
             }

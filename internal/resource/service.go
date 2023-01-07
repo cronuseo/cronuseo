@@ -2,6 +2,7 @@ package resource
 
 import (
 	"context"
+	"log"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
@@ -11,7 +12,7 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (Resource, error)
-	Query(ctx context.Context, org_id string) ([]Resource, error)
+	Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error)
 	Create(ctx context.Context, org_id string, input CreateResourceRequest) (Resource, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateResourceRequest) (Resource, error)
 	Delete(ctx context.Context, org_id string, id string) (Resource, error)
@@ -64,7 +65,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 		return Resource{}, &util.InvalidInputError{}
 	}
 
-	//check organixation exists
+	//check organization exists
 	exists, _ := s.repo.ExistByKey(ctx, req.Key)
 	if exists {
 		return Resource{}, &util.AlreadyExistsError{Path: "Resource"}
@@ -77,6 +78,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 		Name: req.Name,
 	})
 	if err != nil {
+		log.Println(err.Error())
 		return Resource{}, err
 	}
 	return s.Get(ctx, org_id, id)
@@ -93,6 +95,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 	}
 	resource.Name = req.Name
 	if err := s.repo.Update(ctx, org_id, resource.Resource); err != nil {
+		log.Println(err.Error())
 		return resource, err
 	}
 	return resource, nil
@@ -104,14 +107,23 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Resource
 		return Resource{}, &util.NotFoundError{Path: "Resource"}
 	}
 	if err = s.repo.Delete(ctx, org_id, id); err != nil {
+		log.Println(err.Error())
 		return Resource{}, err
 	}
 	return resource, nil
 }
 
-func (s service) Query(ctx context.Context, org_id string) ([]Resource, error) {
-	items, err := s.repo.Query(ctx, org_id)
+type Filter struct {
+	Cursor int    `json:"cursor" query:"cursor"`
+	Limit  int    `json:"limit" query:"limit"`
+	Name   string `json:"name" query:"name"`
+}
+
+func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error) {
+
+	items, err := s.repo.Query(ctx, org_id, filter)
 	if err != nil {
+		log.Println(err.Error())
 		return nil, err
 	}
 	result := []Resource{}
