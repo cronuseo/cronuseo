@@ -41,6 +41,6 @@ version: ## display the version of the API server
 lint: ## run golint on all Go package
 	@golint $(PACKAGES)
 
-.PHONY: run console
-run console: ## run the c6o server
+.PHONY: run-console
+run-console: ## run the c6o server
 	bash run_console.sh

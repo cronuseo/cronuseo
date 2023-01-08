@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/shashimalcse/cronuseo/internal/action"
+	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/config"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/permission"
@@ -87,12 +88,15 @@ func main() {
 
 	clients := permission.KetoClients{WriteClient: writeClient, ReadClient: readClient, CheckClient: checkClient}
 
-	e := buildHandler(db, cfg, clients)
+	// redis client
+	permissionCache := cache.NewRedisCache("localhost:6379", 0, 200)
+
+	e := buildHandler(db, cfg, clients, permissionCache)
 	e.Logger.Fatal(e.Start(cfg.API))
 
 }
 
-func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClients) *echo.Echo {
+func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClients, permissionCache cache.PermissionCache) *echo.Echo {
 	router := echo.New()
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -106,7 +110,7 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClient
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db)))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
-	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db)))
+	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache))
 	return router
 }
 

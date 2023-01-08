@@ -2,8 +2,10 @@ package permission
 
 import (
 	"context"
+	"strconv"
 	"strings"
 
+	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
@@ -26,11 +28,12 @@ type Tuple struct {
 }
 
 type service struct {
-	repo Repository
+	repo            Repository
+	permissionCache cache.PermissionCache
 }
 
-func NewService(repo Repository) Service {
-	return service{repo: repo}
+func NewService(repo Repository, cache cache.PermissionCache) Service {
+	return service{repo: repo, permissionCache: cache}
 }
 
 func (s service) CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
@@ -50,7 +53,20 @@ func (s service) CreateTuple(ctx context.Context, org string, namespace string, 
 func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
 
 	tuple = qualifiedTuple(org, tuple)
-	return s.repo.CheckTuple(ctx, org, namespace, tuple)
+	value, _ := s.permissionCache.Get(ctx, tuple)
+	if value == "true" {
+		return true, nil
+	}
+	if value == "false" {
+		return false, nil
+	}
+	allow, err := s.repo.CheckTuple(ctx, org, namespace, tuple)
+	if err != nil {
+		return false, err
+	}
+	b := strconv.FormatBool(allow)
+	s.permissionCache.Set(ctx, tuple, b)
+	return allow, nil
 
 }
 
