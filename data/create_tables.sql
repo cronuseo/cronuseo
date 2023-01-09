@@ -72,6 +72,18 @@ CREATE TABLE
         CONSTRAINT FK_ORG_RESOURCE_PERMISSION FOREIGN KEY(resource_id) REFERENCES ORG_RESOURCE(resource_id)
     );
 
+CREATE TABLE
+    if not exists ORG_ADMIN_USER(
+        id SERIAL,
+        user_id uuid PRIMARY KEY,
+        username VARCHAR(40) NOT NULL,
+        password CHAR(60) NOT NULL,
+        is_supper BOOLEAN NOT NULL,
+        org_id uuid,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    );
+
 CREATE OR REPLACE FUNCTION TRIGGER_SET_TIMESTAMP() 
 RETURNS TRIGGER AS 
 	$$ BEGIN NEW.updated_at = NOW();
