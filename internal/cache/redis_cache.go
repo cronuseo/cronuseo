@@ -15,6 +15,7 @@ type redisCache struct {
 }
 
 func NewRedisCache(host string, db int, expire time.Duration) PermissionCache {
+
 	return &redisCache{
 		host:   host,
 		db:     db,
@@ -23,6 +24,7 @@ func NewRedisCache(host string, db int, expire time.Duration) PermissionCache {
 }
 
 func (c *redisCache) getClient() *redis.Client {
+
 	return redis.NewClient(&redis.Options{
 		Addr:     c.host,
 		Password: "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81",
@@ -31,6 +33,7 @@ func (c *redisCache) getClient() *redis.Client {
 }
 
 func (c *redisCache) Get(context context.Context, key entity.Tuple) (string, error) {
+
 	client := c.getClient()
 
 	k := key.String()
@@ -40,9 +43,19 @@ func (c *redisCache) Get(context context.Context, key entity.Tuple) (string, err
 }
 
 func (c *redisCache) Set(context context.Context, key entity.Tuple, value string) error {
+
 	client := c.getClient()
 
 	k := key.String()
 	client.Set(context, k, value, c.expire*time.Second)
+
+	return nil
+}
+
+func (c *redisCache) FlushAll(context context.Context) error {
+
+	client := c.getClient()
+	client.FlushAll(context)
+
 	return nil
 }

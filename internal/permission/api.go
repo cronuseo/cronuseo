@@ -64,7 +64,7 @@ func (r permission) check(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input)
+	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input, true)
 	if err != nil {
 		return util.HandleError(err)
 	}
@@ -86,7 +86,7 @@ func (r permission) delete(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input)
+	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input, false)
 	if err != nil {
 		return util.HandleError(err)
 	}
