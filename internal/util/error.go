@@ -36,6 +36,9 @@ func (e *SystemError) Error() string {
 }
 
 func (e *InvalidInputError) Error() string {
+	if e.Path != "" {
+		return "Invalid " + e.Path
+	}
 	return "Invalid input."
 }
 

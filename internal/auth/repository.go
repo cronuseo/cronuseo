@@ -11,6 +11,7 @@ type Repository interface {
 	Create(ctx context.Context, adminUser entity.AdminUser) error
 	ExistByUsername(ctx context.Context, username string) (bool, error)
 	Get(ctx context.Context, id string) (entity.AdminUser, error)
+	GetUserByUsername(ctx context.Context, username string) (entity.AdminUser, error)
 }
 
 type repository struct {
@@ -37,6 +38,12 @@ func (r repository) Create(ctx context.Context, adminUser entity.AdminUser) erro
 func (r repository) Get(ctx context.Context, id string) (entity.AdminUser, error) {
 	user := entity.AdminUser{}
 	err := r.db.Get(&user, "SELECT * FROM admin_user WHERE user_id = $1", id)
+	return user, err
+}
+
+func (r repository) GetUserByUsername(ctx context.Context, username string) (entity.AdminUser, error) {
+	user := entity.AdminUser{}
+	err := r.db.Get(&user, "SELECT * FROM admin_user WHERE username = $1", username)
 	return user, err
 }
 
