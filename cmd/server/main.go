@@ -34,7 +34,7 @@ import (
 
 var Version = "1.0.0"
 
-var flagConfig = flag.String("config", "/Users/thilinashashimal/Desktop/Cronuseo/config/local-debug.yml", "path to the config file")
+var flagConfig = flag.String("config", "./config/local.yml", "path to the config file")
 
 // @title          Cronuseo API
 // @version        1.0
@@ -102,12 +102,12 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClient
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	rg := router.Group("/api/v1")
-	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)), organization.NewService(organization.NewRepository(db)))
-	rg.Use(validateJWT)
-	// Define the health endpoint
 	rg.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
+	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)), organization.NewService(organization.NewRepository(db)))
+	rg.Use(validateJWT)
+	// Define the health endpoint
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
