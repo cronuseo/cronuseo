@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 # Start the backend using Docker Compose
-# docker-compose up -d
 
 # Wait for the backend API to start
 while true; do
@@ -38,10 +37,22 @@ user_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
 docker exec -ti -e "PGPASSWORD=$DB_PASSWORD" $CONTAINER_ID psql -h $DB_HOST -U $DB_USERNAME -d $DB_NAME -c "INSERT INTO org_admin_user(user_id,username,password,org_id,is_super) VALUES('$user_id','$username',crypt('$password', gen_salt('bf')),'$org_id'::uuid,'true');"
 
 # Get the console repository
-git clone https://github.com/shashimalcse/cronuseo-console
+dir=cronuseo-console
+ 
+if [ -d "$dir" -a ! -h "$dir" ]
+then
+  echo "$dir exists"
+ 
+  git pull
+else
+  echo "$dir not exists"
+  git clone https://github.com/shashimalcse/cronuseo-console
+  cd cronuseo-console
+fi
+
 
 # Change into the console repository directory
-cd cronuseo-console
+
 
 # Start the frontend using Next.js
 npm install
