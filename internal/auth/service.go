@@ -16,6 +16,7 @@ import (
 type Service interface {
 	Register(ctx context.Context, adminUser AdminUserRequest) error
 	Login(ctx context.Context, req AdminUserRequest) (*http.Cookie, error)
+	Logout(ctx context.Context) (*http.Cookie, error)
 }
 
 type AdminUser struct {
@@ -69,6 +70,7 @@ func (s service) Register(ctx context.Context, req AdminUserRequest) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -100,4 +102,14 @@ func (s service) Login(ctx context.Context, req AdminUserRequest) (*http.Cookie,
 
 	return cookie, nil
 
+}
+
+func (s service) Logout(ctx context.Context) (*http.Cookie, error) {
+
+	cookie := new(http.Cookie)
+	cookie.Name = "jwt"
+	cookie.Value = ""
+	cookie.Expires = time.Now().Add(-time.Hour)
+
+	return cookie, nil
 }

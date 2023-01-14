@@ -4,17 +4,20 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
-func RegisterHandlers(r *echo.Group, service Service) {
-	res := admin{service}
+func RegisterHandlers(r *echo.Group, service Service, orgService organization.Service) {
+	res := admin{service: service, orgService: orgService}
 	r.POST("/register", res.register)
 	r.POST("/login", res.login)
+	r.POST("/logout", res.logout)
 }
 
 type admin struct {
-	service Service
+	service    Service
+	orgService organization.Service
 }
 
 // @Description Register.
@@ -52,6 +55,22 @@ func (r admin) login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
 	cookie, err := r.service.Login(c.Request().Context(), input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	c.SetCookie(cookie)
+	return c.JSON(http.StatusOK, "Success")
+}
+
+// @Description Logout.
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Success     200
+// @failure     400,403,500
+// @Router      /logout [post]
+func (r admin) logout(c echo.Context) error {
+	cookie, err := r.service.Logout(c.Request().Context())
 	if err != nil {
 		return util.HandleError(err)
 	}
