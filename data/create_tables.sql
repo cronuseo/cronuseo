@@ -78,10 +78,10 @@ CREATE TABLE
         user_id uuid PRIMARY KEY,
         username VARCHAR(40) NOT NULL,
         password CHAR(60) NOT NULL,
-        is_supper BOOLEAN NOT NULL,
+        is_super BOOLEAN NOT NULL,
         org_id uuid,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
 CREATE OR REPLACE FUNCTION TRIGGER_SET_TIMESTAMP() 

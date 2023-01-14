@@ -24,11 +24,11 @@ func NewRepository(db *sqlx.DB) Repository {
 
 func (r repository) Create(ctx context.Context, adminUser entity.AdminUser) error {
 
-	stmt, err := r.db.Prepare("INSERT INTO org(org_key,name,org_id) VALUES($1, $2, $3)")
+	stmt, err := r.db.Prepare("INSERT INTO org_admin_user(user_id,username,password,is_super) VALUES($1, $2, $3, $4)")
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec()
+	_, err = stmt.Exec(adminUser.ID, adminUser.Username, adminUser.Password, adminUser.IsSuper)
 	if err != nil {
 		return err
 	}
@@ -37,18 +37,18 @@ func (r repository) Create(ctx context.Context, adminUser entity.AdminUser) erro
 
 func (r repository) Get(ctx context.Context, id string) (entity.AdminUser, error) {
 	user := entity.AdminUser{}
-	err := r.db.Get(&user, "SELECT * FROM admin_user WHERE user_id = $1", id)
+	err := r.db.Get(&user, "SELECT * FROM org_admin_user WHERE user_id = $1", id)
 	return user, err
 }
 
 func (r repository) GetUserByUsername(ctx context.Context, username string) (entity.AdminUser, error) {
 	user := entity.AdminUser{}
-	err := r.db.Get(&user, "SELECT * FROM admin_user WHERE username = $1", username)
+	err := r.db.Get(&user, "SELECT * FROM org_admin_user WHERE username = $1", username)
 	return user, err
 }
 
 func (r repository) ExistByUsername(ctx context.Context, username string) (bool, error) {
 	exists := false
-	err := r.db.QueryRow("SELECT exists (SELECT user_id FROM admin_user WHERE username = $1)", username).Scan(&exists)
+	err := r.db.QueryRow("SELECT exists (SELECT user_id FROM org_admin_user WHERE username = $1)", username).Scan(&exists)
 	return exists, err
 }

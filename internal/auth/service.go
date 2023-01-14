@@ -15,6 +15,7 @@ import (
 
 type Service interface {
 	Register(ctx context.Context, adminUser AdminUserRequest) error
+	Login(ctx context.Context, req AdminUserRequest) (*http.Cookie, error)
 }
 
 type AdminUser struct {
@@ -63,6 +64,7 @@ func (s service) Register(ctx context.Context, req AdminUserRequest) error {
 		ID:       id,
 		Username: req.Username,
 		Password: password,
+		IsSuper:  true,
 	})
 	if err != nil {
 		return err
