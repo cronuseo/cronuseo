@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/shashimalcse/cronuseo/internal/action"
+	"github.com/shashimalcse/cronuseo/internal/auth"
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/config"
 	"github.com/shashimalcse/cronuseo/internal/organization"
@@ -101,6 +102,7 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClient
 	router.Use(middleware.CORS())
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	rg := router.Group("/api/v1")
+	rg.Use(validateJWT)
 	// Define the health endpoint
 	rg.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
@@ -111,6 +113,7 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClient
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db)))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache))
+	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
 	return router
 }
 
@@ -139,5 +142,31 @@ func getKey(cfg *config.Config) func(token *jwt.Token) (interface{}, error) {
 		}
 
 		return pubkey, nil
+	}
+}
+
+func validateJWT(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		cookie, err := c.Cookie("jwt")
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid or missing JWT cookie")
+		}
+
+		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			}
+			return []byte(auth.SecretKey), nil
+		})
+
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Failed to parse JWT: "+err.Error())
+		}
+
+		if !token.Valid {
+			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid JWT")
+		}
+
+		return next(c)
 	}
 }
