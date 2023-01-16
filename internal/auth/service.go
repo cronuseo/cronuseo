@@ -91,7 +91,6 @@ func (s service) Login(ctx context.Context, req AdminUserRequest) (string, error
 	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub": user.ID,
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
-		"org": user.OrgID,
 	})
 
 	token, err := claims.SignedString([]byte(SecretKey))
