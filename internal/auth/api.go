@@ -54,12 +54,12 @@ func (r admin) login(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	cookie, err := r.service.Login(c.Request().Context(), input)
+	token, err := r.service.Login(c.Request().Context(), input)
 	if err != nil {
 		return util.HandleError(err)
 	}
-	c.SetCookie(cookie)
-	return c.JSON(http.StatusOK, "Success")
+
+	return c.JSON(http.StatusOK, TokenResponse{Token: token})
 }
 
 // @Description Logout.

@@ -15,12 +15,16 @@ import (
 
 type Service interface {
 	Register(ctx context.Context, adminUser AdminUserRequest) error
-	Login(ctx context.Context, req AdminUserRequest) (*http.Cookie, error)
+	Login(ctx context.Context, req AdminUserRequest) (string, error)
 	Logout(ctx context.Context) (*http.Cookie, error)
 }
 
 type AdminUser struct {
 	entity.AdminUser
+}
+
+type TokenResponse struct {
+	Token string `json:"token"`
 }
 
 type AdminUserRequest struct {
@@ -74,33 +78,29 @@ func (s service) Register(ctx context.Context, req AdminUserRequest) error {
 	return nil
 }
 
-func (s service) Login(ctx context.Context, req AdminUserRequest) (*http.Cookie, error) {
+func (s service) Login(ctx context.Context, req AdminUserRequest) (string, error) {
 
 	user, err := s.repo.GetUserByUsername(ctx, req.Username)
 	if err != nil {
-		return nil, &util.NotFoundError{Path: "Username"}
+		return "", &util.NotFoundError{Path: "Username"}
 	}
 	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(req.Password)); err != nil {
-		return nil, &util.InvalidInputError{Path: "Password"}
+		return "", &util.InvalidInputError{Path: "Password"}
 	}
 
-	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		Issuer:    user.ID,
-		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub": user.ID,
+		"exp": time.Now().Add(time.Hour * 24).Unix(),
+		"org": user.OrgID,
 	})
 
 	token, err := claims.SignedString([]byte(SecretKey))
 
 	if err != nil {
-		return nil, &util.SystemError{}
+		return "", &util.SystemError{}
 	}
 
-	cookie := new(http.Cookie)
-	cookie.Name = "jwt"
-	cookie.Value = token
-	cookie.Expires = time.Now().Add(24 * time.Hour)
-
-	return cookie, nil
+	return token, nil
 
 }
 
