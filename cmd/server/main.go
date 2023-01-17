@@ -1,10 +1,7 @@
 package main
 
 import (
-	"context"
-	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -20,15 +17,13 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/user"
 	"google.golang.org/grpc"
 
-	_ "github.com/shashimalcse/cronuseo/docs"
-
-	jwt "github.com/golang-jwt/jwt"
 	"github.com/jmoiron/sqlx"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	jwk "github.com/lestrrat-go/jwx/jwk"
 	_ "github.com/lib/pq"
 	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
+	_ "github.com/shashimalcse/cronuseo/docs"
 	echoSwagger "github.com/swaggo/echo-swagger"
 )
 
@@ -99,14 +94,21 @@ func main() {
 
 func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClients, permissionCache cache.PermissionCache) *echo.Echo {
 	router := echo.New()
-	router.Use(middleware.CORS())
+	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowCredentials: true,
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowHeaders:     []string{echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAccept, echo.HeaderAccessControlAllowCredentials},
+	}))
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
 	rg := router.Group("/api/v1")
 	rg.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
 	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)), organization.NewService(organization.NewRepository(db)))
-	rg.Use(validateJWT)
+	config := echojwt.Config{
+		SigningKey: []byte(auth.SecretKey),
+	}
+	rg.Use(echojwt.WithConfig(config))
 	// Define the health endpoint
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
@@ -115,58 +117,4 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClient
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache))
 	return router
-}
-
-func getKey(cfg *config.Config) func(token *jwt.Token) (interface{}, error) {
-	return func(token *jwt.Token) (interface{}, error) {
-
-		keySet, err := jwk.Fetch(context.Background(), cfg.JWKS)
-		if err != nil {
-			return nil, err
-		}
-
-		keyID, ok := token.Header["kid"].(string)
-		if !ok {
-			return nil, errors.New("expecting JWT header to have a key ID in the kid field")
-		}
-
-		key, found := keySet.LookupKeyID(keyID)
-
-		if !found {
-			return nil, fmt.Errorf("unable to find key %q", keyID)
-		}
-
-		var pubkey interface{}
-		if err := key.Raw(&pubkey); err != nil {
-			return nil, fmt.Errorf("Unable to get the public key. Error: %s", err.Error())
-		}
-
-		return pubkey, nil
-	}
-}
-
-func validateJWT(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		cookie, err := c.Cookie("jwt")
-		if err != nil {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid or missing JWT cookie")
-		}
-
-		token, err := jwt.Parse(cookie.Value, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
-			}
-			return []byte(auth.SecretKey), nil
-		})
-
-		if err != nil {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Failed to parse JWT: "+err.Error())
-		}
-
-		if !token.Valid {
-			return echo.NewHTTPError(http.StatusUnauthorized, "Invalid JWT")
-		}
-
-		return next(c)
-	}
 }

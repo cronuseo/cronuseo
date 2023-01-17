@@ -3,7 +3,8 @@ package auth
 import (
 	"net/http"
 
-	"github.com/golang-jwt/jwt"
+	"github.com/golang-jwt/jwt/v4"
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/util"
@@ -14,6 +15,10 @@ func RegisterHandlers(r *echo.Group, service Service, orgService organization.Se
 	r.POST("/register", res.register)
 	r.POST("/login", res.login)
 	r.POST("/logout", res.logout)
+	config := echojwt.Config{
+		SigningKey: []byte(SecretKey),
+	}
+	r.Use(echojwt.WithConfig(config))
 	r.GET("/me", res.getMe)
 }
 
@@ -88,11 +93,11 @@ func (r admin) logout(c echo.Context) error {
 // @failure     400,403,500
 // @Router      /me [get]
 func (r admin) getMe(c echo.Context) error {
-	print(c.Request().Header.Get("Authorization"))
+
 	user := c.Get("user").(*jwt.Token)
 	claims := user.Claims.(jwt.MapClaims)
-	user_id := claims["sub"].(string)
-	adminuser, err := r.service.GetMe(c.Request().Context(), user_id)
+	name := claims["sub"].(string)
+	adminuser, err := r.service.GetMe(c.Request().Context(), name)
 	if err != nil {
 		return util.HandleError(err)
 	}

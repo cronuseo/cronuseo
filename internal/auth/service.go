@@ -116,7 +116,7 @@ func (s service) Logout(ctx context.Context) (*http.Cookie, error) {
 
 func (s service) GetMe(ctx context.Context, user_id string) (entity.AdminUser, error) {
 
-	user, err := s.repo.GetUserByUsername(ctx, user_id)
+	user, err := s.repo.GetUserByID(ctx, user_id)
 	if err != nil {
 		return entity.AdminUser{}, &util.NotFoundError{Path: "User id"}
 	}
