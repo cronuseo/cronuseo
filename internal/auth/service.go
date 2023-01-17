@@ -17,6 +17,7 @@ type Service interface {
 	Register(ctx context.Context, adminUser AdminUserRequest) error
 	Login(ctx context.Context, req AdminUserRequest) (string, error)
 	Logout(ctx context.Context) (*http.Cookie, error)
+	GetMe(ctx context.Context, user_id string) (entity.AdminUser, error)
 }
 
 type AdminUser struct {
@@ -111,4 +112,14 @@ func (s service) Logout(ctx context.Context) (*http.Cookie, error) {
 	cookie.Expires = time.Now().Add(-time.Hour)
 
 	return cookie, nil
+}
+
+func (s service) GetMe(ctx context.Context, user_id string) (entity.AdminUser, error) {
+
+	user, err := s.repo.GetUserByUsername(ctx, user_id)
+	if err != nil {
+		return entity.AdminUser{}, &util.NotFoundError{Path: "User id"}
+	}
+	return user, nil
+
 }

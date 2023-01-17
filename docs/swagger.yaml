@@ -1397,6 +1397,24 @@ paths:
           description: Internal Server Error
       tags:
       - Auth
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: GetMe.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Auth
   /organization:
     get:
       description: Get all organizations.

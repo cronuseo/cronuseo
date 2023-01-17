@@ -3,6 +3,7 @@ package auth
 import (
 	"net/http"
 
+	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/util"
@@ -13,6 +14,7 @@ func RegisterHandlers(r *echo.Group, service Service, orgService organization.Se
 	r.POST("/register", res.register)
 	r.POST("/login", res.login)
 	r.POST("/logout", res.logout)
+	r.GET("/me", res.getMe)
 }
 
 type admin struct {
@@ -76,4 +78,23 @@ func (r admin) logout(c echo.Context) error {
 	}
 	c.SetCookie(cookie)
 	return c.JSON(http.StatusOK, "Success")
+}
+
+// @Description GetMe.
+// @Tags        Auth
+// @Accept      json
+// @Produce     json
+// @Success     200
+// @failure     400,403,500
+// @Router      /me [get]
+func (r admin) getMe(c echo.Context) error {
+	print(c.Request().Header.Get("Authorization"))
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(jwt.MapClaims)
+	user_id := claims["sub"].(string)
+	adminuser, err := r.service.GetMe(c.Request().Context(), user_id)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusOK, adminuser)
 }
