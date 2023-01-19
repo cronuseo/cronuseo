@@ -59,13 +59,45 @@ func (r repository) Update(ctx context.Context, org_id string, resource entity.R
 }
 
 func (r repository) Delete(ctx context.Context, org_id string, id string) error {
-	stmt, err := r.db.Prepare("DELETE FROM org_resource WHERE org_id = $1 AND resource_id = $2")
+
+	tx, err := r.db.DB.Begin()
+
 	if err != nil {
 		return err
 	}
-	_, err = stmt.Exec(org_id, id)
-	if err != nil {
-		return err
+
+	// Delete actions assigned to the resource
+	{
+		stmt, err := tx.Prepare("DELETE FROM res_action WHERE resource_id = $1")
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		_, err = stmt.Exec(id)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Delete resource
+	{
+		stmt, err := tx.Prepare("DELETE FROM org_resource WHERE org_id = $1 AND resource_id = $2")
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		_, err = stmt.Exec(org_id, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	{
+		err := tx.Commit()
+
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
