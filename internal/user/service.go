@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 
+	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 
@@ -46,11 +47,12 @@ func (m UpdateUserRequest) Validate() error {
 }
 
 type service struct {
-	repo Repository
+	repo            Repository
+	permissionCache cache.PermissionCache
 }
 
-func NewService(repo Repository) Service {
-	return service{repo: repo}
+func NewService(repo Repository, permissionCache cache.PermissionCache) Service {
+	return service{repo: repo, permissionCache: permissionCache}
 }
 
 func (s service) Get(ctx context.Context, org_id string, id string) (User, error) {
@@ -113,6 +115,7 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (User, er
 	if err = s.repo.Delete(ctx, org_id, id); err != nil {
 		return User{}, err
 	}
+	s.permissionCache.FlushAll(ctx)
 	return user, nil
 }
 
@@ -156,5 +159,6 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req UserPa
 	if err := s.repo.Patch(ctx, org_id, id, req); err != nil {
 		return user, err
 	}
+	s.permissionCache.FlushAll(ctx)
 	return user, nil
 }

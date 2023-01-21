@@ -2,7 +2,6 @@ package permission
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/entity"
@@ -11,7 +10,7 @@ import (
 
 type Service interface {
 	CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
-	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, isCheck bool) (bool, error)
+	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
 	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
 	CheckActions(ctx context.Context, org string, namespace string, request CheckActionsRequest) []string
 	PatchPermissions(ctx context.Context, org string, namespace string, req PermissionPatchRequest) error
@@ -44,25 +43,12 @@ func (s service) CreateTuple(ctx context.Context, org string, namespace string, 
 	return s.repo.CreateTuple(ctx, org, namespace, tuple)
 }
 
-func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, isCheck bool) (bool, error) {
+func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
 
 	tuple = qualifiedTuple(org, tuple)
-	if isCheck {
-		value, _ := s.permissionCache.Get(ctx, tuple)
-		if value == "true" {
-			return true, nil
-		}
-		if value == "false" {
-			return false, nil
-		}
-	}
 	allow, err := s.repo.CheckTuple(ctx, org, namespace, tuple)
 	if err != nil {
 		return false, err
-	}
-	b := strconv.FormatBool(allow)
-	if isCheck {
-		s.permissionCache.Set(ctx, tuple, b)
 	}
 	return allow, nil
 
@@ -106,7 +92,7 @@ func (s service) PatchPermissions(ctx context.Context, org_id string, namespace 
 
 				for _, permission := range operation.Permissions {
 					tuple := entity.Tuple{Object: permission.Resource, Relation: permission.Action, SubjectId: permission.Role}
-					exists, err := s.CheckTuple(ctx, org.Key, namespace, tuple, false)
+					exists, err := s.CheckTuple(ctx, org.Key, namespace, tuple)
 					if exists {
 						continue
 					}
@@ -123,7 +109,7 @@ func (s service) PatchPermissions(ctx context.Context, org_id string, namespace 
 			if len(operation.Permissions) > 0 {
 				for _, permission := range operation.Permissions {
 					tuple := entity.Tuple{Object: permission.Resource, Relation: permission.Action, SubjectId: permission.Role}
-					exists, err := s.CheckTuple(ctx, org.Key, namespace, tuple, false)
+					exists, err := s.CheckTuple(ctx, org.Key, namespace, tuple)
 					if !exists {
 						continue
 					}
@@ -157,7 +143,7 @@ func (s service) CheckActions(ctx context.Context, org_id string, namespace stri
 	allowed_actions := []string{}
 	for _, action := range request.Actions {
 		tuple := entity.Tuple{Object: request.Resource, Relation: action, SubjectId: request.Role}
-		bool, _ := s.CheckTuple(ctx, org.Key, namespace, tuple, false)
+		bool, _ := s.CheckTuple(ctx, org.Key, namespace, tuple)
 		if bool {
 			allowed_actions = append(allowed_actions, action)
 		}

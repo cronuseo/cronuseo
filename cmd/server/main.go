@@ -110,7 +110,7 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients util.KetoClients, per
 	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
-	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
+	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
