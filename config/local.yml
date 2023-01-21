@@ -8,4 +8,4 @@ organization:
   config:
     username: admin
     password: admin
-    organization: "super"
+    organization: super

@@ -19,7 +19,7 @@ type Service interface {
 	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
 	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions) ([]string, error)
 	CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll) (entity.CheckAllResponse, error)
-	CreateActions(ctx context.Context, org string, namespace string, request CheckActionsRequest) []string
+	CheckActions(ctx context.Context, org string, namespace string, request CheckActionsRequest) []string
 	PatchPermissions(ctx context.Context, org string, namespace string, req PermissionPatchRequest) error
 }
 
@@ -199,7 +199,12 @@ type PermissionPatchOperation struct {
 	Permissions []entity.Permission `json:"permisssions"`
 }
 
-func (s service) PatchPermissions(ctx context.Context, org string, namespace string, req PermissionPatchRequest) error {
+func (s service) PatchPermissions(ctx context.Context, org_id string, namespace string, req PermissionPatchRequest) error {
+
+	org, err := s.repo.GetOrganization(ctx, org_id)
+	if err != nil {
+		return err
+	}
 	for _, operation := range req.Operations {
 		switch operation.Operation {
 		case "add":
@@ -207,14 +212,14 @@ func (s service) PatchPermissions(ctx context.Context, org string, namespace str
 
 				for _, permission := range operation.Permissions {
 					tuple := entity.Tuple{Object: permission.Resource, Relation: permission.Action, SubjectId: permission.Role}
-					exists, err := s.CheckTuple(ctx, org, namespace, tuple, false)
+					exists, err := s.CheckTuple(ctx, org.Key, namespace, tuple, false)
 					if exists {
 						continue
 					}
 					if err != nil {
 						return err
 					}
-					err = s.CreateTuple(ctx, org, namespace, tuple)
+					err = s.CreateTuple(ctx, org.Key, namespace, tuple)
 					if err != nil {
 						return err
 					}
@@ -224,14 +229,14 @@ func (s service) PatchPermissions(ctx context.Context, org string, namespace str
 			if len(operation.Permissions) > 0 {
 				for _, permission := range operation.Permissions {
 					tuple := entity.Tuple{Object: permission.Resource, Relation: permission.Action, SubjectId: permission.Role}
-					exists, err := s.CheckTuple(ctx, org, namespace, tuple, false)
+					exists, err := s.CheckTuple(ctx, org.Key, namespace, tuple, false)
 					if !exists {
 						continue
 					}
 					if err != nil {
 						return err
 					}
-					err = s.DeleteTuple(ctx, org, namespace, tuple)
+					err = s.DeleteTuple(ctx, org.Key, namespace, tuple)
 					if err != nil {
 						return err
 					}
@@ -249,11 +254,16 @@ type CheckActionsRequest struct {
 	Actions  []string `json:"actions"`
 }
 
-func (s service) CreateActions(ctx context.Context, org string, namespace string, request CheckActionsRequest) []string {
+func (s service) CheckActions(ctx context.Context, org_id string, namespace string, request CheckActionsRequest) []string {
+
+	org, err := s.repo.GetOrganization(ctx, org_id)
+	if err != nil {
+		return []string{}
+	}
 	allowed_actions := []string{}
 	for _, action := range request.Actions {
 		tuple := entity.Tuple{Object: request.Resource, Relation: action, SubjectId: request.Role}
-		bool, _ := s.CheckTuple(ctx, org, namespace, tuple, false)
+		bool, _ := s.CheckTuple(ctx, org.Key, namespace, tuple, false)
 		if bool {
 			allowed_actions = append(allowed_actions, action)
 		}
