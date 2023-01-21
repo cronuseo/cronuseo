@@ -97,7 +97,7 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients util.KetoClients, per
 	router := echo.New()
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"},
 		AllowOrigins:     []string{"http://localhost:3000"},
 	}))
 	router.GET("/swagger/*", echoSwagger.WrapHandler)

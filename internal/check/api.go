@@ -33,10 +33,11 @@ type permission struct {
 // @Router      /{org}/permission/check [post]
 func (r permission) check(c echo.Context) error {
 	var input entity.Tuple
+	api_key := c.Request().Header.Get("API_KEY")
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input, true)
+	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input, true, api_key)
 	if err != nil {
 		return util.HandleError(err)
 	}

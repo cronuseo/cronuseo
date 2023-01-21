@@ -7,10 +7,11 @@ import (
 
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
 type Service interface {
-	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, isCheck bool) (bool, error)
+	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, isCheck bool, apiKey string) (bool, error)
 	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
 	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions) ([]string, error)
 	CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll) (entity.CheckAllResponse, error)
@@ -31,7 +32,21 @@ func NewService(repo Repository, cache cache.PermissionCache) Service {
 	return service{repo: repo, permissionCache: cache}
 }
 
-func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, isCheck bool) (bool, error) {
+func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, isCheck bool, apiKey string) (bool, error) {
+
+	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
+	if api_key == "" {
+		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
+		if err != nil {
+			return false, err
+		}
+		api_key = orgObject.API_KEY
+		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
+	}
+
+	if apiKey != api_key {
+		return false, &util.UnauthorizedError{}
+	}
 
 	tuple = qualifiedTuple(org, tuple)
 	if isCheck {

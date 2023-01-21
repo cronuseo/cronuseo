@@ -28,11 +28,16 @@ docker exec -ti -e "PGPASSWORD=$DB_PASSWORD" $CONTAINER_ID psql -h $DB_HOST -U $
 
 # generate uuid for organization
 org_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
+# generate api key
+key=$(head -c 32 /dev/urandom | base64)
+
 # create organization
-docker exec -ti -e "PGPASSWORD=$DB_PASSWORD" $CONTAINER_ID psql -h $DB_HOST -U $DB_USERNAME -d $DB_NAME -c "INSERT INTO org(org_key,name,org_id) VALUES('$organization','$organization','$org_id'::uuid);"
+docker exec -ti -e "PGPASSWORD=$DB_PASSWORD" $CONTAINER_ID psql -h $DB_HOST -U $DB_USERNAME -d $DB_NAME -c "INSERT INTO org(org_key,name,org_id, org_api_key) VALUES('$organization','$organization','$org_id'::uuid,'$key');"
 
 # generate uuid for admin user
 user_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
 # create organization
 docker exec -ti -e "PGPASSWORD=$DB_PASSWORD" $CONTAINER_ID psql -h $DB_HOST -U $DB_USERNAME -d $DB_NAME -c "INSERT INTO org_admin_user(user_id,username,password,org_id,is_super) VALUES('$user_id','$username',crypt('$password', gen_salt('bf')),'$org_id'::uuid,'true');"
 
@@ -42,7 +47,7 @@ dir=cronuseo-console
 if [ -d "$dir" -a ! -h "$dir" ]
 then
   echo "$dir exists"
- 
+  cd cronuseo-console
   git pull
 else
   echo "$dir not exists"
@@ -50,6 +55,11 @@ else
   cd cronuseo-console
 fi
 
+echo "NEXTAUTH_SECRET=secret" >> .env
+echo "BASE_API=http://localhost:8080/api/v1" >> .env
+
+echo "NEXTAUTH_SECRET=secret" >> .env.local
+echo "BASE_API=http://localhost:8080/api/v1" >> .env.local
 
 # Change into the console repository directory
 
