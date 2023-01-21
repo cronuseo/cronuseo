@@ -1,4 +1,4 @@
-package permission
+package check
 
 import (
 	"context"
@@ -11,9 +11,7 @@ import (
 )
 
 type Repository interface {
-	CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
 	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
-	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
 	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error)
@@ -27,35 +25,8 @@ type repo struct {
 	db          *sqlx.DB
 }
 
-type KetoClients struct {
-	WriteClient rts.WriteServiceClient
-	ReadClient  rts.ReadServiceClient
-	CheckClient rts.CheckServiceClient
-}
-
 func NewRepository(ketoClients util.KetoClients, db *sqlx.DB) Repository {
 	return repo{writeClient: ketoClients.WriteClient, readClient: ketoClients.ReadClient, checkClient: ketoClients.CheckClient, db: db}
-}
-
-func (r repo) CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
-
-	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
-		RelationTupleDeltas: []*rts.RelationTupleDelta{
-			{
-				Action: rts.RelationTupleDelta_ACTION_INSERT,
-				RelationTuple: &rts.RelationTuple{
-					Namespace: namespace,
-					Object:    tuple.Object,
-					Relation:  tuple.Relation,
-					Subject:   rts.NewSubjectID(tuple.SubjectId),
-				},
-			},
-		},
-	})
-	if err != nil {
-		panic("Encountered error: " + err.Error())
-	}
-	return nil
 }
 
 func (r repo) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
@@ -105,27 +76,6 @@ func (r repo) GetSubjectListByObject(ctx context.Context, org string, namespace 
 		obejcts = append(obejcts, rt.Subject.Ref.(*rts.Subject_Id).Id)
 	}
 	return obejcts, nil
-}
-
-func (r repo) DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
-
-	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
-		RelationTupleDeltas: []*rts.RelationTupleDelta{
-			{
-				Action: rts.RelationTupleDelta_ACTION_DELETE,
-				RelationTuple: &rts.RelationTuple{
-					Namespace: namespace,
-					Object:    tuple.Object,
-					Relation:  tuple.Relation,
-					Subject:   rts.NewSubjectID(tuple.SubjectId),
-				},
-			},
-		},
-	})
-	if err != nil {
-		panic("Encountered error: " + err.Error())
-	}
-	return nil
 }
 
 func (r repo) GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error) {

@@ -3,13 +3,19 @@ package organization
 import (
 	"net/http"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/cronuseo/internal/auth"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
 	res := resource{service}
 	router := r.Group("/organization")
+	config := echojwt.Config{
+		SigningKey: []byte(auth.SecretKey),
+	}
+	router.Use(echojwt.WithConfig(config))
 	router.GET("", res.query)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)

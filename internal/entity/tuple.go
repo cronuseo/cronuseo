@@ -1,9 +1,15 @@
 package entity
 
+import "fmt"
+
 type Tuple struct {
 	SubjectId string `json:"subject"`
 	Relation  string `json:"relation"`
 	Object    string `json:"object"`
+}
+
+func (t Tuple) String() string {
+	return fmt.Sprintf("%s%s%s", t.SubjectId, t.Relation, t.Object)
 }
 
 type CheckRequest struct {

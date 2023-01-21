@@ -23,9 +23,11 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 
 > Note : cronuseo still in the experimental stage. Only tested in the local environemnt.
 
-* ``` git clone https://github.com/shashimalcse/cronuseo ```
-* ``` make run ```
-* Heading to http://localhost:8080/swagger/index.html to continue your cronuseo journey.
+* ``` git clone https://github.com/shashimalcse/cronuseo```
+* ``` docker compose up --build```
+* ``` make run-console```
+* Heading to http://localhost:3000 to continue your c6o journey.
+
 
 > cronuseo uses environment variables for configuration, along with .env file support.
 

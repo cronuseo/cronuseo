@@ -1,4 +1,5 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 SELECT uuid_generate_v4();
 
@@ -70,6 +71,18 @@ CREATE TABLE
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         CONSTRAINT FK_ORG_RESOURCE_PERMISSION FOREIGN KEY(resource_id) REFERENCES ORG_RESOURCE(resource_id)
+    );
+
+CREATE TABLE
+    if not exists ORG_ADMIN_USER(
+        id SERIAL,
+        user_id uuid PRIMARY KEY,
+        username VARCHAR(40) NOT NULL,
+        password CHAR(60) NOT NULL,
+        is_super BOOLEAN NOT NULL,
+        org_id uuid,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
 CREATE OR REPLACE FUNCTION TRIGGER_SET_TIMESTAMP() 

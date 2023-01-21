@@ -12,6 +12,13 @@ definitions:
       name:
         type: string
     type: object
+  auth.AdminUserRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   entity.Action:
     properties:
       action_id:
@@ -1347,6 +1354,67 @@ paths:
           description: Internal Server Error
       tags:
       - Action
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login.
+      parameters:
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.AdminUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Auth
+  /logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Auth
+  /me:
+    get:
+      consumes:
+      - application/json
+      description: GetMe.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Auth
   /organization:
     get:
       description: Get all organizations.
@@ -1463,4 +1531,29 @@ paths:
           description: Internal Server Error
       tags:
       - Organization
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Register.
+      parameters:
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.AdminUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Auth
 swagger: "2.0"

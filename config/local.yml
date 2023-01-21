@@ -3,3 +3,9 @@ jwks: "https://api.asgardeo.io/t/shashimal/oauth2/jwks"
 keto_read: "keto:4466"
 keto_write: "keto:4467"
 api: "api:8080"
+
+organization:
+  config:
+    username: admin
+    password: admin
+    organization: super
