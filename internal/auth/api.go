@@ -6,25 +6,24 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
-	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
-func RegisterHandlers(r *echo.Group, service Service, orgService organization.Service) {
-	res := admin{service: service, orgService: orgService}
-	r.POST("/register", res.register)
-	r.POST("/login", res.login)
-	r.POST("/logout", res.logout)
+func RegisterHandlers(r *echo.Group, service Service) {
+	res := admin{service: service}
+	router := r.Group("/auth")
+	router.POST("/register", res.register)
+	router.POST("/login", res.login)
+	router.POST("/logout", res.logout)
 	config := echojwt.Config{
 		SigningKey: []byte(SecretKey),
 	}
-	r.Use(echojwt.WithConfig(config))
-	r.GET("/me", res.getMe)
+	router.Use(echojwt.WithConfig(config))
+	router.GET("/me", res.getMe)
 }
 
 type admin struct {
-	service    Service
-	orgService organization.Service
+	service Service
 }
 
 // @Description Register.

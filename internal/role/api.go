@@ -4,7 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
+	"github.com/shashimalcse/cronuseo/internal/auth"
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
@@ -12,6 +14,10 @@ import (
 func RegisterHandlers(r *echo.Group, service Service) {
 	res := role{service}
 	router := r.Group("/:org_id/role")
+	config := echojwt.Config{
+		SigningKey: []byte(auth.SecretKey),
+	}
+	router.Use(echojwt.WithConfig(config))
 	router.GET("", res.query)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)

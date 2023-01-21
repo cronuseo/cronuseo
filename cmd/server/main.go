@@ -9,16 +9,17 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/action"
 	"github.com/shashimalcse/cronuseo/internal/auth"
 	"github.com/shashimalcse/cronuseo/internal/cache"
+	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/permission"
 	"github.com/shashimalcse/cronuseo/internal/resource"
 	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/user"
+	"github.com/shashimalcse/cronuseo/internal/util"
 	"google.golang.org/grpc"
 
 	"github.com/jmoiron/sqlx"
-	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
@@ -82,7 +83,7 @@ func main() {
 	}
 	checkClient := rts.NewCheckServiceClient(conn)
 
-	clients := permission.KetoClients{WriteClient: writeClient, ReadClient: readClient, CheckClient: checkClient}
+	clients := util.KetoClients{WriteClient: writeClient, ReadClient: readClient, CheckClient: checkClient}
 
 	// redis client
 	permissionCache := cache.NewRedisCache("localhost:6379", 0, 200)
@@ -92,7 +93,7 @@ func main() {
 
 }
 
-func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClients, permissionCache cache.PermissionCache) *echo.Echo {
+func buildHandler(db *sqlx.DB, cfg *config.Config, clients util.KetoClients, permissionCache cache.PermissionCache) *echo.Echo {
 	router := echo.New()
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
@@ -104,17 +105,15 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients permission.KetoClient
 	rg.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
-	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)), organization.NewService(organization.NewRepository(db)))
-	config := echojwt.Config{
-		SigningKey: []byte(auth.SecretKey),
-	}
-	rg.Use(echojwt.WithConfig(config))
-	// Define the health endpoint
+
+	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
+	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache))
+	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db)))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db)))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
-	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache))
+
 	return router
 }
