@@ -7,6 +7,7 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/entity"
 
 	"github.com/jmoiron/sqlx"
+	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 )
 
 type Repository interface {
@@ -15,17 +16,18 @@ type Repository interface {
 	QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]entity.Role, error)
 	Create(ctx context.Context, org_id string, role entity.Role) error
 	Update(ctx context.Context, org_id string, role entity.Role) error
-	Delete(ctx context.Context, org_id string, id string) error
+	Delete(ctx context.Context, role entity.Role) error
 	ExistByID(ctx context.Context, id string) (bool, error)
 	ExistByKey(ctx context.Context, key string) (bool, error)
 }
 
 type repository struct {
-	db *sqlx.DB
+	db          *sqlx.DB
+	writeClient rts.WriteServiceClient
 }
 
-func NewRepository(db *sqlx.DB) Repository {
-	return repository{db: db}
+func NewRepository(db *sqlx.DB, writeClient rts.WriteServiceClient) Repository {
+	return repository{db: db, writeClient: writeClient}
 }
 
 func (r repository) Get(ctx context.Context, org_id string, id string) (entity.Role, error) {
@@ -89,36 +91,68 @@ func (r repository) Update(ctx context.Context, org_id string, role entity.Role)
 	return nil
 }
 
-func (r repository) Delete(ctx context.Context, org_id string, id string) error {
+func (r repository) Delete(ctx context.Context, role entity.Role) error {
 	tx, err := r.db.DB.Begin()
 
 	if err != nil {
 		return err
 	}
+	// delete permissions
+	{
+		organization := entity.Organization{}
+		err := r.db.Get(&organization, "SELECT * FROM org WHERE org_id = $1", role.OrgID)
+		if err != nil {
+			return err
+		}
+		resources := []entity.Resource{}
+		err = r.db.Select(&resources, "SELECT * FROM org_resource WHERE org_id = $1", role.OrgID)
+		if err != nil {
+			return err
+		}
+		for _, resource := range resources {
+			actions := []entity.Action{}
+			err := r.db.Select(&actions, "SELECT * FROM res_action WHERE resource_id = $1", resource.ID)
+			if err != nil {
+				return err
+			}
+			for _, action := range actions {
+				tuple := entity.Tuple{SubjectId: role.Key, Relation: action.Key, Object: resource.Key}
+				qTuple := qualifiedTuple(organization.Key, tuple)
+				err = r.DeleteTuple(ctx, qTuple)
+				if err != nil {
+					return err
+				}
+			}
+		}
+
+	}
+
+	{
+		stmt, err := tx.Prepare(`DELETE FROM user_role WHERE role_id = $1`)
+
+		if err != nil {
+			return err
+		}
+		defer stmt.Close()
+		_, err = stmt.Exec(role.ID)
+
+		if err != nil {
+			return err
+		}
+	}
+
 	{
 		stmt, err := tx.Prepare("DELETE FROM org_role WHERE org_id = $1 AND role_id = $2")
 		if err != nil {
 			return err
 		}
 		defer stmt.Close()
-		_, err = stmt.Exec(org_id, id)
+		_, err = stmt.Exec(role.OrgID, role.ID)
 		if err != nil {
 			return err
 		}
 	}
-	{
-		stmt, err := tx.Prepare(`DELETE FROM org_role WHERE role_id = $1`)
 
-		if err != nil {
-			return err
-		}
-		defer stmt.Close()
-		_, err = stmt.Exec(id)
-
-		if err != nil {
-			return err
-		}
-	}
 	{
 		err := tx.Commit()
 
@@ -153,4 +187,32 @@ func (r repository) ExistByKey(ctx context.Context, key string) (bool, error) {
 	exists := false
 	err := r.db.QueryRow("SELECT exists (SELECT role_id FROM org_role WHERE role_key = $1)", key).Scan(&exists)
 	return exists, err
+}
+
+func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {
+
+	tuple.Object = org + "/" + tuple.Object
+	tuple.SubjectId = org + "/" + tuple.SubjectId
+	return tuple
+}
+
+func (r repository) DeleteTuple(ctx context.Context, tuple entity.Tuple) error {
+
+	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
+		RelationTupleDeltas: []*rts.RelationTupleDelta{
+			{
+				Action: rts.RelationTupleDelta_ACTION_DELETE,
+				RelationTuple: &rts.RelationTuple{
+					Namespace: "permission",
+					Object:    tuple.Object,
+					Relation:  tuple.Relation,
+					Subject:   rts.NewSubjectID(tuple.SubjectId),
+				},
+			},
+		},
+	})
+	if err != nil {
+		panic("Encountered error: " + err.Error())
+	}
+	return nil
 }

@@ -40,12 +40,12 @@ func (r permission) delete(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input, false)
+	err := r.service.DeleteTuple(context.Background(), c.Param("org"), "permission", input)
 	if err != nil {
 		return util.HandleError(err)
 	}
 
-	return c.JSON(http.StatusOK, allow)
+	return c.JSON(http.StatusOK, "")
 }
 
 // @Description Check by username.

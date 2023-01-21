@@ -103,7 +103,7 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Role, er
 	if err != nil {
 		return Role{}, &util.NotFoundError{Path: "Role"}
 	}
-	if err = s.repo.Delete(ctx, org_id, id); err != nil {
+	if err = s.repo.Delete(ctx, role.Role); err != nil {
 		return Role{}, err
 	}
 	return role, nil
