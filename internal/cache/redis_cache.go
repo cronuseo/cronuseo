@@ -59,3 +59,22 @@ func (c *redisCache) FlushAll(context context.Context) error {
 
 	return nil
 }
+
+func (c *redisCache) SetAPIKey(context context.Context, key string, value string) error {
+
+	client := c.getClient()
+
+	client.Set(context, key, value, c.expire*time.Second)
+
+	return nil
+
+}
+
+func (c *redisCache) GetAPIKey(context context.Context, key string) (string, error) {
+
+	client := c.getClient()
+
+	value, _ := client.Get(context, key).Result()
+
+	return value, nil
+}

@@ -71,10 +71,10 @@ func (r repository) Delete(ctx context.Context, resource_id string, id string) e
 }
 
 func (r repository) Query(ctx context.Context, resource_id string, filter Filter) ([]entity.Action, error) {
-	resources := []entity.Action{}
+	actions := []entity.Action{}
 	name := filter.Name + "%"
-	err := r.db.Select(&resources, "SELECT * FROM res_action WHERE resource_id = $1 AND name LIKE $2 AND id > $3 ORDER BY id LIMIT $4", resource_id, name, filter.Cursor, filter.Limit)
-	return resources, err
+	err := r.db.Select(&actions, "SELECT * FROM res_action WHERE resource_id = $1 AND name LIKE $2 AND id > $3 ORDER BY id LIMIT $4", resource_id, name, filter.Cursor, filter.Limit)
+	return actions, err
 }
 
 func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {

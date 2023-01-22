@@ -7,13 +7,14 @@ import (
 
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
 type Service interface {
-	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, isCheck bool) (bool, error)
-	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
-	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions) ([]string, error)
-	CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll) (entity.CheckAllResponse, error)
+	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error)
+	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error)
+	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions, apiKey string) ([]string, error)
+	CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll, apiKey string) (entity.CheckAllResponse, error)
 	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 }
@@ -31,33 +32,65 @@ func NewService(repo Repository, cache cache.PermissionCache) Service {
 	return service{repo: repo, permissionCache: cache}
 }
 
-func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, isCheck bool) (bool, error) {
+func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error) {
+
+	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
+	if api_key == "" {
+		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
+		if err != nil {
+			return false, err
+		}
+		api_key = orgObject.API_KEY
+		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
+	}
+
+	if apiKey != api_key {
+		return false, &util.UnauthorizedError{}
+	}
 
 	tuple = qualifiedTuple(org, tuple)
-	if isCheck {
-		value, _ := s.permissionCache.Get(ctx, tuple)
-		if value == "true" {
-			return true, nil
-		}
-		if value == "false" {
-			return false, nil
-		}
+	value, _ := s.permissionCache.Get(ctx, tuple)
+	if value == "true" {
+		return true, nil
 	}
+	if value == "false" {
+		return false, nil
+	}
+
 	allow, err := s.repo.CheckTuple(ctx, org, namespace, tuple)
 	if err != nil {
 		return false, err
 	}
 	b := strconv.FormatBool(allow)
-	if isCheck {
-		s.permissionCache.Set(ctx, tuple, b)
-	}
+	s.permissionCache.Set(ctx, tuple, b)
 	return allow, nil
 
 }
 
-func (s service) CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
+func (s service) CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error) {
 
-	roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
+	if api_key == "" {
+		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
+		if err != nil {
+			return false, err
+		}
+		api_key = orgObject.API_KEY
+		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
+	}
+	if apiKey != api_key {
+		return false, &util.UnauthorizedError{}
+	}
+	qTuple := qualifiedTuple(org, tuple)
+	value, _ := s.permissionCache.Get(ctx, qTuple)
+	if value == "true" {
+		return true, nil
+	}
+	if value == "false" {
+		return false, nil
+	}
+
+	roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, qTuple)
 	if err != nil {
 		return false, err
 	}
@@ -65,15 +98,31 @@ func (s service) CheckByUsername(ctx context.Context, org string, namespace stri
 	if err != nil {
 		return false, err
 	}
+	allow := false
 	for _, val := range roles_from_db {
 		if contains(roles_from_keto, val) {
-			return true, nil
+			allow = true
 		}
 	}
-	return false, nil
+	b := strconv.FormatBool(allow)
+	s.permissionCache.Set(ctx, qTuple, b)
+	return allow, nil
 }
 
-func (s service) CheckPermissions(ctx context.Context, org string, namespace string, permissions entity.CheckRequestWithPermissions) ([]string, error) {
+func (s service) CheckPermissions(ctx context.Context, org string, namespace string, permissions entity.CheckRequestWithPermissions, apiKey string) ([]string, error) {
+
+	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
+	if api_key == "" {
+		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
+		if err != nil {
+			return []string{}, err
+		}
+		api_key = orgObject.API_KEY
+		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
+	}
+	if apiKey != api_key {
+		return []string{}, &util.UnauthorizedError{}
+	}
 
 	allowedPermissions := []string{}
 	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, permissions.SubjectId)
@@ -95,7 +144,21 @@ func (s service) CheckPermissions(ctx context.Context, org string, namespace str
 	return allowedPermissions, nil
 }
 
-func (s service) CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll) (entity.CheckAllResponse, error) {
+func (s service) CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll, apiKey string) (entity.CheckAllResponse, error) {
+
+	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
+	if api_key == "" {
+		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
+		if err != nil {
+			return entity.CheckAllResponse{}, err
+		}
+		api_key = orgObject.API_KEY
+		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
+	}
+
+	if apiKey != api_key {
+		return entity.CheckAllResponse{}, &util.UnauthorizedError{}
+	}
 	response := entity.CheckAllResponse{}
 
 	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.SubjectId)
@@ -125,7 +188,6 @@ func (s service) CheckAll(ctx context.Context, org string, namespace string, tup
 
 func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 
-	tuple = qualifiedTuple(org, tuple)
 	objects, err := s.repo.GetObjectListBySubject(ctx, org, namespace, tuple)
 	if err != nil {
 		return []string{}, err
@@ -141,7 +203,6 @@ func (s service) GetObjectListBySubject(ctx context.Context, org string, namespa
 
 func (s service) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
 
-	tuple = qualifiedTuple(org, tuple)
 	subjects, err := s.repo.GetSubjectListByObject(ctx, org, namespace, tuple)
 	if err != nil {
 		return []string{}, err

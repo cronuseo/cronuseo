@@ -16,6 +16,7 @@ type Repository interface {
 	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
 	GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error)
 	GetOrganization(ctx context.Context, id string) (entity.Organization, error)
+	GetOrganizationByKey(ctx context.Context, key string) (entity.Organization, error)
 }
 
 type repo struct {
@@ -87,5 +88,11 @@ func (r repo) GetRolesByUsername(ctx context.Context, org string, username strin
 func (r repo) GetOrganization(ctx context.Context, id string) (entity.Organization, error) {
 	organization := entity.Organization{}
 	err := r.db.Get(&organization, "SELECT * FROM org WHERE org_id = $1", id)
+	return organization, err
+}
+
+func (r repo) GetOrganizationByKey(ctx context.Context, key string) (entity.Organization, error) {
+	organization := entity.Organization{}
+	err := r.db.Get(&organization, "SELECT * FROM org WHERE org_key = $1", key)
 	return organization, err
 }

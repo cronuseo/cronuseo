@@ -42,6 +42,14 @@ func (e *InvalidInputError) Error() string {
 	return "Invalid input."
 }
 
+type UnauthorizedError struct {
+	Message string
+}
+
+func (e *UnauthorizedError) Error() string {
+	return e.Message
+}
+
 func HandleError(err error) *echo.HTTPError {
 	switch e := err.(type) {
 	case *InvalidInputError:
@@ -52,6 +60,8 @@ func HandleError(err error) *echo.HTTPError {
 		return echo.NewHTTPError(http.StatusNotFound, e.Error())
 	case *SystemError:
 		return echo.NewHTTPError(http.StatusInternalServerError, e.Error())
+	case *UnauthorizedError:
+		return echo.NewHTTPError(http.StatusUnauthorized, e.Error())
 	default:
 		return echo.NewHTTPError(http.StatusInternalServerError, "Server Error!")
 	}

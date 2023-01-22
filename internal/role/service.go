@@ -3,6 +3,7 @@ package role
 import (
 	"context"
 
+	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 
@@ -44,11 +45,12 @@ func (m UpdateRoleRequest) Validate() error {
 }
 
 type service struct {
-	repo Repository
+	repo            Repository
+	permissionCache cache.PermissionCache
 }
 
-func NewService(repo Repository) Service {
-	return service{repo: repo}
+func NewService(repo Repository, permissionCache cache.PermissionCache) Service {
+	return service{repo: repo, permissionCache: permissionCache}
 }
 
 func (s service) Get(ctx context.Context, org_id string, id string) (Role, error) {
@@ -103,9 +105,10 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Role, er
 	if err != nil {
 		return Role{}, &util.NotFoundError{Path: "Role"}
 	}
-	if err = s.repo.Delete(ctx, org_id, id); err != nil {
+	if err = s.repo.Delete(ctx, role.Role); err != nil {
 		return Role{}, err
 	}
+	s.permissionCache.FlushAll(ctx)
 	return role, nil
 }
 

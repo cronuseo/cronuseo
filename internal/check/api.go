@@ -14,7 +14,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router := r.Group("/:org/permission/check")
 	router.POST("", res.check)
 	router.POST("/username", res.checkbyusername)
-	router.POST("/actions", res.checkpermissions)
+	router.POST("/multi_actions", res.checkpermissions)
 	router.POST("/multi_resources", res.checkall)
 }
 
@@ -33,10 +33,11 @@ type permission struct {
 // @Router      /{org}/permission/check [post]
 func (r permission) check(c echo.Context) error {
 	var input entity.Tuple
+	api_key := c.Request().Header.Get("API_KEY")
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input, true)
+	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input, api_key)
 	if err != nil {
 		return util.HandleError(err)
 	}
@@ -52,13 +53,14 @@ func (r permission) check(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /{org}/permission/check_by_username [post]
+// @Router      /{org}/permission/check/username [post]
 func (r permission) checkbyusername(c echo.Context) error {
 	var input entity.Tuple
+	api_key := c.Request().Header.Get("API_KEY")
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow, err := r.service.CheckByUsername(context.Background(), c.Param("org"), "permission", input)
+	allow, err := r.service.CheckByUsername(context.Background(), c.Param("org"), "permission", input, api_key)
 	if err != nil {
 		return util.HandleError(err)
 	}
@@ -74,13 +76,14 @@ func (r permission) checkbyusername(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /{org}/permission/check_multi_actions [post]
+// @Router      /{org}/permission/check/multi_actions [post]
 func (r permission) checkpermissions(c echo.Context) error {
 	var input entity.CheckRequestWithPermissions
+	api_key := c.Request().Header.Get("API_KEY")
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow, err := r.service.CheckPermissions(context.Background(), c.Param("org"), "permission", input)
+	allow, err := r.service.CheckPermissions(context.Background(), c.Param("org"), "permission", input, api_key)
 	if err != nil {
 		return util.HandleError(err)
 	}
@@ -96,13 +99,14 @@ func (r permission) checkpermissions(c echo.Context) error {
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
-// @Router      /{org}/permission/check_multi_resources [post]
+// @Router      /{org}/permission/check/multi_resources [post]
 func (r permission) checkall(c echo.Context) error {
 	var input entity.CheckRequestAll
+	api_key := c.Request().Header.Get("API_KEY")
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow, err := r.service.CheckAll(context.Background(), c.Param("org"), "permission", input)
+	allow, err := r.service.CheckAll(context.Background(), c.Param("org"), "permission", input, api_key)
 	if err != nil {
 		return util.HandleError(err)
 	}

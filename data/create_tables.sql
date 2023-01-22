@@ -8,6 +8,7 @@ CREATE TABLE
         id SERIAL,
         org_id uuid PRIMARY KEY,
         org_key VARCHAR(40) NOT NULL,
+        org_api_key VARCHAR(64) NOT NULL,
         name VARCHAR(40) NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -84,6 +85,7 @@ CREATE TABLE
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
 
 CREATE OR REPLACE FUNCTION TRIGGER_SET_TIMESTAMP() 
 RETURNS TRIGGER AS 
