@@ -2,10 +2,15 @@ package main
 
 import (
 	"flag"
-	"log"
 	"net/http"
 	"os"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	_ "github.com/lib/pq"
+	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
+	_ "github.com/shashimalcse/cronuseo/docs"
 	"github.com/shashimalcse/cronuseo/internal/action"
 	"github.com/shashimalcse/cronuseo/internal/auth"
 	"github.com/shashimalcse/cronuseo/internal/cache"
@@ -17,15 +22,10 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/user"
 	"github.com/shashimalcse/cronuseo/internal/util"
-	"google.golang.org/grpc"
-
-	"github.com/jmoiron/sqlx"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-	_ "github.com/lib/pq"
-	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
-	_ "github.com/shashimalcse/cronuseo/docs"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
 )
 
 var Version = "1.0.0"
@@ -49,19 +49,21 @@ var flagConfig = flag.String("config", "./config/local.yml", "path to the config
 // @BasePath /api/v1
 func main() {
 
+	logger := InitializeLogger()
+
 	flag.Parse()
 
 	// Load configurations for db, keto and redis.
 	cfg, err := config.Load(*flagConfig)
 	if err != nil {
-		log.Fatal("error loading config")
+		logger.Fatal("Error while loading config.", zap.String("config_file", flag.Lookup("config").Value.String()))
 		os.Exit(-1)
 	}
 
 	// Connect to database.
 	db, err := sqlx.Connect("postgres", cfg.DSN)
 	if err != nil {
-		log.Fatalln("error connecting database")
+		logger.Fatal("Error while connecting to the database.", zap.String("database_url", cfg.DSN))
 		os.Exit(-1)
 	}
 
@@ -70,21 +72,24 @@ func main() {
 	// Write client.
 	conn, err := grpc.Dial(cfg.KetoWrite, grpc.WithInsecure())
 	if err != nil {
-		panic("Encountered error: " + err.Error())
+		logger.Fatal("Error while creating keto write client", zap.String("write_client_endpoint", cfg.KetoWrite))
+		os.Exit(-1)
 	}
 	writeClient := rts.NewWriteServiceClient(conn)
 
 	// Read client.
 	conn, err = grpc.Dial(cfg.KetoRead, grpc.WithInsecure())
 	if err != nil {
-		panic("Encountered error: " + err.Error())
+		logger.Fatal("Error while creating keto read client", zap.String("read_client_endpoint", cfg.KetoWrite))
+		os.Exit(-1)
 	}
 	readClient := rts.NewReadServiceClient(conn)
 
 	// Check client.
 	conn, err = grpc.Dial(cfg.KetoRead, grpc.WithInsecure())
 	if err != nil {
-		panic("Encountered error: " + err.Error())
+		logger.Fatal("Error while creating keto check client", zap.String("check_client_endpoint", cfg.KetoWrite))
+		os.Exit(-1)
 	}
 	checkClient := rts.NewCheckServiceClient(conn)
 
@@ -92,19 +97,30 @@ func main() {
 	clients := util.KetoClients{
 		WriteClient: writeClient,
 		ReadClient:  readClient,
-		CheckClient: checkClient}
+		CheckClient: checkClient,
+	}
 
 	// Redis client.
-	permissionCache := cache.NewRedisCache("localhost:6379", 0, 200)
+	permissionCache := cache.NewRedisCache(cfg.RedisEndpoint, 0, 200, cfg.RedisPassword)
 
-	e := buildHandler(db, cfg, clients, permissionCache)
+	e := buildHandler(db, cfg, logger, clients, permissionCache)
+	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))
 	e.Logger.Fatal(e.Start(cfg.API))
 
 }
 
 // buildHandler builds the echo router.
-func buildHandler(db *sqlx.DB, cfg *config.Config, clients util.KetoClients, permissionCache cache.PermissionCache) *echo.Echo {
+func buildHandler(
+	db *sqlx.DB, // Database
+	cfg *config.Config, // Config
+	logger *zap.Logger, // Logger
+	clients util.KetoClients, // Keto clients
+	permissionCache cache.PermissionCache, // Redis permission cache
+) *echo.Echo {
+
 	router := echo.New()
+
+	//  Set up CORS.
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"}, // API_KEY is used for permission checking SDKs
@@ -125,7 +141,7 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients util.KetoClients, per
 	// Here we register all the handlers. Each handler handle jwt validation separately.
 	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
 	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache))
-	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache))
+	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache, logger))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
@@ -133,4 +149,20 @@ func buildHandler(db *sqlx.DB, cfg *config.Config, clients util.KetoClients, per
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
 
 	return router
+}
+
+func InitializeLogger() *zap.Logger {
+
+	zap_config := zap.NewProductionEncoderConfig()
+	zap_config.EncodeTime = zapcore.ISO8601TimeEncoder
+	fileEncoder := zapcore.NewJSONEncoder(zap_config)
+	consoleEncoder := zapcore.NewConsoleEncoder(zap_config)
+	logFile, _ := os.OpenFile("text.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	writer := zapcore.AddSync(logFile)
+	defaultLogLevel := zapcore.DebugLevel
+	core := zapcore.NewTee(
+		zapcore.NewCore(fileEncoder, writer, defaultLogLevel),
+		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), defaultLogLevel),
+	)
+	return zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
 }

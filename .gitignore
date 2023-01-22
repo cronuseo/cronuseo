@@ -7,3 +7,4 @@ postgres-data
 keto_0.10.0-alpha.0-macOS_64bit
 cronuseo-console
 .VSCodeCounter
+*.log

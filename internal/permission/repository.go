@@ -10,41 +10,37 @@ import (
 	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 )
 
+var (
+	NAMESPACE = "permission"
+)
+
+// Permission repository handle all keto and database operations.
 type Repository interface {
-	CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
-	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
-	DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error
-	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
-	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
-	GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error)
+	CreateTuple(ctx context.Context, org string, tuple entity.Tuple) error
+	CheckTuple(ctx context.Context, org string, tuple entity.Tuple) (bool, error)
+	DeleteTuple(ctx context.Context, org string, tuple entity.Tuple) error
 	GetOrganization(ctx context.Context, id string) (entity.Organization, error)
 }
 
 type repo struct {
 	writeClient rts.WriteServiceClient
-	readClient  rts.ReadServiceClient
 	checkClient rts.CheckServiceClient
 	db          *sqlx.DB
 }
 
-type KetoClients struct {
-	WriteClient rts.WriteServiceClient
-	ReadClient  rts.ReadServiceClient
-	CheckClient rts.CheckServiceClient
-}
-
 func NewRepository(ketoClients util.KetoClients, db *sqlx.DB) Repository {
-	return repo{writeClient: ketoClients.WriteClient, readClient: ketoClients.ReadClient, checkClient: ketoClients.CheckClient, db: db}
+	return repo{writeClient: ketoClients.WriteClient, checkClient: ketoClients.CheckClient, db: db}
 }
 
-func (r repo) CreateTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
+// Create tuple in keto.
+func (r repo) CreateTuple(ctx context.Context, org string, tuple entity.Tuple) error {
 
 	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
 		RelationTupleDeltas: []*rts.RelationTupleDelta{
 			{
 				Action: rts.RelationTupleDelta_ACTION_INSERT,
 				RelationTuple: &rts.RelationTuple{
-					Namespace: namespace,
+					Namespace: NAMESPACE,
 					Object:    tuple.Object,
 					Relation:  tuple.Relation,
 					Subject:   rts.NewSubjectID(tuple.SubjectId),
@@ -58,10 +54,11 @@ func (r repo) CreateTuple(ctx context.Context, org string, namespace string, tup
 	return nil
 }
 
-func (r repo) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
+// Check tuple in keto.
+func (r repo) CheckTuple(ctx context.Context, org string, tuple entity.Tuple) (bool, error) {
 
 	check, err := r.checkClient.Check(ctx, &rts.CheckRequest{
-		Namespace: namespace,
+		Namespace: NAMESPACE,
 		Object:    tuple.Object,
 		Relation:  tuple.Relation,
 		Subject:   rts.NewSubjectID(tuple.SubjectId),
@@ -69,52 +66,15 @@ func (r repo) CheckTuple(ctx context.Context, org string, namespace string, tupl
 	return check.Allowed, err
 }
 
-func (r repo) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
-
-	res, err := r.readClient.ListRelationTuples(ctx, &rts.ListRelationTuplesRequest{
-		Query: &rts.ListRelationTuplesRequest_Query{
-			Namespace: namespace,
-			Relation:  tuple.Relation,
-			Subject:   rts.NewSubjectID(tuple.SubjectId),
-		},
-	})
-	if err != nil {
-		return []string{}, err
-	}
-	obejcts := []string{}
-	for _, rt := range res.RelationTuples {
-		obejcts = append(obejcts, rt.Object)
-	}
-	return obejcts, nil
-}
-
-func (r repo) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
-
-	res, err := r.readClient.ListRelationTuples(ctx, &rts.ListRelationTuplesRequest{
-		Query: &rts.ListRelationTuplesRequest_Query{
-			Namespace: namespace,
-			Object:    tuple.Object,
-			Relation:  tuple.Relation,
-		},
-	})
-	if err != nil {
-		return []string{}, err
-	}
-	obejcts := []string{}
-	for _, rt := range res.RelationTuples {
-		obejcts = append(obejcts, rt.Subject.Ref.(*rts.Subject_Id).Id)
-	}
-	return obejcts, nil
-}
-
-func (r repo) DeleteTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) error {
+// Delete tuple in keto.
+func (r repo) DeleteTuple(ctx context.Context, org string, tuple entity.Tuple) error {
 
 	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
 		RelationTupleDeltas: []*rts.RelationTupleDelta{
 			{
 				Action: rts.RelationTupleDelta_ACTION_DELETE,
 				RelationTuple: &rts.RelationTuple{
-					Namespace: namespace,
+					Namespace: NAMESPACE,
 					Object:    tuple.Object,
 					Relation:  tuple.Relation,
 					Subject:   rts.NewSubjectID(tuple.SubjectId),
@@ -122,18 +82,10 @@ func (r repo) DeleteTuple(ctx context.Context, org string, namespace string, tup
 			},
 		},
 	})
-	if err != nil {
-		panic("Encountered error: " + err.Error())
-	}
-	return nil
+	return err
 }
 
-func (r repo) GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error) {
-	var roles entity.Roles
-	err := r.db.Select(&roles, "select * from org_role where role_id in (select role_id from user_role where user_id in (select user_id from org_user inner join org on org_user.org_id = org.org_id where org_user.username = $1 AND org.org_key = $2))", username, org)
-	return roles.RoleKeys(), err
-}
-
+// Get organization from database.
 func (r repo) GetOrganization(ctx context.Context, id string) (entity.Organization, error) {
 	organization := entity.Organization{}
 	err := r.db.Get(&organization, "SELECT * FROM org WHERE org_id = $1", id)

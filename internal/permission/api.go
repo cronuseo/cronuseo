@@ -7,45 +7,26 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/cronuseo/internal/auth"
-	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
+
 	res := permission{service}
 	router := r.Group("/:org_id/permission")
+
+	// JWT validation middleware.
 	config := echojwt.Config{
 		SigningKey: []byte(auth.SecretKey),
 	}
 	router.Use(echojwt.WithConfig(config))
+
 	router.POST("/check_actions", res.checkActions)
 	router.PATCH("/update", res.patchPermissions)
 }
 
 type permission struct {
 	service Service
-}
-
-// @Description Delete tuple.
-// @Tags        Permission
-// @Accept      json
-// @Param org path string true "Organization"
-// @Param request body Tuple true "body"
-// @Produce     json
-// @Success     201
-// @failure     400,403,500
-// @Router      /{org}/permission/delete [post]
-func (r permission) delete(c echo.Context) error {
-	var input entity.Tuple
-	if err := c.Bind(&input); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-	}
-	err := r.service.DeleteTuple(context.Background(), c.Param("org"), "permission", input)
-	if err != nil {
-		return util.HandleError(err)
-	}
-
-	return c.JSON(http.StatusOK, "")
 }
 
 // @Description Check by username.
@@ -58,13 +39,16 @@ func (r permission) delete(c echo.Context) error {
 // @failure     400,403,500
 // @Router      /{org_id}/permission/check_actions [post]
 func (r permission) checkActions(c echo.Context) error {
+
 	var input CheckActionsRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	allow := r.service.CheckActions(context.Background(), c.Param("org_id"), "permission", input)
-
-	return c.JSON(http.StatusOK, allow)
+	allow_actions, err := r.service.CheckActions(context.Background(), c.Param("org_id"), input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusOK, allow_actions)
 }
 
 // @Description Patch Permissions.
@@ -77,11 +61,12 @@ func (r permission) checkActions(c echo.Context) error {
 // @failure     400,403,500
 // @Router      /{org_id}/permission/update [patch]
 func (r permission) patchPermissions(c echo.Context) error {
+
 	var input PermissionPatchRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
-	_ = r.service.PatchPermissions(context.Background(), c.Param("org_id"), "permission", input)
+	_ = r.service.PatchPermissions(context.Background(), c.Param("org_id"), input)
 
 	return c.JSON(http.StatusOK, "")
 }
