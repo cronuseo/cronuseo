@@ -3,6 +3,8 @@ jwks: "https://api.asgardeo.io/t/shashimal/oauth2/jwks"
 keto_read: "keto:4466"
 keto_write: "keto:4467"
 api: "api:8080"
+redis_host: "localhost:6379"
+redis_password: "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81"
 
 organization:
   config:

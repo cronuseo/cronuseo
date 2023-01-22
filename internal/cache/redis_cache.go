@@ -9,17 +9,19 @@ import (
 )
 
 type redisCache struct {
-	host   string
-	db     int
-	expire time.Duration
+	host     string
+	db       int
+	expire   time.Duration
+	password string
 }
 
-func NewRedisCache(host string, db int, expire time.Duration) PermissionCache {
+func NewRedisCache(host string, db int, expire time.Duration, password string) PermissionCache {
 
 	return &redisCache{
-		host:   host,
-		db:     db,
-		expire: expire,
+		host:     host,
+		db:       db,
+		expire:   expire,
+		password: password,
 	}
 }
 
@@ -27,7 +29,7 @@ func (c *redisCache) getClient() *redis.Client {
 
 	return redis.NewClient(&redis.Options{
 		Addr:     c.host,
-		Password: "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81",
+		Password: c.password,
 		DB:       c.db,
 	})
 }
