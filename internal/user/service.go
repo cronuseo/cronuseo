@@ -126,7 +126,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 	user.FirstName = req.FirstName
 	user.LastName = req.LastName
 	if err := s.repo.Update(ctx, org_id, user.User); err != nil {
-		s.logger.Error("Error while creating user.",
+		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),
 			zap.String("user_id", id))
 		return User{}, err

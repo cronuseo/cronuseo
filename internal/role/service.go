@@ -75,7 +75,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 
 	// Validate role request.
 	if err := req.Validate(); err != nil {
-		s.logger.Error("Error while validating role request.")
+		s.logger.Error("Error while validating role creation request.")
 		return Role{}, &util.InvalidInputError{Path: "Invalid input for role."}
 	}
 
@@ -116,12 +116,12 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 
 	role, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		s.logger.Debug("Role not exists.")
+		s.logger.Debug("Role not exists.", zap.String("role_id", id))
 		return Role{}, &util.NotFoundError{Path: "Role " + id + " not exists."}
 	}
 	role.Name = req.Name
 	if err := s.repo.Update(ctx, org_id, role.Role); err != nil {
-		s.logger.Error("Error while creating role.",
+		s.logger.Error("Error while updating role.",
 			zap.String("organization_id", org_id),
 			zap.String("role_id", id))
 		return Role{}, err
@@ -134,7 +134,7 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Role, er
 
 	role, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		s.logger.Error("Role not exists.")
+		s.logger.Debug("Role not exists.", zap.String("role_id", id))
 		return role, &util.NotFoundError{Path: "Role " + id + " not exists."}
 	}
 	if err = s.repo.Delete(ctx, role.Role); err != nil {

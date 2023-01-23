@@ -7,10 +7,6 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-const (
-	defaultServerPort = 8080
-)
-
 type Config struct {
 	ServerPort    int    `yaml:"server_port" env:"SERVER_PORT"`
 	DSN           string `yaml:"dsn" env:"DSN,secret"`
@@ -22,6 +18,7 @@ type Config struct {
 	RedisPassword string `yaml:"redis_password" env:"REDIS_PASSWORD"`
 }
 
+// Validate the configuration values.
 func (c Config) Validate() error {
 
 	return validation.ValidateStruct(&c,
@@ -35,11 +32,10 @@ func (c Config) Validate() error {
 	)
 }
 
+// Load the configuration from a file.
 func Load(file string) (*Config, error) {
 
-	c := Config{
-		ServerPort: defaultServerPort,
-	}
+	c := Config{}
 	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err

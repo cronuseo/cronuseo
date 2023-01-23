@@ -10,6 +10,7 @@ import (
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
+
 	res := action{service}
 	router := r.Group("/:resource_id/action")
 	router.GET("", res.query)
@@ -32,6 +33,7 @@ type action struct {
 // @failure     404,500
 // @Router      /{resource_id}/action/{id} [get]
 func (r action) get(c echo.Context) error {
+
 	action, err := r.service.Get(c.Request().Context(), c.Param("resource_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)
@@ -67,6 +69,7 @@ func (r action) query(c echo.Context) error {
 	response := entity.ActionQueryResponse{}
 	maxActionID := -1
 	minActionID := 10000
+	// Create action results and links.
 	for _, action := range actions {
 		newAction := entity.ActionResult{ID: action.ID, Name: action.Name, Key: action.Key,
 			ResourceID: action.ResourceID, CreatedAt: action.CreatedAt, UpdatedAt: action.UpdatedAt}
@@ -84,6 +87,7 @@ func (r action) query(c echo.Context) error {
 	}
 	response.Size = len(actions)
 	response.Limit = filter.Limit
+	// Pagination.
 	if len(actions) > 0 {
 		response.Cursor = maxActionID
 		links := entity.Links{}
@@ -121,6 +125,7 @@ func (r action) query(c echo.Context) error {
 // @failure     400,403,500
 // @Router      /{resource_id}/action [post]
 func (r action) create(c echo.Context) error {
+
 	var input CreateActionRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
@@ -144,6 +149,7 @@ func (r action) create(c echo.Context) error {
 // @failure     400,403,404,500
 // @Router      /{resource_id}/action/{id} [put]
 func (r action) update(c echo.Context) error {
+
 	var input UpdateActionRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
@@ -165,6 +171,7 @@ func (r action) update(c echo.Context) error {
 // @failure     404,500
 // @Router      /{resource_id}/action/{id} [delete]
 func (r action) delete(c echo.Context) error {
+
 	_, err := r.service.Delete(c.Request().Context(), c.Param("resource_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)

@@ -117,7 +117,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 	}
 	resource.Name = req.Name
 	if err := s.repo.Update(ctx, org_id, resource.Resource); err != nil {
-		s.logger.Error("Error while creating resource.",
+		s.logger.Error("Error while updating resource.",
 			zap.String("organization_id", org_id),
 			zap.String("resource_id", id))
 		return Resource{}, err
@@ -139,7 +139,7 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Resource
 			zap.String("resource_id", id))
 		return Resource{}, err
 	}
-	return resource, nil
+	return resource, err
 }
 
 // Pagination filter.
