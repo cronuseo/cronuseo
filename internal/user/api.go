@@ -39,6 +39,7 @@ type resource struct {
 // @failure     404,500
 // @Router      /{org_id}/user/{id} [get]
 func (r resource) get(c echo.Context) error {
+
 	user, err := r.service.Get(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)
@@ -58,6 +59,7 @@ func (r resource) get(c echo.Context) error {
 // @failure     500
 // @Router      /{org_id}/user [get]
 func (r resource) query(c echo.Context) error {
+
 	var filter Filter
 	org_id := c.Param("org_id")
 	if err := c.Bind(&filter); err != nil {
@@ -73,6 +75,8 @@ func (r resource) query(c echo.Context) error {
 	response := entity.UserQueryResponse{}
 	maxUserID := -1
 	minUserID := 10000
+
+	// Create users results response.
 	for _, user := range users {
 		newUser := entity.UserResult{ID: user.ID, Username: user.Username, FirstName: user.FirstName, LastName: user.LastName,
 			OrgID: user.OrgID, CreatedAt: user.CreatedAt, UpdatedAt: user.UpdatedAt}
@@ -89,6 +93,8 @@ func (r resource) query(c echo.Context) error {
 	}
 	response.Size = len(users)
 	response.Limit = filter.Limit
+
+	// Pagination
 	if len(users) > 0 {
 		response.Cursor = maxUserID
 		links := entity.Links{}
@@ -126,6 +132,7 @@ func (r resource) query(c echo.Context) error {
 // @failure     400,403,500
 // @Router      /{org_id}/user [post]
 func (r resource) create(c echo.Context) error {
+
 	var input CreateUserRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
@@ -149,6 +156,7 @@ func (r resource) create(c echo.Context) error {
 // @failure     400,403,404,500
 // @Router      /{org_id}/user/{id} [put]
 func (r resource) update(c echo.Context) error {
+
 	var input UpdateUserRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
@@ -170,6 +178,7 @@ func (r resource) update(c echo.Context) error {
 // @failure     404,500
 // @Router      /{org_id}/user/{id} [delete]
 func (r resource) delete(c echo.Context) error {
+
 	_, err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)
@@ -188,6 +197,7 @@ func (r resource) delete(c echo.Context) error {
 // @failure     400,403,404,500
 // @Router      /{org_id}/user/{id} [patch]
 func (r resource) patch(c echo.Context) error {
+
 	var input UserPatchRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")

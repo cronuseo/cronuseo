@@ -64,7 +64,7 @@ func (s service) Get(ctx context.Context, org_id string, id string) (Resource, e
 			zap.String("resource_id", id))
 		return Resource{}, &util.NotFoundError{Path: "Resource"}
 	}
-	return Resource{resource}, nil
+	return Resource{resource}, err
 }
 
 // Create new resource.
@@ -72,7 +72,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 
 	// Validate resource request.
 	if err := req.Validate(); err != nil {
-		s.logger.Error("Error while validating resource request.")
+		s.logger.Error("Error while validating resource create request.")
 		return Resource{}, &util.InvalidInputError{Path: "Invalid input for resource."}
 	}
 
@@ -109,9 +109,10 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return Resource{}, &util.InvalidInputError{Path: "Invalid input for resource."}
 	}
 
+	// Get resource.
 	resource, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		s.logger.Debug("Resource not exists.")
+		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
 		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
 	}
 	resource.Name = req.Name
@@ -129,8 +130,8 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Resource
 
 	resource, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		s.logger.Error("Resource not exists.")
-		return resource, &util.NotFoundError{Path: "Resource " + id + " not exists."}
+		s.logger.Error("Resource not exists.", zap.String("resource_id", id))
+		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
 	}
 	if err = s.repo.Delete(ctx, org_id, id); err != nil {
 		s.logger.Error("Error while deleting resource.",

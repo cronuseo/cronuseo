@@ -143,6 +143,7 @@ func (s service) Delete(ctx context.Context, org_id string, id string) (Role, er
 			zap.String("role_id", id))
 		return Role{}, err
 	}
+	// Here we are flushing the cache after every patch request. TODO: Need to find a better way to do this.
 	s.permissionCache.FlushAll(ctx)
 	return role, err
 }

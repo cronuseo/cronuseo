@@ -6,6 +6,7 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
+	"go.uber.org/zap"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -32,6 +33,7 @@ type CreateUserRequest struct {
 }
 
 func (m CreateUserRequest) Validate() error {
+
 	return validation.ValidateStruct(&m,
 		validation.Field(&m.Username, validation.Required),
 	)
@@ -49,33 +51,46 @@ func (m UpdateUserRequest) Validate() error {
 type service struct {
 	repo            Repository
 	permissionCache cache.PermissionCache
+	logger          *zap.Logger
 }
 
-func NewService(repo Repository, permissionCache cache.PermissionCache) Service {
+func NewService(repo Repository, permissionCache cache.PermissionCache, logger *zap.Logger) Service {
+
 	return service{repo: repo, permissionCache: permissionCache}
 }
 
+// Get user by id.
 func (s service) Get(ctx context.Context, org_id string, id string) (User, error) {
+
 	user, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
+		s.logger.Error("Error while getting the user.",
+			zap.String("organization_id", org_id),
+			zap.String("user_id", id))
 		return User{}, &util.NotFoundError{Path: "User"}
 	}
-	return User{user}, nil
+	return User{user}, err
 }
 
+// Create new user.
 func (s service) Create(ctx context.Context, org_id string, req CreateUserRequest) (User, error) {
 
+	// Validate user request.
 	if err := req.Validate(); err != nil {
-		return User{}, &util.InvalidInputError{}
+		s.logger.Error("Error while validating user create request.")
+		return User{}, &util.InvalidInputError{Path: "Invalid input for user."}
 	}
 
-	//check organization exists
+	// Check user already exists.
 	exists, _ := s.repo.ExistByKey(ctx, req.Username)
 	if exists {
-		return User{}, &util.AlreadyExistsError{Path: "User"}
-	}
+		s.logger.Debug("User already exists.")
+		return User{}, &util.AlreadyExistsError{Path: "User : " + req.Username + " already exists."}
 
+	}
+	// Generate user id.
 	id := entity.GenerateID()
+
 	err := s.repo.Create(ctx, org_id, entity.User{
 		ID:        id,
 		Username:  req.Username,
@@ -83,58 +98,83 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		LastName:  req.LastName,
 		Roles:     req.Roles,
 	})
+
 	if err != nil {
+		s.logger.Error("Error while creating user.",
+			zap.String("organization_id", org_id))
 		return User{}, err
 	}
-
 	return s.Get(ctx, org_id, id)
 }
 
+// Update user.
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateUserRequest) (User, error) {
+
+	// Validate user request.
 	if err := req.Validate(); err != nil {
-		return User{}, &util.InvalidInputError{}
+		s.logger.Error("Error while validating user create request.")
+		return User{}, &util.InvalidInputError{Path: "Invalid input for user."}
 	}
 
+	// Get user.
 	user, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return user, &util.NotFoundError{Path: "User"}
+		s.logger.Debug("User not exists.", zap.String("user_id", id))
+		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
 	}
+
 	user.FirstName = req.FirstName
 	user.LastName = req.LastName
 	if err := s.repo.Update(ctx, org_id, user.User); err != nil {
-		return user, err
-	}
-	return user, nil
-}
-
-func (s service) Delete(ctx context.Context, org_id string, id string) (User, error) {
-	user, err := s.Get(ctx, org_id, id)
-	if err != nil {
-		return User{}, &util.NotFoundError{Path: "User"}
-	}
-	if err = s.repo.Delete(ctx, org_id, id); err != nil {
+		s.logger.Error("Error while creating user.",
+			zap.String("organization_id", org_id),
+			zap.String("user_id", id))
 		return User{}, err
 	}
+	return user, err
+}
+
+// Delete user.
+func (s service) Delete(ctx context.Context, org_id string, id string) (User, error) {
+
+	user, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Error("User not exists.", zap.String("user_id", id))
+		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
+
+	}
+	if err = s.repo.Delete(ctx, org_id, id); err != nil {
+		s.logger.Error("Error while deleting user.",
+			zap.String("organization_id", org_id),
+			zap.String("user_id", id))
+		return User{}, err
+	}
+	// Here we are flushing the cache after every patch request. TODO: Need to find a better way to do this.
 	s.permissionCache.FlushAll(ctx)
 	return user, nil
 }
 
+// Pagination filter.
 type Filter struct {
 	Cursor int    `json:"cursor" query:"cursor"`
 	Limit  int    `json:"limit" query:"limit"`
 	Name   string `json:"name" query:"name"`
 }
 
+// Get all user.
 func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]User, error) {
+
 	items, err := s.repo.Query(ctx, org_id, filter)
 	if err != nil {
-		return nil, err
+		s.logger.Error("Error while retrieving all users.",
+			zap.String("organization_id", org_id))
+		return []User{}, err
 	}
 	result := []User{}
 	for _, item := range items {
 		result = append(result, User{item})
 	}
-	return result, nil
+	return result, err
 }
 
 type UserPatchRequest struct {
@@ -151,13 +191,21 @@ type Value struct {
 	Value string `json:"value"`
 }
 
+// Patch user. mainly patch user roles.
 func (s service) Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error) {
+
 	user, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return user, &util.NotFoundError{Path: "User"}
+		s.logger.Error("User not exists.", zap.String("user_id", id))
+		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
+
 	}
 	if err := s.repo.Patch(ctx, org_id, id, req); err != nil {
-		return user, err
+		s.logger.Error("Error while patching user.",
+			zap.String("organization_id", org_id),
+			zap.String("user_id", id),
+		)
+		return User{}, err
 	}
 	s.permissionCache.FlushAll(ctx)
 	return user, nil
