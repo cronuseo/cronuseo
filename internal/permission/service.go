@@ -112,7 +112,7 @@ func (s service) PatchPermissions(ctx context.Context, org_id string, req Permis
 					tuple := entity.Tuple{Object: permission.Resource, Relation: permission.Action, SubjectId: permission.Role}
 					exists, err := s.CheckTuple(ctx, org.Key, tuple)
 					if exists {
-						s.logger.Info("Tuple is already existed in keto. Hence skipping the tuple creation.",
+						s.logger.Debug("Tuple is already existed in keto. Hence skipping the tuple creation.",
 							zap.String("subject", tuple.SubjectId),
 							zap.String("object", tuple.Object),
 							zap.String("relation", tuple.Relation),
@@ -133,7 +133,7 @@ func (s service) PatchPermissions(ctx context.Context, org_id string, req Permis
 					tuple := entity.Tuple{Object: permission.Resource, Relation: permission.Action, SubjectId: permission.Role}
 					exists, err := s.CheckTuple(ctx, org.Key, tuple)
 					if !exists {
-						s.logger.Info("Tuple is not exists in keto. Hence skipping the tuple deletion.",
+						s.logger.Debug("Tuple is not exists in keto. Hence skipping the tuple deletion.",
 							zap.String("subject", tuple.SubjectId),
 							zap.String("object", tuple.Object),
 							zap.String("relation", tuple.Relation),

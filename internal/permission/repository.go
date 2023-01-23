@@ -29,7 +29,12 @@ type repo struct {
 }
 
 func NewRepository(ketoClients util.KetoClients, db *sqlx.DB) Repository {
-	return repo{writeClient: ketoClients.WriteClient, checkClient: ketoClients.CheckClient, db: db}
+
+	return repo{
+		writeClient: ketoClients.WriteClient,
+		checkClient: ketoClients.CheckClient,
+		db:          db,
+	}
 }
 
 // Create tuple in keto.
@@ -48,10 +53,7 @@ func (r repo) CreateTuple(ctx context.Context, org string, tuple entity.Tuple) e
 			},
 		},
 	})
-	if err != nil {
-		panic("Encountered error: " + err.Error())
-	}
-	return nil
+	return err
 }
 
 // Check tuple in keto.
@@ -87,6 +89,7 @@ func (r repo) DeleteTuple(ctx context.Context, org string, tuple entity.Tuple) e
 
 // Get organization from database.
 func (r repo) GetOrganization(ctx context.Context, id string) (entity.Organization, error) {
+
 	organization := entity.Organization{}
 	err := r.db.Get(&organization, "SELECT * FROM org WHERE org_id = $1", id)
 	return organization, err
