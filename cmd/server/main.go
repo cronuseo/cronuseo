@@ -126,6 +126,10 @@ func buildHandler(
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"}, // API_KEY is used for permission checking SDKs
 		AllowOrigins:     []string{"http://localhost:3000"},
 	}))
+	// Echo logger middleware.
+	router.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+		Format: "[${time_rfc3339}]; method=${method}; uri=${uri}; status=${status};\n",
+	}))
 
 	// Swagger endpoint.
 	router.GET("/swagger/*", echoSwagger.WrapHandler)
