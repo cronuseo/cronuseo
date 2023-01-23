@@ -144,7 +144,7 @@ func buildHandler(
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache, logger))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache))
-	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db)))
+	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db), logger))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
 

@@ -40,10 +40,17 @@ func NewService(repo Repository, cache cache.PermissionCache, logger *zap.Logger
 // Create tuple in keto.
 func (s service) CreateTuple(ctx context.Context, org string, tuple entity.Tuple) error {
 
+	s.logger.Debug("Started deleting tuple with keto.",
+		zap.String("organization", org),
+		zap.String("subject", tuple.SubjectId),
+		zap.String("object", tuple.Object),
+		zap.String("relation", tuple.Relation),
+	)
 	qTuple := qualifiedTuple(org, tuple)
 	err := s.repo.CreateTuple(ctx, org, qTuple)
 	if err != nil {
 		s.logger.Error("Error while creating tuple with keto.",
+			zap.String("organization", org),
 			zap.String("subject", tuple.SubjectId),
 			zap.String("object", tuple.Object),
 			zap.String("relation", tuple.Relation),
@@ -55,27 +62,40 @@ func (s service) CreateTuple(ctx context.Context, org string, tuple entity.Tuple
 // Check tuple in keto.
 func (s service) CheckTuple(ctx context.Context, org string, tuple entity.Tuple) (bool, error) {
 
+	s.logger.Debug("Started checking tuple with keto.",
+		zap.String("organization", org),
+		zap.String("subject", tuple.SubjectId),
+		zap.String("object", tuple.Object),
+		zap.String("relation", tuple.Relation),
+	)
 	qTuple := qualifiedTuple(org, tuple)
 	allow, err := s.repo.CheckTuple(ctx, org, qTuple)
 	if err != nil {
 		s.logger.Error("Error while checking tuple with keto.",
+			zap.String("organization", org),
 			zap.String("subject", tuple.SubjectId),
 			zap.String("object", tuple.Object),
 			zap.String("relation", tuple.Relation),
 		)
-		return false, err
 	}
-	return allow, nil
+	return allow, err
 
 }
 
 // Delete tuple in keto.
 func (s service) DeleteTuple(ctx context.Context, org string, tuple entity.Tuple) error {
 
+	s.logger.Debug("Started deleting tuple with keto.",
+		zap.String("organization", org),
+		zap.String("subject", tuple.SubjectId),
+		zap.String("object", tuple.Object),
+		zap.String("relation", tuple.Relation),
+	)
 	qTuple := qualifiedTuple(org, tuple)
 	err := s.repo.DeleteTuple(ctx, org, qTuple)
 	if err != nil {
 		s.logger.Error("Error while deleting tuple with keto.",
+			zap.String("organization", org),
 			zap.String("subject", tuple.SubjectId),
 			zap.String("object", tuple.Object),
 			zap.String("relation", tuple.Relation),
@@ -99,7 +119,7 @@ func (s service) PatchPermissions(ctx context.Context, org_id string, req Permis
 	org, err := s.repo.GetOrganization(ctx, org_id)
 	if err != nil {
 		s.logger.Error("Error while getting organization from database.",
-			zap.String("organization_id", org_id),
+			zap.String("organization", org_id),
 		)
 		return err
 	}
@@ -112,12 +132,13 @@ func (s service) PatchPermissions(ctx context.Context, org_id string, req Permis
 					tuple := entity.Tuple{Object: permission.Resource, Relation: permission.Action, SubjectId: permission.Role}
 					exists, err := s.CheckTuple(ctx, org.Key, tuple)
 					if exists {
-						s.logger.Debug("Tuple is already existed in keto. Hence skipping the tuple creation.",
+						s.logger.Error("Tuple is already existed in keto. Hence skipping the tuple creation.",
+							zap.String("organization", org.Key),
 							zap.String("subject", tuple.SubjectId),
 							zap.String("object", tuple.Object),
 							zap.String("relation", tuple.Relation),
 						)
-						continue
+						return &util.AlreadyExistsError{Path: "Tuple = subject : " + tuple.SubjectId + " object : " + tuple.Object + " relation : " + tuple.Relation + ""}
 					}
 					if err != nil {
 						return err
@@ -133,12 +154,13 @@ func (s service) PatchPermissions(ctx context.Context, org_id string, req Permis
 					tuple := entity.Tuple{Object: permission.Resource, Relation: permission.Action, SubjectId: permission.Role}
 					exists, err := s.CheckTuple(ctx, org.Key, tuple)
 					if !exists {
-						s.logger.Debug("Tuple is not exists in keto. Hence skipping the tuple deletion.",
+						s.logger.Error("Tuple is not exists in keto. Hence skipping the tuple deletion.",
+							zap.String("organization", org.Key),
 							zap.String("subject", tuple.SubjectId),
 							zap.String("object", tuple.Object),
 							zap.String("relation", tuple.Relation),
 						)
-						continue
+						return &util.NotFoundError{Path: "Tuple = subject : " + tuple.SubjectId + " object : " + tuple.Object + " relation : " + tuple.Relation + ""}
 					}
 					if err != nil {
 						return err
@@ -170,14 +192,14 @@ func (s service) CheckActions(ctx context.Context, org_id string, request CheckA
 		s.logger.Error("Error while getting organization from database.",
 			zap.String("organization_id", org_id),
 		)
-		return []string{}, err
+		return []string{}, &util.NotFoundError{Path: "Organization"}
 	}
 	allowed_actions := []string{}
 	for _, action := range request.Actions {
 		tuple := entity.Tuple{Object: request.Resource, Relation: action, SubjectId: request.Role}
 		bool, err := s.CheckTuple(ctx, org.Key, tuple)
 		if err != nil {
-			return []string{}, &util.SystemError{}
+			return []string{}, &util.NotFoundError{Path: "Tuple  = role : " + request.Role + " resource : " + request.Resource + " action : " + action}
 		}
 		if bool {
 			allowed_actions = append(allowed_actions, action)
