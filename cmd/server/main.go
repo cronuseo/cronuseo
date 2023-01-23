@@ -128,7 +128,7 @@ func buildHandler(
 	}))
 	// Echo logger middleware.
 	router.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: "[${time_rfc3339}]; method=${method}; uri=${uri}; status=${status};\n",
+		Format: "${time_rfc3339}; method=${method}; uri=${uri}; status=${status};\n",
 	}))
 
 	// Swagger endpoint.
@@ -149,7 +149,7 @@ func buildHandler(
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db)))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db), logger))
-	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache))
+	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache, logger))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db)))
 
 	return router

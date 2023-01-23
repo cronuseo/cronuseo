@@ -59,7 +59,7 @@ func (s service) Get(ctx context.Context, org_id string, id string) (Resource, e
 
 	resource, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
-		s.logger.Error("Error while getting resource.",
+		s.logger.Error("Error while getting the resource.",
 			zap.String("organization_id", org_id),
 			zap.String("resource_id", id))
 		return Resource{}, &util.NotFoundError{Path: "Resource"}
@@ -79,7 +79,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 	// Check resource already exists.
 	exists, _ := s.repo.ExistByKey(ctx, req.Key)
 	if exists {
-		s.logger.Error("Resource already exists.")
+		s.logger.Debug("Resource already exists.")
 		return Resource{}, &util.AlreadyExistsError{Path: "Resource : " + req.Key + " already exists."}
 	}
 
@@ -111,8 +111,8 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 
 	resource, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		s.logger.Error("Resource not exists.")
-		return resource, &util.NotFoundError{Path: "Resource " + id + " not exists."}
+		s.logger.Debug("Resource not exists.")
+		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
 	}
 	resource.Name = req.Name
 	if err := s.repo.Update(ctx, org_id, resource.Resource); err != nil {
@@ -121,7 +121,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 			zap.String("resource_id", id))
 		return Resource{}, err
 	}
-	return resource, nil
+	return resource, err
 }
 
 // Delete resource.
@@ -156,11 +156,11 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Res
 	if err != nil {
 		s.logger.Error("Error while retrieving all resources.",
 			zap.String("organization_id", org_id))
-		return result, err
+		return []Resource{}, err
 	}
 
 	for _, item := range items {
 		result = append(result, Resource{item})
 	}
-	return result, nil
+	return result, err
 }

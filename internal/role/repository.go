@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/permission"
 
 	"github.com/jmoiron/sqlx"
 	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
@@ -27,16 +28,21 @@ type repository struct {
 }
 
 func NewRepository(db *sqlx.DB, writeClient rts.WriteServiceClient) Repository {
+
 	return repository{db: db, writeClient: writeClient}
 }
 
+// Get role by id.
 func (r repository) Get(ctx context.Context, org_id string, id string) (entity.Role, error) {
+
 	role := entity.Role{}
 	err := r.db.Get(&role, "SELECT * FROM org_role WHERE org_id = $1 AND role_id = $2", org_id, id)
 	return role, err
 }
 
+// Create new role.
 func (r repository) Create(ctx context.Context, org_id string, role entity.Role) error {
+
 	tx, err := r.db.DB.Begin()
 
 	if err != nil {
@@ -53,7 +59,7 @@ func (r repository) Create(ctx context.Context, org_id string, role entity.Role)
 			return err
 		}
 	}
-	// add users
+	// Assign users to the role.
 	if len(role.Users) > 0 {
 		stmt, err := tx.Prepare("INSERT INTO user_role(user_id,role_id) VALUES($1, $2)")
 		if err != nil {
@@ -79,7 +85,9 @@ func (r repository) Create(ctx context.Context, org_id string, role entity.Role)
 
 }
 
+// Update role.
 func (r repository) Update(ctx context.Context, org_id string, role entity.Role) error {
+
 	stmt, err := r.db.Prepare("UPDATE org_role SET name = $1 HERE org_id = $2 AND role_id = $3")
 	if err != nil {
 		return err
@@ -91,13 +99,15 @@ func (r repository) Update(ctx context.Context, org_id string, role entity.Role)
 	return nil
 }
 
+// Delete role.
 func (r repository) Delete(ctx context.Context, role entity.Role) error {
+
 	tx, err := r.db.DB.Begin()
 
 	if err != nil {
 		return err
 	}
-	// delete permissions
+	// Delete all permissions of the role.
 	{
 		organization := entity.Organization{}
 		err := r.db.Get(&organization, "SELECT * FROM org WHERE org_id = $1", role.OrgID)
@@ -127,6 +137,7 @@ func (r repository) Delete(ctx context.Context, role entity.Role) error {
 
 	}
 
+	// Delete all users relationship of the role.
 	{
 		stmt, err := tx.Prepare(`DELETE FROM user_role WHERE role_id = $1`)
 
@@ -141,6 +152,7 @@ func (r repository) Delete(ctx context.Context, role entity.Role) error {
 		}
 	}
 
+	// Delete the role.
 	{
 		stmt, err := tx.Prepare("DELETE FROM org_role WHERE org_id = $1 AND role_id = $2")
 		if err != nil {
@@ -163,13 +175,16 @@ func (r repository) Delete(ctx context.Context, role entity.Role) error {
 	return nil
 }
 
+// Query roles.
 func (r repository) Query(ctx context.Context, org_id string, filter Filter) ([]entity.Role, error) {
+
 	roles := []entity.Role{}
 	name := filter.Name + "%"
 	err := r.db.Select(&roles, "SELECT * FROM org_role WHERE org_id = $1 AND name LIKE $2 AND id > $3 ORDER BY id LIMIT $4", org_id, name, filter.Cursor, filter.Limit)
 	return roles, err
 }
 
+// Query roles by user id.
 func (r repository) QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]entity.Role, error) {
 	roles := []entity.Role{}
 	name := filter.Name + "%"
@@ -177,12 +192,14 @@ func (r repository) QueryByUserID(ctx context.Context, org_id string, user_id st
 	return roles, err
 }
 
+// Check if role exists by id.
 func (r repository) ExistByID(ctx context.Context, id string) (bool, error) {
 	exists := false
 	err := r.db.QueryRow("SELECT exists (SELECT role_id FROM org_role WHERE role_id = $1)", id).Scan(&exists)
 	return exists, err
 }
 
+// Check if role exists by key.
 func (r repository) ExistByKey(ctx context.Context, key string) (bool, error) {
 	exists := false
 	err := r.db.QueryRow("SELECT exists (SELECT role_id FROM org_role WHERE role_key = $1)", key).Scan(&exists)
@@ -196,6 +213,8 @@ func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {
 	return tuple
 }
 
+// When role is deleted, we need to delete all permissions that associated with the role.
+// Here we use keto to delete the permissions.
 func (r repository) DeleteTuple(ctx context.Context, tuple entity.Tuple) error {
 
 	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
@@ -203,7 +222,7 @@ func (r repository) DeleteTuple(ctx context.Context, tuple entity.Tuple) error {
 			{
 				Action: rts.RelationTupleDelta_ACTION_DELETE,
 				RelationTuple: &rts.RelationTuple{
-					Namespace: "permission",
+					Namespace: permission.NAMESPACE,
 					Object:    tuple.Object,
 					Relation:  tuple.Relation,
 					Subject:   rts.NewSubjectID(tuple.SubjectId),
@@ -211,8 +230,5 @@ func (r repository) DeleteTuple(ctx context.Context, tuple entity.Tuple) error {
 			},
 		},
 	})
-	if err != nil {
-		panic("Encountered error: " + err.Error())
-	}
-	return nil
+	return err
 }
