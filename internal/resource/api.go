@@ -38,6 +38,7 @@ type resource struct {
 // @failure     404,500
 // @Router      /{org_id}/resource/{id} [get]
 func (r resource) get(c echo.Context) error {
+
 	resource, err := r.service.Get(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)
@@ -57,6 +58,7 @@ func (r resource) get(c echo.Context) error {
 // @failure     500
 // @Router      /{org_id}/resource [get]
 func (r resource) query(c echo.Context) error {
+
 	org_id := c.Param("org_id")
 	var filter Filter
 	if err := c.Bind(&filter); err != nil {
@@ -65,6 +67,7 @@ func (r resource) query(c echo.Context) error {
 	if filter.Limit == 0 {
 		filter.Limit = 10
 	}
+	// Get all resources.
 	resources, err := r.service.Query(c.Request().Context(), org_id, filter)
 	if err != nil {
 		return util.HandleError(err)
@@ -72,6 +75,8 @@ func (r resource) query(c echo.Context) error {
 	response := entity.ResourceQueryResponse{}
 	maxResourceID := -1
 	minResourceID := 10000
+
+	// Create resource results for the response.
 	for _, resource := range resources {
 		newResource := entity.ResourceResult{ID: resource.ID, Name: resource.Name, Key: resource.Key,
 			OrgID: resource.OrgID, CreatedAt: resource.CreatedAt, UpdatedAt: resource.UpdatedAt}
@@ -87,6 +92,7 @@ func (r resource) query(c echo.Context) error {
 		}
 
 	}
+	// Pagination
 	response.Size = len(resources)
 	response.Limit = filter.Limit
 	if len(resources) > 0 {
@@ -126,6 +132,7 @@ func (r resource) query(c echo.Context) error {
 // @failure     400,403,500
 // @Router      /{org_id}/resource [post]
 func (r resource) create(c echo.Context) error {
+
 	var input CreateResourceRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
@@ -149,6 +156,7 @@ func (r resource) create(c echo.Context) error {
 // @failure     400,403,404,500
 // @Router      /{org_id}/resource/{id} [put]
 func (r resource) update(c echo.Context) error {
+
 	var input UpdateResourceRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
@@ -170,6 +178,7 @@ func (r resource) update(c echo.Context) error {
 // @failure     404,500
 // @Router      /{org_id}/resource/{id} [delete]
 func (r resource) delete(c echo.Context) error {
+
 	_, err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)

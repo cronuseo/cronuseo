@@ -12,6 +12,7 @@ import (
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
+
 	res := role{service}
 	router := r.Group("/:org_id/role")
 	config := echojwt.Config{
@@ -39,6 +40,7 @@ type role struct {
 // @failure     404,500
 // @Router      /{org_id}/role/{id} [get]
 func (r role) get(c echo.Context) error {
+
 	role, err := r.service.Get(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)
@@ -58,6 +60,7 @@ func (r role) get(c echo.Context) error {
 // @failure     500
 // @Router      /{org_id}/role [get]
 func (r role) query(c echo.Context) error {
+
 	var filter Filter
 	org_id := c.Param("org_id")
 	if err := c.Bind(&filter); err != nil {
@@ -66,6 +69,7 @@ func (r role) query(c echo.Context) error {
 	if filter.Limit == 0 {
 		filter.Limit = 10
 	}
+	// Get all roles.
 	roles, err := r.service.Query(c.Request().Context(), org_id, filter)
 	if err != nil {
 		return util.HandleError(err)
@@ -73,6 +77,7 @@ func (r role) query(c echo.Context) error {
 	response := entity.RoleQueryResponse{}
 	maxRoleID := -1
 	minRoleID := 10000
+	// Create roles results for the response.
 	for _, role := range roles {
 		newAction := entity.RoleResult{ID: role.ID, Name: role.Name, Key: role.Key,
 			OrgID: role.OrgID, CreatedAt: role.CreatedAt, UpdatedAt: role.UpdatedAt}
@@ -88,6 +93,7 @@ func (r role) query(c echo.Context) error {
 		}
 
 	}
+	// Pagination
 	response.Size = len(roles)
 	response.Limit = filter.Limit
 	if len(roles) > 0 {
@@ -127,6 +133,7 @@ func (r role) query(c echo.Context) error {
 // @failure     400,403,500
 // @Router      /{org_id}/role [post]
 func (r role) create(c echo.Context) error {
+
 	var input CreateRoleRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
@@ -150,6 +157,7 @@ func (r role) create(c echo.Context) error {
 // @failure     400,403,404,500
 // @Router      /{org_id}/role/{id} [put]
 func (r role) update(c echo.Context) error {
+
 	var input UpdateRoleRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
@@ -171,6 +179,7 @@ func (r role) update(c echo.Context) error {
 // @failure     404,500
 // @Router      /{org_id}/role/{id} [delete]
 func (r role) delete(c echo.Context) error {
+
 	_, err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)
@@ -187,6 +196,7 @@ func (r role) delete(c echo.Context) error {
 // @failure     500
 // @Router      /{org_id}/role/user/{user_id} [get]
 func (r role) QueryByUserID(c echo.Context) error {
+
 	var filter Filter
 	org_id := c.Param("org_id")
 	user_id := c.Param("user_id")

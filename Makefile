@@ -15,7 +15,7 @@ help: ## help information about make commands
 
 .PHONY: run
 run: ## run the c6o server
-	go run ${LDFLAGS} cmd/server/main.go
+	go run ${LDFLAGS} cmd/server/main.go -config ${CONFIG_FILE}
 
 .PHONY: run-restart
 run-restart: ## restart the c6o server

@@ -2,10 +2,10 @@ package resource
 
 import (
 	"context"
-	"log"
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
+	"go.uber.org/zap"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
@@ -29,6 +29,7 @@ type CreateResourceRequest struct {
 }
 
 func (m CreateResourceRequest) Validate() error {
+
 	return validation.ValidateStruct(&m,
 		validation.Field(&m.Key, validation.Required),
 	)
@@ -39,96 +40,128 @@ type UpdateResourceRequest struct {
 }
 
 func (m UpdateResourceRequest) Validate() error {
+
 	return validation.ValidateStruct(&m)
 }
 
 type service struct {
-	repo Repository
+	repo   Repository
+	logger *zap.Logger
 }
 
-func NewService(repo Repository) Service {
-	return service{repo: repo}
+func NewService(repo Repository, logger *zap.Logger) Service {
+
+	return service{repo: repo, logger: logger}
 }
 
+// Get resource by id.
 func (s service) Get(ctx context.Context, org_id string, id string) (Resource, error) {
+
 	resource, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
-		return Resource{}, &util.NotFoundError{Path: "Organization"}
+		s.logger.Error("Error while getting the resource.",
+			zap.String("organization_id", org_id),
+			zap.String("resource_id", id))
+		return Resource{}, &util.NotFoundError{Path: "Resource"}
 	}
-	return Resource{resource}, nil
+	return Resource{resource}, err
 }
 
+// Create new resource.
 func (s service) Create(ctx context.Context, org_id string, req CreateResourceRequest) (Resource, error) {
 
-	//validate organization
+	// Validate resource request.
 	if err := req.Validate(); err != nil {
-		return Resource{}, &util.InvalidInputError{}
+		s.logger.Error("Error while validating resource create request.")
+		return Resource{}, &util.InvalidInputError{Path: "Invalid input for resource."}
 	}
 
-	//check organization exists
+	// Check resource already exists.
 	exists, _ := s.repo.ExistByKey(ctx, req.Key)
 	if exists {
-		return Resource{}, &util.AlreadyExistsError{Path: "Resource"}
+		s.logger.Debug("Resource already exists.")
+		return Resource{}, &util.AlreadyExistsError{Path: "Resource : " + req.Key + " already exists."}
 	}
 
+	// Generate resource id.
 	id := entity.GenerateID()
+
 	err := s.repo.Create(ctx, org_id, entity.Resource{
 		ID:   id,
 		Key:  req.Key,
 		Name: req.Name,
 	})
 	if err != nil {
-		log.Println(err.Error())
+		s.logger.Error("Error while creating resource.",
+			zap.String("organization_id", org_id),
+			zap.String("resource key", req.Key))
 		return Resource{}, err
 	}
 	return s.Get(ctx, org_id, id)
 }
 
+// Update resource.
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateResourceRequest) (Resource, error) {
+
+	// Validate resource request.
 	if err := req.Validate(); err != nil {
-		return Resource{}, &util.InvalidInputError{}
+		s.logger.Error("Error while validating resource request.")
+		return Resource{}, &util.InvalidInputError{Path: "Invalid input for resource."}
 	}
 
+	// Get resource.
 	resource, err := s.Get(ctx, org_id, id)
 	if err != nil {
-		return resource, &util.NotFoundError{Path: "Resource"}
+		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
+		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
 	}
 	resource.Name = req.Name
 	if err := s.repo.Update(ctx, org_id, resource.Resource); err != nil {
-		log.Println(err.Error())
-		return resource, err
-	}
-	return resource, nil
-}
-
-func (s service) Delete(ctx context.Context, org_id string, id string) (Resource, error) {
-	resource, err := s.Get(ctx, org_id, id)
-	if err != nil {
-		return Resource{}, &util.NotFoundError{Path: "Resource"}
-	}
-	if err = s.repo.Delete(ctx, org_id, id); err != nil {
-		log.Println(err.Error())
+		s.logger.Error("Error while updating resource.",
+			zap.String("organization_id", org_id),
+			zap.String("resource_id", id))
 		return Resource{}, err
 	}
-	return resource, nil
+	return resource, err
 }
 
+// Delete resource.
+func (s service) Delete(ctx context.Context, org_id string, id string) (Resource, error) {
+
+	resource, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Error("Resource not exists.", zap.String("resource_id", id))
+		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
+	}
+	if err = s.repo.Delete(ctx, org_id, id); err != nil {
+		s.logger.Error("Error while deleting resource.",
+			zap.String("organization_id", org_id),
+			zap.String("resource_id", id))
+		return Resource{}, err
+	}
+	return resource, err
+}
+
+// Pagination filter.
 type Filter struct {
 	Cursor int    `json:"cursor" query:"cursor"`
 	Limit  int    `json:"limit" query:"limit"`
 	Name   string `json:"name" query:"name"`
 }
 
+// Get all resources.
 func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error) {
 
+	result := []Resource{}
 	items, err := s.repo.Query(ctx, org_id, filter)
 	if err != nil {
-		log.Println(err.Error())
-		return nil, err
+		s.logger.Error("Error while retrieving all resources.",
+			zap.String("organization_id", org_id))
+		return []Resource{}, err
 	}
-	result := []Resource{}
+
 	for _, item := range items {
 		result = append(result, Resource{item})
 	}
-	return result, nil
+	return result, err
 }
