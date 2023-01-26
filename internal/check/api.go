@@ -49,13 +49,13 @@ func (r permission) check(c echo.Context) error {
 // @Tags        Permission
 // @Accept      json
 // @Param org path string true "Organization"
-// @Param request body entity.CheckRequestWithPermissions true "body"
+// @Param request body entity.CheckRequestWithUser true "body"
 // @Produce     json
 // @Success     201
 // @failure     400,403,500
 // @Router      /{org}/permission/check/username [post]
 func (r permission) checkbyusername(c echo.Context) error {
-	var input entity.Tuple
+	var input entity.CheckRequestWithUser
 	api_key := c.Request().Header.Get("API_KEY")
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")

@@ -18,6 +18,12 @@ type CheckRequest struct {
 	Object    string `json:"object"`
 }
 
+type CheckRequestWithUser struct {
+	Username   string `json:"username"`
+	Permission string `json:"permission"`
+	Resource   string `json:"resource"`
+}
+
 type CheckRequestWithPermissions struct {
 	SubjectId string     `json:"subject"`
 	Relations []Relation `json:"permissions"`
