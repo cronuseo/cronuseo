@@ -14,6 +14,7 @@ type Repository interface {
 	Create(ctx context.Context, organization entity.Organization) error
 	Update(ctx context.Context, organization entity.Organization) error
 	Delete(ctx context.Context, id string) error
+	RefreshAPIKey(ctx context.Context, apiKey string, id string) error
 	ExistByID(ctx context.Context, id string) (bool, error)
 	ExistByKey(ctx context.Context, key string) (bool, error)
 }
@@ -69,6 +70,19 @@ func (r repository) Delete(ctx context.Context, id string) error {
 		return err
 	}
 	if _, err = stmt.Exec(id); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Refresh API key.
+func (r repository) RefreshAPIKey(ctx context.Context, apiKey string, id string) error {
+
+	stmt, err := r.db.Prepare("UPDATE org SET org_api_key = $1 WHERE org_id = $2")
+	if err != nil {
+		return err
+	}
+	if _, err = stmt.Exec(apiKey, id); err != nil {
 		return err
 	}
 	return nil

@@ -21,6 +21,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
+	router.POST("/:id/refresh", res.refreshAPIKey)
 }
 
 type resource struct {
@@ -113,4 +114,21 @@ func (r resource) delete(c echo.Context) error {
 		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusNoContent, "")
+}
+
+// @Description Refresh organization API Key.
+// @Tags        Organization
+// @Accept      json
+// @Param id path string true "Organization ID"
+// @Produce     json
+// @Success     201 {object}  entity.Organization
+// @failure     400,403,404,500
+// @Router      /organization/{id}/refresh [post]
+func (r resource) refreshAPIKey(c echo.Context) error {
+
+	organization, err := r.service.RefreshAPIKey(c.Request().Context(), c.Param("id"))
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusCreated, organization)
 }
