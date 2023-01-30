@@ -1,27 +1,20 @@
-FROM golang:alpine AS build
-RUN apk update && \
-    apk add curl \
-            git \
-            bash \
-            make \
-            ca-certificates && \
-    rm -rf /var/cache/apk/*
+FROM golang:1.19-alpine 
+
+ENV GO111MODULE=on
+
+ARG APP_ENV
+ENV APP_ENV=$APP_ENV
 
 WORKDIR /app
 
-COPY go.* ./
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod tidy
 RUN go mod download
-RUN go mod verify
 
 COPY . .
-RUN make build
 
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates bash
-WORKDIR /app/
-COPY --from=build /app/server .
-COPY --from=build /app/cmd/server/entrypoint.sh .
-COPY --from=build /app/config/*.yml ./config/
-RUN ls -la
-RUN chmod +x entrypoint.sh
-ENTRYPOINT ["./entrypoint.sh"]
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server ./cmd/server
+EXPOSE 3333
+ENTRYPOINT ./server -config "./config/${APP_ENV}.yml"
