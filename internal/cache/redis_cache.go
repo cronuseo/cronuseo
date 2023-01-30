@@ -76,7 +76,6 @@ func (c *redisCache) GetAPIKey(context context.Context, key string) (string, err
 	client := c.getClient()
 
 	value, _ := client.Get(context, key).Result()
-
 	return value, nil
 }
 
