@@ -12,4 +12,5 @@ type PermissionCache interface {
 	Get(context context.Context, key entity.Tuple) (string, error)
 	GetAPIKey(context context.Context, key string) (string, error)
 	FlushAll(context context.Context) error
+	DeleteAPIKey(context context.Context) error
 }

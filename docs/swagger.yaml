@@ -19,6 +19,15 @@ definitions:
       username:
         type: string
     type: object
+  check.Tuple:
+    properties:
+      object:
+        type: string
+      relation:
+        type: string
+      subject:
+        type: string
+    type: object
   entity.Action:
     properties:
       action_id:
@@ -54,6 +63,15 @@ definitions:
       subject:
         type: string
     type: object
+  entity.CheckRequestWithUser:
+    properties:
+      permission:
+        type: string
+      resource:
+        type: string
+      username:
+        type: string
+    type: object
   entity.Links:
     properties:
       next:
@@ -77,6 +95,8 @@ definitions:
       created_at:
         type: string
       name:
+        type: string
+      org_api_key:
         type: string
       org_id:
         type: string
@@ -267,7 +287,7 @@ definitions:
     properties:
       op:
         type: string
-      permisssions:
+      permissions:
         items:
           $ref: '#/definitions/entity.Permission'
         type: array
@@ -278,15 +298,6 @@ definitions:
         items:
           $ref: '#/definitions/permission.PermissionPatchOperation'
         type: array
-    type: object
-  permission.Tuple:
-    properties:
-      object:
-        type: string
-      relation:
-        type: string
-      subject:
-        type: string
     type: object
   resource.CreateResourceRequest:
     properties:
@@ -373,6 +384,66 @@ info:
   title: Cronuseo API
   version: "1.0"
 paths:
+  /{org_id}/permission/check_actions:
+    post:
+      consumes:
+      - application/json
+      description: Check by username.
+      parameters:
+      - description: Organization
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission.CheckActionsRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
+  /{org_id}/permission/update:
+    patch:
+      consumes:
+      - application/json
+      description: Patch Permissions.
+      parameters:
+      - description: Organization
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/permission.PermissionPatchRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Permission
   /{org_id}/resource:
     get:
       description: Get all resources.
@@ -916,7 +987,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/permission.Tuple'
+          $ref: '#/definitions/check.Tuple'
       produces:
       - application/json
       responses:
@@ -930,37 +1001,7 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /{org}/permission/check_actions:
-    post:
-      consumes:
-      - application/json
-      description: Check by username.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/permission.CheckActionsRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{org}/permission/check_by_username:
+  /{org}/permission/check/multi_actions:
     post:
       consumes:
       - application/json
@@ -990,37 +1031,7 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /{org}/permission/check_multi_actions:
-    post:
-      consumes:
-      - application/json
-      description: Check by username.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.CheckRequestWithPermissions'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{org}/permission/check_multi_resources:
+  /{org}/permission/check/multi_resources:
     post:
       consumes:
       - application/json
@@ -1050,11 +1061,11 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /{org}/permission/create:
+  /{org}/permission/check/username:
     post:
       consumes:
       - application/json
-      description: Create tuple.
+      description: Check by username.
       parameters:
       - description: Organization
         in: path
@@ -1066,127 +1077,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/permission.Tuple'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{org}/permission/delete:
-    post:
-      consumes:
-      - application/json
-      description: Delete tuple.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/permission.Tuple'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{org}/permission/list/resource:
-    post:
-      consumes:
-      - application/json
-      description: Get objects.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/permission.Tuple'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{org}/permission/list/role:
-    post:
-      consumes:
-      - application/json
-      description: Get subjects.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/permission.Tuple'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{org}/permission/update:
-    patch:
-      consumes:
-      - application/json
-      description: Patch Permissions.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/permission.PermissionPatchRequest'
+          $ref: '#/definitions/entity.CheckRequestWithUser'
       produces:
       - application/json
       responses:
@@ -1514,6 +1405,34 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/organization.UpdateOrganizationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/entity.Organization'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Organization
+  /organization/{id}/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh organization API Key.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: id
+        required: true
+        type: string
       produces:
       - application/json
       responses:

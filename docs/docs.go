@@ -298,6 +298,49 @@ const docTemplate = `{
                 }
             }
         },
+        "/organization/{id}/refresh": {
+            "post": {
+                "description": "Refresh organization API Key.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Organization"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Organization"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/register": {
             "post": {
                 "description": "Register.",
@@ -324,6 +367,98 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{org_id}/permission/check_actions": {
+            "post": {
+                "description": "Check by username.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/permission.CheckActionsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/{org_id}/permission/update": {
+            "patch": {
+                "description": "Patch Permissions.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Permission"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/permission.PermissionPatchRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
                     },
                     "400": {
                         "description": "Bad Request"
@@ -1160,7 +1295,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/permission.Tuple"
+                            "$ref": "#/definitions/check.Tuple"
                         }
                     }
                 ],
@@ -1180,53 +1315,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/permission/check_actions": {
-            "post": {
-                "description": "Check by username.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/permission.CheckActionsRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/check_by_username": {
+        "/{org}/permission/check/multi_actions": {
             "post": {
                 "description": "Check by username.",
                 "consumes": [
@@ -1272,53 +1361,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/permission/check_multi_actions": {
-            "post": {
-                "description": "Check by username.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.CheckRequestWithPermissions"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/check_multi_resources": {
+        "/{org}/permission/check/multi_resources": {
             "post": {
                 "description": "Check by username.",
                 "consumes": [
@@ -1364,9 +1407,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org}/permission/create": {
+        "/{org}/permission/check/username": {
             "post": {
-                "description": "Create tuple.",
+                "description": "Check by username.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1390,191 +1433,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/permission.Tuple"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/delete": {
-            "post": {
-                "description": "Delete tuple.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/permission.Tuple"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/list/resource": {
-            "post": {
-                "description": "Get objects.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/permission.Tuple"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/list/role": {
-            "post": {
-                "description": "Get subjects.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/permission.Tuple"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/update": {
-            "patch": {
-                "description": "Patch Permissions.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/permission.PermissionPatchRequest"
+                            "$ref": "#/definitions/entity.CheckRequestWithUser"
                         }
                     }
                 ],
@@ -1859,6 +1718,20 @@ const docTemplate = `{
                 }
             }
         },
+        "check.Tuple": {
+            "type": "object",
+            "properties": {
+                "object": {
+                    "type": "string"
+                },
+                "relation": {
+                    "type": "string"
+                },
+                "subject": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Action": {
             "type": "object",
             "properties": {
@@ -1913,6 +1786,20 @@ const docTemplate = `{
                 }
             }
         },
+        "entity.CheckRequestWithUser": {
+            "type": "object",
+            "properties": {
+                "permission": {
+                    "type": "string"
+                },
+                "resource": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Links": {
             "type": "object",
             "properties": {
@@ -1948,6 +1835,9 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "org_api_key": {
                     "type": "string"
                 },
                 "org_id": {
@@ -2242,7 +2132,7 @@ const docTemplate = `{
                 "op": {
                     "type": "string"
                 },
-                "permisssions": {
+                "permissions": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/entity.Permission"
@@ -2258,20 +2148,6 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/permission.PermissionPatchOperation"
                     }
-                }
-            }
-        },
-        "permission.Tuple": {
-            "type": "object",
-            "properties": {
-                "object": {
-                    "type": "string"
-                },
-                "relation": {
-                    "type": "string"
-                },
-                "subject": {
-                    "type": "string"
                 }
             }
         },

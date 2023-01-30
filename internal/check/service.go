@@ -13,7 +13,7 @@ import (
 
 type Service interface {
 	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error)
-	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error)
+	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithUser, apiKey string) (bool, error)
 	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions, apiKey string) ([]string, error)
 	CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll, apiKey string) (entity.CheckAllResponse, error)
 	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
@@ -87,7 +87,7 @@ func (s service) CheckTuple(ctx context.Context, org string, namespace string, t
 }
 
 // Checks if the user has the permission to perform the action by username.
-func (s service) CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error) {
+func (s service) CheckByUsername(ctx context.Context, org string, namespace string, tupleUsername entity.CheckRequestWithUser, apiKey string) (bool, error) {
 
 	// Checking API Key is valid or not.
 	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
@@ -105,6 +105,12 @@ func (s service) CheckByUsername(ctx context.Context, org string, namespace stri
 		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
 	}
 
+	if apiKey != api_key {
+		s.logger.Debug("API_KEY is not valid.")
+		return false, &util.UnauthorizedError{}
+	}
+
+	tuple := entity.Tuple{SubjectId: tupleUsername.Username, Object: tupleUsername.Resource, Relation: tupleUsername.Permission}
 	qTuple := qualifiedTuple(org, tuple)
 	value, _ := s.permissionCache.Get(ctx, qTuple)
 	if value == "true" {
