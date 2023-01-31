@@ -41,29 +41,3 @@ user_id=$(uuidgen | tr '[:upper:]' '[:lower:]')
 # create organization
 docker exec -ti -e "PGPASSWORD=$DB_PASSWORD" $CONTAINER_ID psql -h $DB_HOST -U $DB_USERNAME -d $DB_NAME -c "INSERT INTO org_admin_user(user_id,username,password,org_id,is_super) VALUES('$user_id','$username',crypt('$password', gen_salt('bf')),'$org_id'::uuid,'true');"
 
-# Get the console repository
-dir=cronuseo-console
- 
-if [ -d "$dir" -a ! -h "$dir" ]
-then
-  echo "$dir exists"
-  cd cronuseo-console
-  git pull
-else
-  echo "$dir not exists"
-  git clone https://github.com/shashimalcse/cronuseo-console
-  cd cronuseo-console
-fi
-
-echo "NEXTAUTH_SECRET=secret" >> .env
-echo "BASE_API=http://localhost:8080/api/v1" >> .env
-
-echo "NEXTAUTH_SECRET=secret" >> .env.local
-echo "BASE_API=http://localhost:8080/api/v1" >> .env.local
-
-# Change into the console repository directory
-
-
-# Start the frontend using Next.js
-npm install
-npm run dev

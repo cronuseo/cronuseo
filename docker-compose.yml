@@ -6,12 +6,12 @@ services:
       - ./postgres-data:/var/lib/postgresql/data
       - ./data/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
     ports:
-      - "${DB_PORT}:${DB_PORT}"
+      - "5432:5432"
     environment:
-      - POSTGRES_USER=${DB_USERNAME}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-      - DATABASE_HOST=${DB_HOST} 
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=cronuseo
+      - DATABASE_HOST=cronuseo-db
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -21,12 +21,12 @@ services:
     image: postgres
     restart: always
     ports:
-      - "${KETO_DB_PORT}:${DB_PORT}"
+      - "5433:5433"
     environment:
-      - POSTGRES_USER=${KETO_DB_USERNAME}
-      - POSTGRES_PASSWORD=${KETO_DB_PASSWORD}
-      - POSTGRES_DB=${KETO_DB_NAME}
-      - DATABASE_HOST=${KETO_DB_HOST} 
+      - POSTGRES_USER=keto
+      - POSTGRES_PASSWORD=keto
+      - POSTGRES_DB=keto
+      - DATABASE_HOST=keto-db
   keto:
     image: oryd/keto:v0.10.0-alpha.0
     ports:
@@ -54,9 +54,7 @@ services:
     command: ["migrate", "up", "-y"]
     restart: on-failure
   api:
-    build:
-      context: .
-      dockerfile: cmd/server/Dockerfile
+    image: ghcr.io/shashimalcse/cronuseo
     ports:
       - "8080:8080"
     depends_on:
@@ -73,6 +71,13 @@ services:
     command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
     volumes: 
       - cache:/data
+  console:
+    image: ghcr.io/shashimalcse/cronuseo-console:latest
+    environment:
+      - NEXTAUTH_SECRET= secret
+      - BASE_API= http://api:8080/api/v1
+    ports:
+      - "3000:3000"
 volumes:
   api:
   database_postgres:     
