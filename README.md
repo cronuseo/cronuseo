@@ -16,8 +16,6 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 ## Main features:
 
 * Role-based Access Control (RBAC)
-* Relationship-based Access Control (ReBAC) (Coming Soon)
-* Attribute-based Access Control (ABAC) (Coming Soon)
 
 ## Get started
 
