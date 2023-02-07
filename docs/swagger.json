@@ -1754,10 +1754,10 @@
                 "resources": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Object"
+                        "$ref": "#/definitions/entity.ResourceObject"
                     }
                 },
-                "subject": {
+                "username": {
                     "type": "string"
                 }
             }
@@ -1768,7 +1768,7 @@
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Relation"
+                        "$ref": "#/definitions/entity.PermissionObject"
                     }
                 },
                 "resource": {
@@ -1803,20 +1803,6 @@
                     "type": "string"
                 },
                 "self": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Object": {
-            "type": "object",
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Relation"
-                    }
-                },
-                "resource": {
                     "type": "string"
                 }
             }
@@ -1858,7 +1844,7 @@
                 }
             }
         },
-        "entity.Relation": {
+        "entity.PermissionObject": {
             "type": "object",
             "properties": {
                 "permission": {
@@ -1893,6 +1879,20 @@
             "type": "object",
             "properties": {
                 "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceObject": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.PermissionObject"
+                    }
+                },
+                "resource": {
                     "type": "string"
                 }
             }

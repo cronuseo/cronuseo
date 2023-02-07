@@ -25,23 +25,23 @@ type CheckRequestWithUser struct {
 }
 
 type CheckRequestWithPermissions struct {
-	Username    string     `json:"username"`
-	Permissions []Relation `json:"permissions"`
-	Resource    string     `json:"resource"`
+	Username    string             `json:"username"`
+	Permissions []PermissionObject `json:"permissions"`
+	Resource    string             `json:"resource"`
 }
 
 type CheckRequestAll struct {
-	SubjectId string   `json:"subject"`
-	Objects   []Object `json:"resources"`
+	Username  string           `json:"username"`
+	Resources []ResourceObject `json:"resources"`
 }
 
-type Relation struct {
-	Relation string `json:"permission"`
+type PermissionObject struct {
+	Permission string `json:"permission"`
 }
 
-type Object struct {
-	Object    string     `json:"resource"`
-	Relations []Relation `json:"permissions"`
+type ResourceObject struct {
+	Resource    string             `json:"resource"`
+	Permissions []PermissionObject `json:"permissions"`
 }
 
 type CheckAllResponse struct {

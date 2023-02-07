@@ -47,16 +47,16 @@ definitions:
     properties:
       resources:
         items:
-          $ref: '#/definitions/entity.Object'
+          $ref: '#/definitions/entity.ResourceObject'
         type: array
-      subject:
+      username:
         type: string
     type: object
   entity.CheckRequestWithPermissions:
     properties:
       permissions:
         items:
-          $ref: '#/definitions/entity.Relation'
+          $ref: '#/definitions/entity.PermissionObject'
         type: array
       resource:
         type: string
@@ -79,15 +79,6 @@ definitions:
       prev:
         type: string
       self:
-        type: string
-    type: object
-  entity.Object:
-    properties:
-      permissions:
-        items:
-          $ref: '#/definitions/entity.Relation'
-        type: array
-      resource:
         type: string
     type: object
   entity.Organization:
@@ -114,7 +105,7 @@ definitions:
       role:
         type: string
     type: object
-  entity.Relation:
+  entity.PermissionObject:
     properties:
       permission:
         type: string
@@ -137,6 +128,15 @@ definitions:
   entity.ResourceLinks:
     properties:
       self:
+        type: string
+    type: object
+  entity.ResourceObject:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/entity.PermissionObject'
+        type: array
+      resource:
         type: string
     type: object
   entity.ResourceQueryResponse:

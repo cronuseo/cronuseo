@@ -1761,10 +1761,10 @@ const docTemplate = `{
                 "resources": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Object"
+                        "$ref": "#/definitions/entity.ResourceObject"
                     }
                 },
-                "subject": {
+                "username": {
                     "type": "string"
                 }
             }
@@ -1775,7 +1775,7 @@ const docTemplate = `{
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Relation"
+                        "$ref": "#/definitions/entity.PermissionObject"
                     }
                 },
                 "resource": {
@@ -1810,20 +1810,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "self": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Object": {
-            "type": "object",
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Relation"
-                    }
-                },
-                "resource": {
                     "type": "string"
                 }
             }
@@ -1865,7 +1851,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.Relation": {
+        "entity.PermissionObject": {
             "type": "object",
             "properties": {
                 "permission": {
@@ -1900,6 +1886,20 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceObject": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.PermissionObject"
+                    }
+                },
+                "resource": {
                     "type": "string"
                 }
             }
