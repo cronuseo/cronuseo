@@ -169,13 +169,14 @@ func (s service) CheckPermissions(ctx context.Context, org string, namespace str
 	}
 
 	allowedPermissions := []string{}
-	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, permissions.SubjectId)
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, permissions.Username)
 	if err != nil {
 		return []string{}, err
 	}
-	for _, permission := range permissions.Relations {
-		tuple := entity.Tuple{Object: permissions.Object, Relation: permission.Relation}
-		roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+	for _, permission := range permissions.Permissions {
+		tuple := entity.Tuple{Object: permissions.Resource, Relation: permission.Relation}
+		qTuple := qualifiedTuple(org, tuple)
+		roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, qTuple)
 		if err != nil {
 			return []string{}, err
 		}

@@ -1772,16 +1772,16 @@ const docTemplate = `{
         "entity.CheckRequestWithPermissions": {
             "type": "object",
             "properties": {
-                "object": {
-                    "type": "string"
-                },
                 "permissions": {
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/entity.Relation"
                     }
                 },
-                "subject": {
+                "resource": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

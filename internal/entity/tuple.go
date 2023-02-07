@@ -25,9 +25,9 @@ type CheckRequestWithUser struct {
 }
 
 type CheckRequestWithPermissions struct {
-	SubjectId string     `json:"subject"`
-	Relations []Relation `json:"permissions"`
-	Object    string     `json:"object"`
+	Username    string     `json:"username"`
+	Permissions []Relation `json:"permissions"`
+	Resource    string     `json:"resource"`
 }
 
 type CheckRequestAll struct {

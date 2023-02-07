@@ -54,13 +54,13 @@ definitions:
     type: object
   entity.CheckRequestWithPermissions:
     properties:
-      object:
-        type: string
       permissions:
         items:
           $ref: '#/definitions/entity.Relation'
         type: array
-      subject:
+      resource:
+        type: string
+      username:
         type: string
     type: object
   entity.CheckRequestWithUser:
