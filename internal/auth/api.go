@@ -33,7 +33,7 @@ type admin struct {
 // @Produce     json
 // @Success     200
 // @failure     400,403,500
-// @Router      /register [post]
+// @Router      /auth/register [post]
 func (r admin) register(c echo.Context) error {
 	var input AdminUserRequest
 	if err := c.Bind(&input); err != nil {
@@ -54,7 +54,7 @@ func (r admin) register(c echo.Context) error {
 // @Produce     json
 // @Success     200
 // @failure     400,403,500
-// @Router      /login [post]
+// @Router      /auth/login [post]
 func (r admin) login(c echo.Context) error {
 	var input AdminUserRequest
 	if err := c.Bind(&input); err != nil {
@@ -74,7 +74,7 @@ func (r admin) login(c echo.Context) error {
 // @Produce     json
 // @Success     200
 // @failure     400,403,500
-// @Router      /logout [post]
+// @Router      /auth/logout [post]
 func (r admin) logout(c echo.Context) error {
 	cookie, err := r.service.Logout(c.Request().Context())
 	if err != nil {
@@ -90,7 +90,7 @@ func (r admin) logout(c echo.Context) error {
 // @Produce     json
 // @Success     200
 // @failure     400,403,500
-// @Router      /me [get]
+// @Router      /auth/me [get]
 func (r admin) getMe(c echo.Context) error {
 
 	user := c.Get("user").(*jwt.Token)

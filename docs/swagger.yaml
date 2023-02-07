@@ -1245,7 +1245,7 @@ paths:
           description: Internal Server Error
       tags:
       - Action
-  /login:
+  /auth/login:
     post:
       consumes:
       - application/json
@@ -1270,7 +1270,7 @@ paths:
           description: Internal Server Error
       tags:
       - Auth
-  /logout:
+  /auth/logout:
     post:
       consumes:
       - application/json
@@ -1288,11 +1288,36 @@ paths:
           description: Internal Server Error
       tags:
       - Auth
-  /me:
+  /auth/me:
     get:
       consumes:
       - application/json
       description: GetMe.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register.
+      parameters:
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.AdminUserRequest'
       produces:
       - application/json
       responses:
@@ -1450,29 +1475,4 @@ paths:
           description: Internal Server Error
       tags:
       - Organization
-  /register:
-    post:
-      consumes:
-      - application/json
-      description: Register.
-      parameters:
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/auth.AdminUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Auth
 swagger: "2.0"
