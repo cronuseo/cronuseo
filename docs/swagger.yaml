@@ -47,20 +47,20 @@ definitions:
     properties:
       resources:
         items:
-          $ref: '#/definitions/entity.Object'
+          $ref: '#/definitions/entity.ResourceObject'
         type: array
-      subject:
+      username:
         type: string
     type: object
   entity.CheckRequestWithPermissions:
     properties:
-      object:
-        type: string
       permissions:
         items:
-          $ref: '#/definitions/entity.Relation'
+          $ref: '#/definitions/entity.PermissionObject'
         type: array
-      subject:
+      resource:
+        type: string
+      username:
         type: string
     type: object
   entity.CheckRequestWithUser:
@@ -79,15 +79,6 @@ definitions:
       prev:
         type: string
       self:
-        type: string
-    type: object
-  entity.Object:
-    properties:
-      permissions:
-        items:
-          $ref: '#/definitions/entity.Relation'
-        type: array
-      resource:
         type: string
     type: object
   entity.Organization:
@@ -114,7 +105,7 @@ definitions:
       role:
         type: string
     type: object
-  entity.Relation:
+  entity.PermissionObject:
     properties:
       permission:
         type: string
@@ -137,6 +128,15 @@ definitions:
   entity.ResourceLinks:
     properties:
       self:
+        type: string
+    type: object
+  entity.ResourceObject:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/entity.PermissionObject'
+        type: array
+      resource:
         type: string
     type: object
   entity.ResourceQueryResponse:
@@ -1245,7 +1245,7 @@ paths:
           description: Internal Server Error
       tags:
       - Action
-  /login:
+  /auth/login:
     post:
       consumes:
       - application/json
@@ -1270,7 +1270,7 @@ paths:
           description: Internal Server Error
       tags:
       - Auth
-  /logout:
+  /auth/logout:
     post:
       consumes:
       - application/json
@@ -1288,11 +1288,36 @@ paths:
           description: Internal Server Error
       tags:
       - Auth
-  /me:
+  /auth/me:
     get:
       consumes:
       - application/json
       description: GetMe.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "500":
+          description: Internal Server Error
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register.
+      parameters:
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.AdminUserRequest'
       produces:
       - application/json
       responses:
@@ -1450,29 +1475,4 @@ paths:
           description: Internal Server Error
       tags:
       - Organization
-  /register:
-    post:
-      consumes:
-      - application/json
-      description: Register.
-      parameters:
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/auth.AdminUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Auth
 swagger: "2.0"

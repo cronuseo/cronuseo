@@ -169,19 +169,20 @@ func (s service) CheckPermissions(ctx context.Context, org string, namespace str
 	}
 
 	allowedPermissions := []string{}
-	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, permissions.SubjectId)
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, permissions.Username)
 	if err != nil {
 		return []string{}, err
 	}
-	for _, permission := range permissions.Relations {
-		tuple := entity.Tuple{Object: permissions.Object, Relation: permission.Relation}
-		roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+	for _, permission := range permissions.Permissions {
+		tuple := entity.Tuple{Object: permissions.Resource, Relation: permission.Permission}
+		qTuple := qualifiedTuple(org, tuple)
+		roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, qTuple)
 		if err != nil {
 			return []string{}, err
 		}
 		for _, val := range roles_from_db {
 			if contains(roles_from_keto, val) {
-				allowedPermissions = append(allowedPermissions, permission.Relation)
+				allowedPermissions = append(allowedPermissions, permission.Permission)
 			}
 		}
 	}
@@ -205,22 +206,23 @@ func (s service) CheckAll(ctx context.Context, org string, namespace string, tup
 	}
 	response := entity.CheckAllResponse{}
 
-	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.SubjectId)
+	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.Username)
 	if err != nil {
 		return response, err
 	}
-	for _, resource := range tuple.Objects {
-		res_name := resource.Object
+	for _, resource := range tuple.Resources {
+		res_name := resource.Resource
 		allowedPermissions := []string{}
-		for _, permission := range resource.Relations {
-			tuple := entity.Tuple{Object: res_name, Relation: permission.Relation}
-			roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, tuple)
+		for _, permission := range resource.Permissions {
+			tuple := entity.Tuple{Object: res_name, Relation: permission.Permission}
+			qTuple := qualifiedTuple(org, tuple)
+			roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, qTuple)
 			if err != nil {
 				return response, err
 			}
 			for _, val := range roles_from_db {
 				if contains(roles_from_keto, val) {
-					allowedPermissions = append(allowedPermissions, permission.Relation)
+					allowedPermissions = append(allowedPermissions, permission.Permission)
 				}
 			}
 		}

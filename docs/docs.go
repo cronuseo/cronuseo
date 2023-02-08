@@ -25,7 +25,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/login": {
+        "/auth/login": {
             "post": {
                 "description": "Login.",
                 "consumes": [
@@ -64,7 +64,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/logout": {
+        "/auth/logout": {
             "post": {
                 "description": "Logout.",
                 "consumes": [
@@ -92,7 +92,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/me": {
+        "/auth/me": {
             "get": {
                 "description": "GetMe.",
                 "consumes": [
@@ -103,6 +103,45 @@ const docTemplate = `{
                 ],
                 "tags": [
                     "Auth"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Register.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.AdminUserRequest"
+                        }
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -334,45 +373,6 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/register": {
-            "post": {
-                "description": "Register.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/auth.AdminUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     },
                     "500": {
                         "description": "Internal Server Error"
@@ -1761,10 +1761,10 @@ const docTemplate = `{
                 "resources": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Object"
+                        "$ref": "#/definitions/entity.ResourceObject"
                     }
                 },
-                "subject": {
+                "username": {
                     "type": "string"
                 }
             }
@@ -1772,16 +1772,16 @@ const docTemplate = `{
         "entity.CheckRequestWithPermissions": {
             "type": "object",
             "properties": {
-                "object": {
-                    "type": "string"
-                },
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Relation"
+                        "$ref": "#/definitions/entity.PermissionObject"
                     }
                 },
-                "subject": {
+                "resource": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1810,20 +1810,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "self": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Object": {
-            "type": "object",
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Relation"
-                    }
-                },
-                "resource": {
                     "type": "string"
                 }
             }
@@ -1865,7 +1851,7 @@ const docTemplate = `{
                 }
             }
         },
-        "entity.Relation": {
+        "entity.PermissionObject": {
             "type": "object",
             "properties": {
                 "permission": {
@@ -1900,6 +1886,20 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceObject": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.PermissionObject"
+                    }
+                },
+                "resource": {
                     "type": "string"
                 }
             }

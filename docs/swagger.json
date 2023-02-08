@@ -18,7 +18,7 @@
     "host": "localhost:8080",
     "basePath": "/api/v1",
     "paths": {
-        "/login": {
+        "/auth/login": {
             "post": {
                 "description": "Login.",
                 "consumes": [
@@ -57,7 +57,7 @@
                 }
             }
         },
-        "/logout": {
+        "/auth/logout": {
             "post": {
                 "description": "Logout.",
                 "consumes": [
@@ -85,7 +85,7 @@
                 }
             }
         },
-        "/me": {
+        "/auth/me": {
             "get": {
                 "description": "GetMe.",
                 "consumes": [
@@ -96,6 +96,45 @@
                 ],
                 "tags": [
                     "Auth"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Register.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "parameters": [
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.AdminUserRequest"
+                        }
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -327,45 +366,6 @@
                     },
                     "404": {
                         "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/register": {
-            "post": {
-                "description": "Register.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/auth.AdminUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     },
                     "500": {
                         "description": "Internal Server Error"
@@ -1754,10 +1754,10 @@
                 "resources": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Object"
+                        "$ref": "#/definitions/entity.ResourceObject"
                     }
                 },
-                "subject": {
+                "username": {
                     "type": "string"
                 }
             }
@@ -1765,16 +1765,16 @@
         "entity.CheckRequestWithPermissions": {
             "type": "object",
             "properties": {
-                "object": {
-                    "type": "string"
-                },
                 "permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Relation"
+                        "$ref": "#/definitions/entity.PermissionObject"
                     }
                 },
-                "subject": {
+                "resource": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -1803,20 +1803,6 @@
                     "type": "string"
                 },
                 "self": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Object": {
-            "type": "object",
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.Relation"
-                    }
-                },
-                "resource": {
                     "type": "string"
                 }
             }
@@ -1858,7 +1844,7 @@
                 }
             }
         },
-        "entity.Relation": {
+        "entity.PermissionObject": {
             "type": "object",
             "properties": {
                 "permission": {
@@ -1893,6 +1879,20 @@
             "type": "object",
             "properties": {
                 "self": {
+                    "type": "string"
+                }
+            }
+        },
+        "entity.ResourceObject": {
+            "type": "object",
+            "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/entity.PermissionObject"
+                    }
+                },
+                "resource": {
                     "type": "string"
                 }
             }
