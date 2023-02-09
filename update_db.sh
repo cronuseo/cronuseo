@@ -1,17 +1,6 @@
 #!/usr/bin/env bash
 
-# Start the backend using Docker Compose
-
-# Wait for the backend API to start
-while true; do
-  HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/v1/health)
-  if [ "$HTTP_STATUS" -eq 200 ]; then
-    break
-  fi
-  sleep 1
-done
-
-CONTAINER_ID='cronuseo-cronuseo-db-1'
+CONTAINER_ID='db'
 
 username=$(yq '.organization.config.username' ./config/local.yml)
 password=$(yq '.organization.config.password' ./config/local.yml)
@@ -22,6 +11,27 @@ DB_PORT='5432'
 DB_USERNAME='postgres'
 DB_PASSWORD='postgres' 
 DB_NAME='cronuseo' 
+
+
+# Continuously check the status of the database
+while true; do
+  # Use docker exec to run psql inside the container
+  result=$(docker exec "$CONTAINER_ID" psql -U postgres -c '\l')
+
+  # Check the exit status of docker exec
+  if [ $? -eq 0 ]; then
+    # The database is up, print a message
+    echo "The database is up and accepting connections."
+    break
+  else
+    # The database is down, print a message
+    echo "The database is down."
+  fi
+
+  # Sleep for a short time before checking again
+  sleep 5
+done
+
 
 # clear tables
 docker exec -ti -e "PGPASSWORD=$DB_PASSWORD" $CONTAINER_ID psql -h $DB_HOST -U $DB_USERNAME -d $DB_NAME -c "TRUNCATE org, org_user, org_role, org_resource, user_role, res_action, org_admin_user RESTART IDENTITY CASCADE;"

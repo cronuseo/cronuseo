@@ -1,0 +1,33 @@
+version: '3.8'
+services:
+  cronuseo-db:
+    image: postgres
+    container_name: db
+    volumes: 
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./data/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=cronuseo
+      - DATABASE_HOST=db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    tty: true
+  keto-db:
+    image: postgres
+    container_name: keto-db
+    restart: always
+    ports:
+      - "5433:5433"
+    environment:
+      - POSTGRES_USER=keto
+      - POSTGRES_PASSWORD=keto
+      - POSTGRES_DB=keto
+      - DATABASE_HOST=keto-db
+    tty: true

@@ -17,14 +17,6 @@ help: ## help information about make commands
 run: ## run the c6o server
 	go run ${LDFLAGS} cmd/server/main.go -config ${CONFIG_FILE}
 
-.PHONY: run-restart
-run-restart: ## restart the c6o server
-	@pkill -P `cat $(PID_FILE)` || true
-	@printf '%*s\n' "80" '' | tr ' ' -
-	@echo "Source file changed. Restarting server..."
-	@go run ${LDFLAGS} cmd/server/main.go & echo $$! > $(PID_FILE)
-	@printf '%*s\n' "80" '' | tr ' ' -
-
 .PHONY: build
 build:  ## build the c6o server binary
 	CGO_ENABLED=0 go build ${LDFLAGS} -a -o server $(MODULE)/cmd/server
@@ -41,6 +33,10 @@ version: ## display the version of the API server
 lint: ## run golint on all Go package
 	@golint $(PACKAGES)
 
-.PHONY: run-console
-run-console: ## run the c6o server
-	bash run_console.sh
+.PHONY: setup-db
+setup-db: ## strat the databases
+	docker compose -f docker-compose-db.yml up -d && bash update_db.sh
+	
+.PHONY: start
+start: ## start backend, frontend, keto and redis
+	docker compose up
