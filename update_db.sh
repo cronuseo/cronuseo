@@ -32,7 +32,6 @@ while true; do
   sleep 5
 done
 
-
 # clear tables
 docker exec -ti -e "PGPASSWORD=$DB_PASSWORD" $CONTAINER_ID psql -h $DB_HOST -U $DB_USERNAME -d $DB_NAME -c "TRUNCATE org, org_user, org_role, org_resource, user_role, res_action, org_admin_user RESTART IDENTITY CASCADE;"
 
