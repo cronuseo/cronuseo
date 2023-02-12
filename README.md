@@ -26,6 +26,11 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 * ``` make run-console```
 * Heading to http://localhost:3000 to continue your c6o journey.
 
+## cronuseo SDKs for applications
+
+* python - https://pypi.org/project/cronuseosdk
+* nodejs - https://www.npmjs.com/package/cronuseosdk
+* golang - https://github.com/shashimalcse/cronuseogosdk
 
 > cronuseo uses environment variables for configuration, along with .env file support.
 
