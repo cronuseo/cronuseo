@@ -23,6 +23,7 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 
 * ``` git clone https://github.com/shashimalcse/cronuseo```
 * ``` docker compose up --build```
+* ``` docker compose -f docker-compose-database.yml up```
 * ``` make run-console```
 * Heading to http://localhost:3000 to continue your c6o journey.
 
