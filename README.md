@@ -28,7 +28,7 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 * Heading to http://localhost:3000 to continue your c6o journey.
 
 ## cronuseo SDKs for applications
-use these sdks to check permisisons
+use these sdks to check permisisons for the user.
 * python - https://pypi.org/project/cronuseosdk
 * nodejs - https://www.npmjs.com/package/cronuseosdk
 * golang - https://github.com/shashimalcse/cronuseogosdk
