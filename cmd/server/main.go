@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"os"
@@ -23,6 +24,9 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/user"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -102,6 +106,15 @@ func main() {
 
 	// Redis client.
 	permissionCache := cache.NewRedisCache(cfg.RedisEndpoint, 0, 200, cfg.RedisPassword)
+
+	// Mongo client.
+	mongo_client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Mongo))
+	if err != nil {
+		panic(err)
+	}
+	if err := mongo_client.Ping(context.TODO(), readpref.Primary()); err != nil {
+		panic(err)
+	}
 
 	e := buildHandler(db, cfg, logger, clients, permissionCache)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))

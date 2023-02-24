@@ -16,6 +16,7 @@ type Config struct {
 	API           string `yaml:"api" env:"API,secret"`
 	RedisEndpoint string `yaml:"redis_endpoint" env:"REDIS_ENDPOINT"`
 	RedisPassword string `yaml:"redis_password" env:"REDIS_PASSWORD"`
+	Mongo         string `yaml:"mongo" env:"Mongo,secret"`
 }
 
 // Validate the configuration values.
@@ -29,6 +30,7 @@ func (c Config) Validate() error {
 		validation.Field(&c.API, validation.Required),
 		validation.Field(&c.RedisEndpoint, validation.Required),
 		validation.Field(&c.RedisPassword, validation.Required),
+		validation.Field(&c.Mongo, validation.Required),
 	)
 }
 
