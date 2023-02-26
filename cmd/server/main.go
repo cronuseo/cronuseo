@@ -26,7 +26,6 @@ import (
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -112,9 +111,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	if err := mongo_client.Ping(context.TODO(), readpref.Primary()); err != nil {
-		panic(err)
-	}
+	_ = mongo_client.Database("monitoring").Collection("checks")
 
 	e := buildHandler(db, cfg, logger, clients, permissionCache)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))
