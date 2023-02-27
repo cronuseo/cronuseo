@@ -111,9 +111,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	_ = mongo_client.Database("monitoring").Collection("checks")
 
-	e := buildHandler(db, cfg, logger, clients, permissionCache)
+	e := buildHandler(db, cfg, logger, clients, permissionCache, mongo_client)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))
 	e.Logger.Fatal(e.Start(cfg.API))
 
@@ -126,6 +125,7 @@ func buildHandler(
 	logger *zap.Logger, // Logger
 	clients util.KetoClients, // Keto clients
 	permissionCache cache.PermissionCache, // Redis permission cache
+	monitoringClient *mongo.Client, // Mongo monitoring client
 ) *echo.Echo {
 
 	router := echo.New()
@@ -147,14 +147,15 @@ func buildHandler(
 	// API endpoints.
 	rg := router.Group("/api/v1")
 
-	// Currently this health check endpoint is used by the run console script to check availability of the service.
+	// Currently this health check endpoint is used by the run console script to check availability of tshashi@
+	he service.
 	rg.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
 
 	// Here we register all the handlers. Each handler handle jwt validation separately.
 	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger))
+	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), monitoringClient.Database("monitoring").Collection("checks"))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache, logger))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db), logger, permissionCache))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache, logger))
