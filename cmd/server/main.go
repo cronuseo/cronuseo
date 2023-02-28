@@ -107,7 +107,11 @@ func main() {
 	permissionCache := cache.NewRedisCache(cfg.RedisEndpoint, 0, 200, cfg.RedisPassword)
 
 	// Mongo client.
-	mongo_client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Mongo))
+	credential := options.Credential{
+		Username: cfg.MongoUser,
+		Password: cfg.MongoPassword,
+	}
+	mongo_client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Mongo).SetAuth(credential))
 	if err != nil {
 		panic(err)
 	}
@@ -147,8 +151,7 @@ func buildHandler(
 	// API endpoints.
 	rg := router.Group("/api/v1")
 
-	// Currently this health check endpoint is used by the run console script to check availability of tshashi@
-	he service.
+	// Currently this health check endpoint is used by the run console script to check availability of the service.
 	rg.GET("/health", func(c echo.Context) error {
 		return c.String(http.StatusOK, "OK")
 	})
