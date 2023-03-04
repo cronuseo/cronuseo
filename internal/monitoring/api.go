@@ -24,17 +24,17 @@ type resource struct {
 }
 
 // @Description Get allowed by org Id.
-// @Tags        Organization
-// @Param id path string true "Organization ID"
+// @Tags        Monitoring
+// @Param org_id path string true "Organization ID"
 // @Produce     json
-// @Success     200 {object}  entity.Organization
+// @Success     200 {object}  entity.AllowedData
 // @failure     404,500
 // @Router      {org_id}/monitoring/allowed_data [get]
 func (r resource) getAllowedData(c echo.Context) error {
-	organization, err := r.service.GetAllowedData(c.Request().Context(), c.Param("org_id"))
+	data, err := r.service.GetAllowedData(c.Request().Context(), c.Param("org_id"))
 	if err != nil {
 		return util.HandleError(err)
 	}
 
-	return c.JSON(http.StatusOK, organization)
+	return c.JSON(http.StatusOK, data)
 }

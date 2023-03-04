@@ -17,6 +17,7 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
+	"github.com/shashimalcse/cronuseo/internal/monitoring"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/permission"
 	"github.com/shashimalcse/cronuseo/internal/resource"
@@ -165,6 +166,7 @@ func buildHandler(
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db), logger))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache, logger))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db), logger))
+	monitoring.RegisterHandlers(rg, monitoring.NewService(monitoring.NewRepository(monitoringClient), logger))
 
 	return router
 }
