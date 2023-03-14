@@ -3,14 +3,17 @@ package check
 import (
 	"context"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterHandlers(r *echo.Group, service Service) {
-	res := permission{service}
+func RegisterHandlers(r *echo.Group, service Service, monitoring_client *mongo.Collection) {
+	res := permission{service: service, monitoring_client: monitoring_client}
 	router := r.Group("/:org/permission/check")
 	router.POST("", res.check)
 	router.POST("/username", res.checkbyusername)
@@ -19,7 +22,9 @@ func RegisterHandlers(r *echo.Group, service Service) {
 }
 
 type permission struct {
-	service Service
+	service           Service
+	monitoring_client *mongo.Collection
+	wg                sync.WaitGroup
 }
 
 // @Description Check tuple.
@@ -37,6 +42,7 @@ func (r permission) check(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
+
 	allow, err := r.service.CheckTuple(context.Background(), c.Param("org"), "permission", input, api_key)
 	if err != nil {
 		return util.HandleError(err)
@@ -60,10 +66,18 @@ func (r permission) checkbyusername(c echo.Context) error {
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
+
 	allow, err := r.service.CheckByUsername(context.Background(), c.Param("org"), "permission", input, api_key)
 	if err != nil {
 		return util.HandleError(err)
 	}
+
+	r.wg.Add(1)
+	go func(input entity.CheckRequestWithUser) {
+		defer r.wg.Done()
+		checkMetrics := entity.CheckMetrics{Request: input, Result: allow, Timestamp: time.Now()}
+		_, _ = r.monitoring_client.InsertOne(context.Background(), checkMetrics)
+	}(input)
 
 	return c.JSON(http.StatusOK, allow)
 }

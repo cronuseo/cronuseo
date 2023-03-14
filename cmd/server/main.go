@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
+	"github.com/shashimalcse/cronuseo/internal/monitoring"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/permission"
 	"github.com/shashimalcse/cronuseo/internal/resource"
@@ -23,6 +25,8 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/user"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
@@ -103,7 +107,17 @@ func main() {
 	// Redis client.
 	permissionCache := cache.NewRedisCache(cfg.RedisEndpoint, 0, 200, cfg.RedisPassword)
 
-	e := buildHandler(db, cfg, logger, clients, permissionCache)
+	// Mongo client.
+	credential := options.Credential{
+		Username: cfg.MongoUser,
+		Password: cfg.MongoPassword,
+	}
+	mongo_client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Mongo).SetAuth(credential))
+	if err != nil {
+		panic(err)
+	}
+
+	e := buildHandler(db, cfg, logger, clients, permissionCache, mongo_client)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))
 	e.Logger.Fatal(e.Start(cfg.API))
 
@@ -116,6 +130,7 @@ func buildHandler(
 	logger *zap.Logger, // Logger
 	clients util.KetoClients, // Keto clients
 	permissionCache cache.PermissionCache, // Redis permission cache
+	monitoringClient *mongo.Client, // Mongo monitoring client
 ) *echo.Echo {
 
 	router := echo.New()
@@ -144,13 +159,14 @@ func buildHandler(
 
 	// Here we register all the handlers. Each handler handle jwt validation separately.
 	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger))
+	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), monitoringClient.Database("monitoring").Collection("checks"))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache, logger))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db), logger, permissionCache))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache, logger))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db), logger))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache, logger))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db), logger))
+	monitoring.RegisterHandlers(rg, monitoring.NewService(monitoring.NewRepository(monitoringClient), logger))
 
 	return router
 }
