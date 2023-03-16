@@ -19,6 +19,7 @@ type Config struct {
 	Mongo         string `yaml:"mongo" env:"Mongo,secret"`
 	MongoUser     string `yaml:"mongouser" env:"MongoUser,secret"`
 	MongoPassword string `yaml:"mongopassword" env:"MongoPassword,secret"`
+	DefaultOrg    string `yaml:"default_org" env:"DEFAULT_ORG"`
 }
 
 // Validate the configuration values.
