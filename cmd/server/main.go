@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"flag"
+	"log"
 	"net/http"
 	"os"
 
@@ -17,6 +20,7 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
+	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/monitoring"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/permission"
@@ -25,6 +29,7 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/user"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	echoSwagger "github.com/swaggo/echo-swagger"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -117,6 +122,9 @@ func main() {
 		panic(err)
 	}
 
+	mongo_db := mongo_client.Database(cfg.MongoDBName)
+	InitializeOrganization(mongo_db, logger, cfg.DefaultOrg)
+
 	e := buildHandler(db, cfg, logger, clients, permissionCache, mongo_client)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))
 	e.Logger.Fatal(e.Start(cfg.API))
@@ -177,7 +185,7 @@ func InitializeLogger() *zap.Logger {
 	zap_config.EncodeTime = zapcore.ISO8601TimeEncoder
 	fileEncoder := zapcore.NewJSONEncoder(zap_config)
 	consoleEncoder := zapcore.NewConsoleEncoder(zap_config)
-	logFile, _ := os.OpenFile("text.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, _ := os.OpenFile("log.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	writer := zapcore.AddSync(logFile)
 	defaultLogLevel := zapcore.DebugLevel
 	core := zapcore.NewTee(
@@ -185,4 +193,37 @@ func InitializeLogger() *zap.Logger {
 		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), defaultLogLevel),
 	)
 	return zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
+}
+
+func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName string) {
+
+	orgCollection := db.Collection("organizations")
+	filter := bson.M{"name": orgName}
+	var org mongo_entity.Organization
+	err := orgCollection.FindOne(context.Background(), filter).Decode(&org)
+	if err == mongo.ErrNoDocuments {
+		// Organization doesn't exist, so create it
+		key := make([]byte, 32)
+
+		if _, err := rand.Read(key); err != nil {
+			logger.Fatal("Error while initializing organization", zap.String("initializing_organization", orgName))
+			os.Exit(-1)
+
+		}
+		APIKey := base64.StdEncoding.EncodeToString(key)
+		defaultOrg := mongo_entity.Organization{
+			DisplayName: orgName,
+			Identifier:  orgName,
+			API_KEY:     APIKey,
+		}
+		_, err = orgCollection.InsertOne(context.Background(), defaultOrg)
+		if err != nil {
+			log.Fatal(err)
+		}
+		logger.Info("Default organization created")
+	} else if err != nil {
+		logger.Fatal("Error while initializing organization", zap.String("initializing_organization", orgName))
+	} else {
+		logger.Info("Organization already exists")
+	}
 }

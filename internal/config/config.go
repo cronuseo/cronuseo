@@ -19,6 +19,7 @@ type Config struct {
 	Mongo         string `yaml:"mongo" env:"Mongo,secret"`
 	MongoUser     string `yaml:"mongouser" env:"MongoUser,secret"`
 	MongoPassword string `yaml:"mongopassword" env:"MongoPassword,secret"`
+	MongoDBName   string `yaml:"mongodbname" env:"MongoDBName,secret"`
 	DefaultOrg    string `yaml:"default_org" env:"DEFAULT_ORG"`
 }
 
@@ -36,6 +37,8 @@ func (c Config) Validate() error {
 		validation.Field(&c.Mongo, validation.Required),
 		validation.Field(&c.MongoUser, validation.Required),
 		validation.Field(&c.MongoPassword, validation.Required),
+		validation.Field(&c.DefaultOrg, validation.Required),
+		validation.Field(&c.MongoDBName, validation.Required),
 	)
 }
 
