@@ -203,6 +203,7 @@ func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName stri
 	err := orgCollection.FindOne(context.Background(), filter).Decode(&org)
 	if err == mongo.ErrNoDocuments {
 		// Organization doesn't exist, so create it
+
 		key := make([]byte, 32)
 
 		if _, err := rand.Read(key); err != nil {
@@ -211,6 +212,7 @@ func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName stri
 
 		}
 		APIKey := base64.StdEncoding.EncodeToString(key)
+
 		defaultOrg := mongo_entity.Organization{
 			DisplayName: orgName,
 			Identifier:  orgName,
