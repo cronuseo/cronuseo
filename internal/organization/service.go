@@ -22,7 +22,7 @@ type Service interface {
 }
 
 type Organization struct {
-	*mongo_entity.Organization
+	mongo_entity.Organization
 }
 
 type CreateOrganizationRequest struct {
@@ -63,7 +63,7 @@ func (s service) Get(ctx context.Context, id string) (Organization, error) {
 	if err != nil {
 		return Organization{}, &util.NotFoundError{Path: "Organization"}
 	}
-	return Organization{org}, nil
+	return Organization{*org}, nil
 }
 
 // Create new organization.
@@ -145,7 +145,7 @@ func (s service) Query(ctx context.Context) ([]Organization, error) {
 	}
 	result := []Organization{}
 	for _, item := range items {
-		result = append(result, Organization{&item})
+		result = append(result, Organization{item})
 	}
 	return result, nil
 }
