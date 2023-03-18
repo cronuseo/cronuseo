@@ -6,7 +6,7 @@ import (
 	"encoding/base64"
 
 	"github.com/shashimalcse/cronuseo/internal/cache"
-	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.uber.org/zap"
 
@@ -17,23 +17,22 @@ type Service interface {
 	Get(ctx context.Context, id string) (Organization, error)
 	Query(ctx context.Context) ([]Organization, error)
 	Create(ctx context.Context, input CreateOrganizationRequest) (Organization, error)
-	Update(ctx context.Context, id string, input UpdateOrganizationRequest) (Organization, error)
 	RefreshAPIKey(ctx context.Context, id string) (Organization, error)
 	Delete(ctx context.Context, id string) (Organization, error)
 }
 
 type Organization struct {
-	entity.Organization
+	*mongo_entity.Organization
 }
 
 type CreateOrganizationRequest struct {
-	Key  string `json:"org_key" db:"org_key"`
-	Name string `json:"name" db:"name"`
+	Identifier  string `json:"identifier" db:"identifier"`
+	DisplayName string `json:"display_name" db:"display_name"`
 }
 
 func (m CreateOrganizationRequest) Validate() error {
 	return validation.ValidateStruct(&m,
-		validation.Field(&m.Key, validation.Required),
+		validation.Field(&m.Identifier, validation.Required),
 	)
 }
 
@@ -60,13 +59,11 @@ func NewService(repo Repository, logger *zap.Logger, permissionCache cache.Permi
 // Get organization by id.
 func (s service) Get(ctx context.Context, id string) (Organization, error) {
 
-	organization, err := s.repo.Get(ctx, id)
+	org, err := s.repo.Get(ctx, id)
 	if err != nil {
-		s.logger.Error("Error while getting the organization.",
-			zap.String("organization_id", id))
 		return Organization{}, &util.NotFoundError{Path: "Organization"}
 	}
-	return Organization{organization}, nil
+	return Organization{org}, nil
 }
 
 // Create new organization.
@@ -74,58 +71,27 @@ func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Org
 
 	// Validate organization
 	if err := req.Validate(); err != nil {
-		s.logger.Error("Error while validating organization create request.")
 		return Organization{}, &util.InvalidInputError{Path: "Invalid input for organization."}
 
 	}
 
 	// Check organization exists.
-	exists, _ := s.repo.ExistByKey(ctx, req.Key)
+	exists, _ := s.repo.CheckOrgExistByIdentifier(ctx, req.Identifier)
 	if exists {
 		s.logger.Debug("Organization already exists.")
-		return Organization{}, &util.AlreadyExistsError{Path: "Organization : " + req.Key + " already exists."}
+		return Organization{}, &util.AlreadyExistsError{Path: "Organization : " + req.Identifier + " already exists."}
 
 	}
-	// Generate organization id.
-	id := entity.GenerateID()
 
-	err := s.repo.Create(ctx, entity.Organization{
-		ID:   id,
-		Key:  req.Key,
-		Name: req.Name,
+	id, err := s.repo.Create(ctx, mongo_entity.Organization{
+		Identifier:  req.Identifier,
+		DisplayName: req.DisplayName,
 	})
 	if err != nil {
-		s.logger.Error("Error while updating organization.",
-			zap.String("organization_id", id))
+		s.logger.Error("Error while creating organization.")
 		return Organization{}, err
 	}
 	return s.Get(ctx, id)
-}
-
-// Update organization by id.
-func (s service) Update(ctx context.Context, id string, req UpdateOrganizationRequest) (Organization, error) {
-
-	// Validate organization
-	if err := req.Validate(); err != nil {
-		s.logger.Error("Error while validating organization create request.")
-		return Organization{}, &util.InvalidInputError{Path: "Invalid input for organization."}
-
-	}
-
-	// Get organization
-	organization, err := s.Get(ctx, id)
-	if err != nil {
-		s.logger.Debug("Organization not exists.", zap.String("organization_id", id))
-		return Organization{}, &util.NotFoundError{Path: "Organization " + id + " not exists."}
-	}
-
-	organization.Name = req.Name
-	if err := s.repo.Update(ctx, organization.Organization); err != nil {
-		s.logger.Error("Error while updating organization.",
-			zap.String("organization_id", id))
-		return Organization{}, err
-	}
-	return organization, err
 }
 
 // Delete organization by id.
@@ -137,8 +103,7 @@ func (s service) Delete(ctx context.Context, id string) (Organization, error) {
 		return Organization{}, &util.NotFoundError{Path: "Organization " + id + " not exists."}
 	}
 	if err = s.repo.Delete(ctx, id); err != nil {
-		s.logger.Error("Error while deleting organization.",
-			zap.String("organization_id", id))
+		s.logger.Error("Error while deleting organization.", zap.String("organization_id", id))
 		return Organization{}, err
 	}
 	return organization, nil
@@ -148,8 +113,8 @@ func (s service) Delete(ctx context.Context, id string) (Organization, error) {
 func (s service) RefreshAPIKey(ctx context.Context, id string) (Organization, error) {
 
 	// Get organization
-	organization, err := s.Get(ctx, id)
-	if err != nil {
+	exists, _ := s.repo.CheckOrgExistById(ctx, id)
+	if !exists {
 		s.logger.Debug("Organization not exists.", zap.String("organization_id", id))
 		return Organization{}, &util.NotFoundError{Path: "Organization " + id + " not exists."}
 	}
@@ -161,13 +126,12 @@ func (s service) RefreshAPIKey(ctx context.Context, id string) (Organization, er
 		return Organization{}, err
 	}
 	APIKey := base64.StdEncoding.EncodeToString(key)
-	if err := s.repo.RefreshAPIKey(ctx, APIKey, organization.ID); err != nil {
-		s.logger.Error("Error while updating organization.",
-			zap.String("organization_id", id))
+	if err := s.repo.RefreshAPIKey(ctx, APIKey, id); err != nil {
+		s.logger.Error("Error while updating organization.", zap.String("organization_id", id))
 		return Organization{}, err
 	}
 	s.permissionCache.DeleteAPIKey(ctx)
-	organization, err = s.Get(ctx, id)
+	organization, err := s.Get(ctx, id)
 	return organization, err
 }
 
@@ -181,7 +145,7 @@ func (s service) Query(ctx context.Context) ([]Organization, error) {
 	}
 	result := []Organization{}
 	for _, item := range items {
-		result = append(result, Organization{item})
+		result = append(result, Organization{&item})
 	}
 	return result, nil
 }

@@ -16,7 +16,7 @@ import (
 type Repository interface {
 	Get(ctx context.Context, id string) (*mongo_entity.Organization, error)
 	Query(ctx context.Context) ([]mongo_entity.Organization, error)
-	Create(ctx context.Context, organization mongo_entity.Organization) error
+	Create(ctx context.Context, organization mongo_entity.Organization) (string, error)
 	Delete(ctx context.Context, id string) error
 	RefreshAPIKey(ctx context.Context, apiKey string, id string) error
 	CheckOrgExistById(ctx context.Context, id string) (bool, error)
@@ -60,13 +60,20 @@ func (r repository) Get(ctx context.Context, id string) (*mongo_entity.Organizat
 }
 
 // Create new organization.
-func (r repository) Create(ctx context.Context, organization mongo_entity.Organization) error {
+func (r repository) Create(ctx context.Context, organization mongo_entity.Organization) (string, error) {
 
-	_, err := r.mongodb.Collection("organizations").InsertOne(context.Background(), organization)
+	result, err := r.mongodb.Collection("organizations").InsertOne(context.Background(), organization)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	// Get the ID of the newly created document and convert it to a string
+	objID, ok := result.InsertedID.(primitive.ObjectID)
+	if !ok {
+		return "", mongo.ErrNoDocuments
+	}
+	orgID := objID.Hex()
+
+	return orgID, nil
 }
 
 // Delete organization.

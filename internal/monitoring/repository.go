@@ -13,18 +13,18 @@ type Repository interface {
 }
 
 type repository struct {
-	monitoringClient *mongo.Client
+	mongodb *mongo.Database
 }
 
-func NewRepository(monitoringClient *mongo.Client) Repository {
+func NewRepository(mongodb *mongo.Database) Repository {
 
-	return repository{monitoringClient: monitoringClient}
+	return repository{mongodb: mongodb}
 }
 
 // Get allowed data.
 func (r repository) GetAllowed(ctx context.Context, orgId string) (entity.AllowedData, error) {
 
-	collection := r.monitoringClient.Database("monitoring").Collection("checks")
+	collection := r.mongodb.Collection("checks")
 
 	data := entity.AllowedData{}
 

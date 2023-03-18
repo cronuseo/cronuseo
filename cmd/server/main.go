@@ -125,7 +125,7 @@ func main() {
 	mongo_db := mongo_client.Database(cfg.MongoDBName)
 	InitializeOrganization(mongo_db, logger, cfg.DefaultOrg)
 
-	e := buildHandler(db, cfg, logger, clients, permissionCache, mongo_client)
+	e := buildHandler(db, cfg, logger, clients, permissionCache, mongo_db)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))
 	e.Logger.Fatal(e.Start(cfg.API))
 
@@ -138,7 +138,7 @@ func buildHandler(
 	logger *zap.Logger, // Logger
 	clients util.KetoClients, // Keto clients
 	permissionCache cache.PermissionCache, // Redis permission cache
-	monitoringClient *mongo.Client, // Mongo monitoring client
+	mongodb *mongo.Database, // Mongo monitoring client
 ) *echo.Echo {
 
 	router := echo.New()
@@ -167,14 +167,14 @@ func buildHandler(
 
 	// Here we register all the handlers. Each handler handle jwt validation separately.
 	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), monitoringClient.Database("monitoring").Collection("checks"))
+	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache, logger))
-	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db), logger, permissionCache))
+	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db, mongodb), logger, permissionCache))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache, logger))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db), logger))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache, logger))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db), logger))
-	monitoring.RegisterHandlers(rg, monitoring.NewService(monitoring.NewRepository(monitoringClient), logger))
+	monitoring.RegisterHandlers(rg, monitoring.NewService(monitoring.NewRepository(mongodb), logger))
 
 	return router
 }

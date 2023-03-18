@@ -20,7 +20,6 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
-	router.PUT("/:id", res.update)
 	router.POST("/:id/refresh", res.refreshAPIKey)
 }
 
@@ -76,28 +75,6 @@ func (r resource) create(c echo.Context) error {
 		return util.HandleError(err)
 	}
 
-	return c.JSON(http.StatusCreated, organization)
-}
-
-// @Description Update organization.
-// @Tags        Organization
-// @Accept      json
-// @Param id path string true "Organization ID"
-// @Param request body UpdateOrganizationRequest true "body"
-// @Produce     json
-// @Success     201 {object}  entity.Organization
-// @failure     400,403,404,500
-// @Router      /organization/{id} [put]
-func (r resource) update(c echo.Context) error {
-	var input UpdateOrganizationRequest
-	if err := c.Bind(&input); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-	}
-
-	organization, err := r.service.Update(c.Request().Context(), c.Param("id"), input)
-	if err != nil {
-		return util.HandleError(err)
-	}
 	return c.JSON(http.StatusCreated, organization)
 }
 
