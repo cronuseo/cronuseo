@@ -9,8 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
-	"github.com/jmoiron/sqlx"
 )
 
 type Repository interface {
@@ -24,13 +22,12 @@ type Repository interface {
 }
 
 type repository struct {
-	db      *sqlx.DB
 	mongodb *mongo.Database
 }
 
-func NewRepository(db *sqlx.DB, mongodb *mongo.Database) Repository {
+func NewRepository(mongodb *mongo.Database) Repository {
 
-	return repository{db: db, mongodb: mongodb}
+	return repository{mongodb: mongodb}
 }
 
 // Get organization by id.
@@ -164,7 +161,11 @@ func (r repository) Query(ctx context.Context) ([]mongo_entity.Organization, err
 // Check if organization exists by id.
 func (r repository) CheckOrgExistById(ctx context.Context, id string) (bool, error) {
 
-	filter := bson.M{"_id": id}
+	orgId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+	filter := bson.M{"_id": orgId}
 
 	// Search for the organization in the "organizations" collection
 	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)

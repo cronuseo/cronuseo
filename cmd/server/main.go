@@ -169,9 +169,9 @@ func buildHandler(
 	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
 	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache, logger))
-	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(db, mongodb), logger, permissionCache))
+	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongodb), logger, permissionCache))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache, logger))
-	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(db), logger))
+	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongodb), logger))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache, logger))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db), logger))
 	monitoring.RegisterHandlers(rg, monitoring.NewService(monitoring.NewRepository(mongodb), logger))
@@ -198,7 +198,7 @@ func InitializeLogger() *zap.Logger {
 func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName string) {
 
 	orgCollection := db.Collection("organizations")
-	filter := bson.M{"name": orgName}
+	filter := bson.M{"identifier": orgName}
 	var org mongo_entity.Organization
 	err := orgCollection.FindOne(context.Background(), filter).Decode(&org)
 	if err == mongo.ErrNoDocuments {
@@ -217,6 +217,7 @@ func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName stri
 			DisplayName: orgName,
 			Identifier:  orgName,
 			API_KEY:     APIKey,
+			Resources:   []mongo_entity.Resource{},
 		}
 		_, err = orgCollection.InsertOne(context.Background(), defaultOrg)
 		if err != nil {

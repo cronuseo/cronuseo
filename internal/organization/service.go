@@ -36,16 +36,6 @@ func (m CreateOrganizationRequest) Validate() error {
 	)
 }
 
-type UpdateOrganizationRequest struct {
-	Name string `json:"name" db:"name"`
-}
-
-func (m UpdateOrganizationRequest) Validate() error {
-	return validation.ValidateStruct(&m,
-		validation.Field(&m.Name, validation.Length(0, 128)),
-	)
-}
-
 type service struct {
 	repo            Repository
 	logger          *zap.Logger
@@ -83,9 +73,18 @@ func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Org
 
 	}
 
+	key := make([]byte, 32)
+
+	if _, err := rand.Read(key); err != nil {
+		return Organization{}, err
+
+	}
+	APIKey := base64.StdEncoding.EncodeToString(key)
+
 	id, err := s.repo.Create(ctx, mongo_entity.Organization{
 		Identifier:  req.Identifier,
 		DisplayName: req.DisplayName,
+		API_KEY:     APIKey,
 	})
 	if err != nil {
 		s.logger.Error("Error while creating organization.")
