@@ -15,7 +15,7 @@ type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (*mongo_entity.Resource, error)
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.Resource, error)
 	Create(ctx context.Context, org_id string, resource mongo_entity.Resource) error
-	Update(ctx context.Context, org_id string, id string, update_resource UpdateResourceRequest) error
+	Update(ctx context.Context, org_id string, id string, update_resource UpdateResource) error
 	Delete(ctx context.Context, org_id string, id string) error
 	CheckResourceExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckResourceExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
@@ -83,7 +83,7 @@ func (r repository) Create(ctx context.Context, org_id string, resource mongo_en
 
 }
 
-func (r repository) Update(ctx context.Context, org_id string, id string, update_resource UpdateResourceRequest) error {
+func (r repository) Update(ctx context.Context, org_id string, id string, update_resource UpdateResource) error {
 
 	orgId, err := primitive.ObjectIDFromHex(org_id)
 	if err != nil {
@@ -102,6 +102,31 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		filter := bson.M{"_id": orgId, "resources._id": resId}
 		update := bson.M{"$set": bson.M{"resources.$.display_name": newName}}
 		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+		if err != nil {
+			return err
+		}
+	}
+
+	// add actions
+	if len(update_resource.AddedActions) > 0 {
+
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
+			"$each": update_resource.AddedActions,
+		}}}
+		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(update_resource.RemovedActions) > 0 {
+
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
+			"_id": bson.M{"$in": update_resource.RemovedActions},
+		}}}
+		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err
 		}

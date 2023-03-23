@@ -39,7 +39,13 @@ func (m CreateResourceRequest) Validate() error {
 type UpdateResourceRequest struct {
 	DisplayName    string                `json:"display_name"`
 	AddedActions   []mongo_entity.Action `json:"added_actions"`
-	RemovedActions []mongo_entity.Action `json:"removed_actions"`
+	RemovedActions []string              `json:"removed_actions"`
+}
+
+type UpdateResource struct {
+	DisplayName    string                `json:"display_name"`
+	AddedActions   []mongo_entity.Action `json:"added_actions"`
+	RemovedActions []primitive.ObjectID  `json:"removed_actions"`
 }
 
 type service struct {
@@ -112,7 +118,30 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
 	}
 
-	if err := s.repo.Update(ctx, org_id, id, req); err != nil {
+	var addedActions []mongo_entity.Action
+	for _, action := range req.AddedActions {
+		actionId := primitive.NewObjectID()
+		addedActions = append(addedActions, mongo_entity.Action{
+			ID:          actionId,
+			Identifier:  action.Identifier,
+			DisplayName: action.DisplayName,
+		})
+	}
+
+	var removedActions []primitive.ObjectID
+	for _, actionId := range req.RemovedActions {
+		id, err := primitive.ObjectIDFromHex(actionId)
+		if err != nil {
+			return Resource{}, err
+		}
+		removedActions = append(removedActions, id)
+	}
+
+	if err := s.repo.Update(ctx, org_id, id, UpdateResource{
+		DisplayName:    req.DisplayName,
+		AddedActions:   addedActions,
+		RemovedActions: removedActions,
+	}); err != nil {
 		s.logger.Error("Error while updating resource.",
 			zap.String("organization_id", org_id),
 			zap.String("resource_id", id))
