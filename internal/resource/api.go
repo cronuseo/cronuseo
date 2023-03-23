@@ -19,7 +19,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.GET("", res.query)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
-	// router.DELETE("/:id", res.delete)
+	router.DELETE("/:id", res.delete)
 	// router.PUT("/:id", res.update)
 }
 
@@ -175,11 +175,11 @@ func (r resource) create(c echo.Context) error {
 // @Success     204
 // @failure     404,500
 // @Router      /{org_id}/resource/{id} [delete]
-// func (r resource) delete(c echo.Context) error {
+func (r resource) delete(c echo.Context) error {
 
-// 	_, err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
-// 	if err != nil {
-// 		return util.HandleError(err)
-// 	}
-// 	return c.JSON(http.StatusNoContent, "")
-// }
+	err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusNoContent, "")
+}

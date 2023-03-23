@@ -16,7 +16,7 @@ type Repository interface {
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.Resource, error)
 	Create(ctx context.Context, org_id string, resource mongo_entity.Resource) error
 	// Update(ctx context.Context, org_id string, resource mongo_entity.Resource) error
-	// Delete(ctx context.Context, org_id string, id string) error
+	Delete(ctx context.Context, org_id string, id string) error
 	CheckResourceExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckResourceExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
 }
@@ -112,6 +112,36 @@ func (r repository) Query(ctx context.Context, org_id string) (*[]mongo_entity.R
 	}
 
 	return &org.Resources, nil
+}
+
+// Delete existing resource.
+func (r repository) Delete(ctx context.Context, org_id string, id string) error {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return err
+	}
+
+	resId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	// Define filter to find the resource by its ID
+	filter := bson.M{"_id": orgId}
+	update := bson.M{"$pull": bson.M{"resources": bson.M{"_id": resId}}}
+	// Find the resource document in the "organizations" collection
+	result, err := r.mongodb.Collection("organizations").UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
+	if err != nil {
+		return err
+	}
+
+	// Check if the update operation modified any documents
+	if result.ModifiedCount == 0 {
+		return err
+	}
+
+	return nil
 }
 
 // Check if resource exists by id.

@@ -16,7 +16,7 @@ type Service interface {
 	Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error)
 	Create(ctx context.Context, org_id string, input CreateResourceRequest) (Resource, error)
 	// Update(ctx context.Context, org_id string, id string, input UpdateResourceRequest) (Resource, error)
-	// Delete(ctx context.Context, org_id string, id string) (Resource, error)
+	Delete(ctx context.Context, org_id string, id string) error
 }
 
 type Resource struct {
@@ -62,9 +62,7 @@ func (s service) Get(ctx context.Context, org_id string, id string) (Resource, e
 
 	resource, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
-		s.logger.Error("Error while getting the resource.",
-			zap.String("organization_id", org_id),
-			zap.String("resource_id", id))
+		s.logger.Error("Error while getting the resource.", zap.String("organization_id", org_id), zap.String("resource_id", id))
 		return Resource{}, &util.NotFoundError{Path: "Resource"}
 	}
 	return Resource{*resource}, err
@@ -135,21 +133,21 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 // }
 
 // Delete resource.
-// func (s service) Delete(ctx context.Context, org_id string, id string) (Resource, error) {
+func (s service) Delete(ctx context.Context, org_id string, id string) error {
 
-// 	resource, err := s.Get(ctx, org_id, id)
-// 	if err != nil {
-// 		s.logger.Error("Resource not exists.", zap.String("resource_id", id))
-// 		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
-// 	}
-// 	if err = s.repo.Delete(ctx, org_id, id); err != nil {
-// 		s.logger.Error("Error while deleting resource.",
-// 			zap.String("organization_id", org_id),
-// 			zap.String("resource_id", id))
-// 		return Resource{}, err
-// 	}
-// 	return resource, err
-// }
+	_, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Error("Resource not exists.", zap.String("resource_id", id))
+		return &util.NotFoundError{Path: "Resource " + id + " not exists."}
+	}
+	if err = s.repo.Delete(ctx, org_id, id); err != nil {
+		s.logger.Error("Error while deleting resource.",
+			zap.String("organization_id", org_id),
+			zap.String("resource_id", id))
+		return err
+	}
+	return nil
+}
 
 // Pagination filter.
 type Filter struct {
