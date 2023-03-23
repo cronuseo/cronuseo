@@ -16,7 +16,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 		SigningKey: []byte(auth.SecretKey),
 	}
 	router.Use(echojwt.WithConfig(config))
-	// router.GET("", res.query)
+	router.GET("", res.query)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
 	// router.DELETE("/:id", res.delete)
@@ -55,70 +55,70 @@ func (r resource) get(c echo.Context) error {
 // @Success     200 {array}  entity.ResourceQueryResponse
 // @failure     500
 // @Router      /{org_id}/resource [get]
-// func (r resource) query(c echo.Context) error {
+func (r resource) query(c echo.Context) error {
 
-// 	org_id := c.Param("org_id")
-// 	var filter Filter
-// 	if err := c.Bind(&filter); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-// 	}
-// 	if filter.Limit == 0 {
-// 		filter.Limit = 10
-// 	}
-// 	// Get all resources.
-// 	resources, err := r.service.Query(c.Request().Context(), org_id, filter)
-// 	if err != nil {
-// 		return util.HandleError(err)
-// 	}
-// 	response := entity.ResourceQueryResponse{}
-// 	maxResourceID := -1
-// 	minResourceID := 10000
+	org_id := c.Param("org_id")
+	var filter Filter
+	if err := c.Bind(&filter); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	if filter.Limit == 0 {
+		filter.Limit = 10
+	}
+	// Get all resources.
+	resources, err := r.service.Query(c.Request().Context(), org_id, filter)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	// response := entity.ResourceQueryResponse{}
+	// maxResourceID := -1
+	// minResourceID := 10000
 
-// 	// Create resource results for the response.
-// 	for _, resource := range resources {
-// 		newResource := entity.ResourceResult{ID: resource.ID, Name: resource.Name, Key: resource.Key,
-// 			OrgID: resource.OrgID, CreatedAt: resource.CreatedAt, UpdatedAt: resource.UpdatedAt}
-// 		newResource.Links = entity.ResourceLinks{Self: "/" + org_id + "/resource/" + resource.ID}
-// 		response.Results = append(response.Results, newResource)
-// 		if i, err := strconv.Atoi(resource.LogicalKey); err == nil {
-// 			if maxResourceID < i {
-// 				maxResourceID = i
-// 			}
-// 			if minResourceID > i {
-// 				minResourceID = i
-// 			}
-// 		}
+	// // Create resource results for the response.
+	// for _, resource := range resources {
+	// 	newResource := entity.ResourceResult{ID: resource.ID, Name: resource.Name, Key: resource.Key,
+	// 		OrgID: resource.OrgID, CreatedAt: resource.CreatedAt, UpdatedAt: resource.UpdatedAt}
+	// 	newResource.Links = entity.ResourceLinks{Self: "/" + org_id + "/resource/" + resource.ID}
+	// 	response.Results = append(response.Results, newResource)
+	// 	if i, err := strconv.Atoi(resource.LogicalKey); err == nil {
+	// 		if maxResourceID < i {
+	// 			maxResourceID = i
+	// 		}
+	// 		if minResourceID > i {
+	// 			minResourceID = i
+	// 		}
+	// 	}
 
-// 	}
-// 	// Pagination
-// 	response.Size = len(resources)
-// 	response.Limit = filter.Limit
-// 	if len(resources) > 0 {
-// 		response.Cursor = maxResourceID
-// 		links := entity.Links{}
-// 		links.Self = "/" + org_id + "/resource/"
-// 		if filter.Name != "" {
-// 			links.Self += "?name=" + filter.Name
-// 		}
-// 		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
-// 		if len(resources) == filter.Limit {
-// 			links.Next = "/" + org_id + "/resource/"
-// 			if filter.Name != "" {
-// 				links.Next += "?name=" + filter.Name
-// 			}
-// 			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-// 		}
-// 		if filter.Cursor != 0 {
-// 			links.Prev = "/" + org_id + "/resource/"
-// 			if filter.Name != "" {
-// 				links.Prev += "?name=" + filter.Name
-// 			}
-// 			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
-// 		}
-// 		response.Links = links
-// 	}
-// 	return c.JSON(http.StatusOK, response)
-// }
+	// }
+	// // Pagination
+	// response.Size = len(resources)
+	// response.Limit = filter.Limit
+	// if len(resources) > 0 {
+	// 	response.Cursor = maxResourceID
+	// 	links := entity.Links{}
+	// 	links.Self = "/" + org_id + "/resource/"
+	// 	if filter.Name != "" {
+	// 		links.Self += "?name=" + filter.Name
+	// 	}
+	// 	links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
+	// 	if len(resources) == filter.Limit {
+	// 		links.Next = "/" + org_id + "/resource/"
+	// 		if filter.Name != "" {
+	// 			links.Next += "?name=" + filter.Name
+	// 		}
+	// 		links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
+	// 	}
+	// 	if filter.Cursor != 0 {
+	// 		links.Prev = "/" + org_id + "/resource/"
+	// 		if filter.Name != "" {
+	// 			links.Prev += "?name=" + filter.Name
+	// 		}
+	// 		links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
+	// 	}
+	// 	response.Links = links
+	// }
+	return c.JSON(http.StatusOK, resources)
+}
 
 // @Description Create resource.
 // @Tags        Resource

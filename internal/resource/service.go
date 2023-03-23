@@ -13,7 +13,7 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (Resource, error)
-	// Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error)
+	Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error)
 	Create(ctx context.Context, org_id string, input CreateResourceRequest) (Resource, error)
 	// Update(ctx context.Context, org_id string, id string, input UpdateResourceRequest) (Resource, error)
 	// Delete(ctx context.Context, org_id string, id string) (Resource, error)
@@ -159,18 +159,18 @@ type Filter struct {
 }
 
 // Get all resources.
-// func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error) {
+func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error) {
 
-// 	result := []Resource{}
-// 	items, err := s.repo.Query(ctx, org_id, filter)
-// 	if err != nil {
-// 		s.logger.Error("Error while retrieving all resources.",
-// 			zap.String("organization_id", org_id))
-// 		return []Resource{}, err
-// 	}
+	result := []Resource{}
+	items, err := s.repo.Query(ctx, org_id)
+	if err != nil {
+		s.logger.Error("Error while retrieving all resources.",
+			zap.String("organization_id", org_id))
+		return []Resource{}, err
+	}
 
-// 	for _, item := range items {
-// 		result = append(result, Resource{item})
-// 	}
-// 	return result, err
-// }
+	for _, item := range *items {
+		result = append(result, Resource{item})
+	}
+	return result, err
+}
