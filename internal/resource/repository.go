@@ -15,7 +15,7 @@ type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (*mongo_entity.Resource, error)
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.Resource, error)
 	Create(ctx context.Context, org_id string, resource mongo_entity.Resource) error
-	// Update(ctx context.Context, org_id string, resource mongo_entity.Resource) error
+	Update(ctx context.Context, org_id string, id string, update_resource UpdateResourceRequest) error
 	Delete(ctx context.Context, org_id string, id string) error
 	CheckResourceExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckResourceExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
@@ -67,8 +67,6 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 // Create new resource.
 func (r repository) Create(ctx context.Context, org_id string, resource mongo_entity.Resource) error {
 
-	coll := r.mongodb.Collection("organizations")
-
 	orgId, err := primitive.ObjectIDFromHex(org_id)
 	if err != nil {
 		return err
@@ -76,13 +74,40 @@ func (r repository) Create(ctx context.Context, org_id string, resource mongo_en
 	// Update the APIResources array for the given organization
 	filter := bson.M{"_id": orgId}
 	update := bson.M{"$push": bson.M{"resources": resource}}
-	_, err = coll.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
 	}
 
 	return nil
 
+}
+
+func (r repository) Update(ctx context.Context, org_id string, id string, update_resource UpdateResourceRequest) error {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return err
+	}
+
+	resId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	newName := update_resource.DisplayName
+
+	if newName != "" {
+
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$set": bson.M{"resources.$.display_name": newName}}
+		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 // Get all resources.

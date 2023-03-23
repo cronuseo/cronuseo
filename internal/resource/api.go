@@ -20,7 +20,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
-	// router.PUT("/:id", res.update)
+	router.PUT("/:id", res.update)
 }
 
 type resource struct {
@@ -153,19 +153,19 @@ func (r resource) create(c echo.Context) error {
 // @Success     201 {object}  entity.Resource
 // @failure     400,403,404,500
 // @Router      /{org_id}/resource/{id} [put]
-// func (r resource) update(c echo.Context) error {
+func (r resource) update(c echo.Context) error {
 
-// 	var input UpdateResourceRequest
-// 	if err := c.Bind(&input); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-// 	}
+	var input UpdateResourceRequest
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
 
-// 	resource, err := r.service.Update(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
-// 	if err != nil {
-// 		return util.HandleError(err)
-// 	}
-// 	return c.JSON(http.StatusCreated, resource)
-// }
+	resource, err := r.service.Update(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusCreated, resource)
+}
 
 // @Description Delete resource.
 // @Tags        Resource

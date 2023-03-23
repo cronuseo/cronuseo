@@ -15,7 +15,7 @@ type Service interface {
 	Get(ctx context.Context, org_id string, id string) (Resource, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error)
 	Create(ctx context.Context, org_id string, input CreateResourceRequest) (Resource, error)
-	// Update(ctx context.Context, org_id string, id string, input UpdateResourceRequest) (Resource, error)
+	Update(ctx context.Context, org_id string, id string, input UpdateResourceRequest) (Resource, error)
 	Delete(ctx context.Context, org_id string, id string) error
 }
 
@@ -37,14 +37,9 @@ func (m CreateResourceRequest) Validate() error {
 }
 
 type UpdateResourceRequest struct {
-	DisplayName    string                `json:"display_name" db:"display_name"`
+	DisplayName    string                `json:"display_name"`
 	AddedActions   []mongo_entity.Action `json:"added_actions"`
-	RemovedActions []mongo_entity.Action `json:"added_actions"`
-}
-
-func (m UpdateResourceRequest) Validate() error {
-
-	return validation.ValidateStruct(&m)
+	RemovedActions []mongo_entity.Action `json:"removed_actions"`
 }
 
 type service struct {
@@ -108,29 +103,23 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 }
 
 // Update resource.
-// func (s service) Update(ctx context.Context, org_id string, id string, req UpdateResourceRequest) (Resource, error) {
+func (s service) Update(ctx context.Context, org_id string, id string, req UpdateResourceRequest) (Resource, error) {
 
-// 	// Validate resource request.
-// 	if err := req.Validate(); err != nil {
-// 		s.logger.Error("Error while validating resource request.")
-// 		return Resource{}, &util.InvalidInputError{Path: "Invalid input for resource."}
-// 	}
+	// Get resource.
+	resource, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
+		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
+	}
 
-// 	// Get resource.
-// 	resource, err := s.Get(ctx, org_id, id)
-// 	if err != nil {
-// 		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
-// 		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
-// 	}
-// 	resource.Name = req.Name
-// 	if err := s.repo.Update(ctx, org_id, resource.Resource); err != nil {
-// 		s.logger.Error("Error while updating resource.",
-// 			zap.String("organization_id", org_id),
-// 			zap.String("resource_id", id))
-// 		return Resource{}, err
-// 	}
-// 	return resource, err
-// }
+	if err := s.repo.Update(ctx, org_id, id, req); err != nil {
+		s.logger.Error("Error while updating resource.",
+			zap.String("organization_id", org_id),
+			zap.String("resource_id", id))
+		return Resource{}, err
+	}
+	return resource, err
+}
 
 // Delete resource.
 func (s service) Delete(ctx context.Context, org_id string, id string) error {
