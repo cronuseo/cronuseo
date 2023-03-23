@@ -105,14 +105,15 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 		s.logger.Error("Error while creating resource.", zap.String("organization_id", org_id), zap.String("resource identifier", req.Identifier))
 		return Resource{}, err
 	}
-	return Resource{}, nil
+	resource, err := s.repo.Get(ctx, org_id, resId.String())
+	return Resource{*resource}, nil
 }
 
 // Update resource.
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateResourceRequest) (Resource, error) {
 
 	// Get resource.
-	resource, err := s.Get(ctx, org_id, id)
+	_, err := s.Get(ctx, org_id, id)
 	if err != nil {
 		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
 		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
@@ -147,7 +148,8 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 			zap.String("resource_id", id))
 		return Resource{}, err
 	}
-	return resource, err
+	updatedResource, err := s.repo.Get(ctx, org_id, id)
+	return Resource{*updatedResource}, nil
 }
 
 // Delete resource.
