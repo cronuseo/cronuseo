@@ -16,6 +16,7 @@ type Repository interface {
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.Resource, error)
 	Create(ctx context.Context, org_id string, resource mongo_entity.Resource) error
 	Update(ctx context.Context, org_id string, id string, update_resource UpdateResource) error
+	Patch(ctx context.Context, org_id string, id string, patch_resource PatchResource) error
 	Delete(ctx context.Context, org_id string, id string) error
 	CheckResourceExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckResourceExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
@@ -125,6 +126,46 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		filter := bson.M{"_id": orgId, "resources._id": resId}
 		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
 			"_id": bson.M{"$in": update_resource.RemovedActions},
+		}}}
+		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r repository) Patch(ctx context.Context, org_id string, id string, patch_resource PatchResource) error {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return err
+	}
+
+	resId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	// add actions
+	if len(patch_resource.AddedActions) > 0 {
+
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
+			"$each": patch_resource.AddedActions,
+		}}}
+		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(patch_resource.RemovedActions) > 0 {
+
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
+			"_id": bson.M{"$in": patch_resource.RemovedActions},
 		}}}
 		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {

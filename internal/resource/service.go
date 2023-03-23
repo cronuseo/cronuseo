@@ -16,6 +16,7 @@ type Service interface {
 	Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error)
 	Create(ctx context.Context, org_id string, input CreateResourceRequest) (Resource, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateResourceRequest) (Resource, error)
+	Patch(ctx context.Context, org_id string, id string, input PatchResourceRequest) (Resource, error)
 	Delete(ctx context.Context, org_id string, id string) error
 }
 
@@ -42,8 +43,18 @@ type UpdateResourceRequest struct {
 	RemovedActions []string              `json:"removed_actions"`
 }
 
+type PatchResourceRequest struct {
+	AddedActions   []mongo_entity.Action `json:"added_actions"`
+	RemovedActions []string              `json:"removed_actions"`
+}
+
 type UpdateResource struct {
 	DisplayName    string                `json:"display_name"`
+	AddedActions   []mongo_entity.Action `json:"added_actions"`
+	RemovedActions []primitive.ObjectID  `json:"removed_actions"`
+}
+
+type PatchResource struct {
 	AddedActions   []mongo_entity.Action `json:"added_actions"`
 	RemovedActions []primitive.ObjectID  `json:"removed_actions"`
 }
@@ -112,6 +123,54 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 // Update resource.
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateResourceRequest) (Resource, error) {
 
+	// Get resource to check resource exists.
+	_, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
+		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
+	}
+
+	// Set added actions.
+	var addedActions []mongo_entity.Action
+	for _, action := range req.AddedActions {
+		actionId := primitive.NewObjectID()
+		addedActions = append(addedActions, mongo_entity.Action{
+			ID:          actionId,
+			Identifier:  action.Identifier,
+			DisplayName: action.DisplayName,
+		})
+	}
+	// Set removed actions ids.
+	var removedActions []primitive.ObjectID
+	for _, actionId := range req.RemovedActions {
+		id, err := primitive.ObjectIDFromHex(actionId)
+		if err != nil {
+			return Resource{}, err
+		}
+		removedActions = append(removedActions, id)
+	}
+
+	if err := s.repo.Update(ctx, org_id, id, UpdateResource{
+		DisplayName:    req.DisplayName,
+		AddedActions:   addedActions,
+		RemovedActions: removedActions,
+	}); err != nil {
+		s.logger.Error("Error while updating resource.",
+			zap.String("organization_id", org_id),
+			zap.String("resource_id", id))
+		return Resource{}, err
+	}
+	updatedResource, err := s.repo.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
+		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
+	}
+	return Resource{*updatedResource}, nil
+}
+
+// Patch resource.
+func (s service) Patch(ctx context.Context, org_id string, id string, req PatchResourceRequest) (Resource, error) {
+
 	// Get resource.
 	_, err := s.Get(ctx, org_id, id)
 	if err != nil {
@@ -138,8 +197,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		removedActions = append(removedActions, id)
 	}
 
-	if err := s.repo.Update(ctx, org_id, id, UpdateResource{
-		DisplayName:    req.DisplayName,
+	if err := s.repo.Patch(ctx, org_id, id, PatchResource{
 		AddedActions:   addedActions,
 		RemovedActions: removedActions,
 	}); err != nil {
@@ -149,6 +207,10 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return Resource{}, err
 	}
 	updatedResource, err := s.repo.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
+		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
+	}
 	return Resource{*updatedResource}, nil
 }
 
