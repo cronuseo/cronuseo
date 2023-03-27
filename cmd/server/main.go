@@ -170,7 +170,7 @@ func buildHandler(
 	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
 	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache, logger))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongodb), logger, permissionCache))
-	user.RegisterHandlers(rg, user.NewService(user.NewRepository(db), permissionCache, logger))
+	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongodb), permissionCache, logger))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongodb), logger))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache, logger))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db), logger))
@@ -218,6 +218,8 @@ func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName stri
 			Identifier:  orgName,
 			API_KEY:     APIKey,
 			Resources:   []mongo_entity.Resource{},
+			Users:       []mongo_entity.User{},
+			Roles:       []mongo_entity.Role{},
 		}
 		_, err = orgCollection.InsertOne(context.Background(), defaultOrg)
 		if err != nil {
