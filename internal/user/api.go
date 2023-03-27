@@ -19,8 +19,8 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	// router.GET("", res.query)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
-	// router.DELETE("/:id", res.delete)
-	// router.PUT("/:id", res.update)
+	router.DELETE("/:id", res.delete)
+	router.PUT("/:id", res.update)
 	// router.PATCH("/:id", res.patch)
 }
 
@@ -153,19 +153,19 @@ func (r resource) create(c echo.Context) error {
 // @Success     201 {object}  entity.User
 // @failure     400,403,404,500
 // @Router      /{org_id}/user/{id} [put]
-// func (r resource) update(c echo.Context) error {
+func (r resource) update(c echo.Context) error {
 
-// 	var input UpdateUserRequest
-// 	if err := c.Bind(&input); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-// 	}
+	var input UpdateUserRequest
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
 
-// 	user, err := r.service.Update(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
-// 	if err != nil {
-// 		return util.HandleError(err)
-// 	}
-// 	return c.JSON(http.StatusCreated, user)
-// }
+	user, err := r.service.Update(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusCreated, user)
+}
 
 // // @Description Delete user.
 // // @Tags        User
@@ -175,14 +175,14 @@ func (r resource) create(c echo.Context) error {
 // // @Success     204
 // // @failure     404,500
 // // @Router      /{org_id}/user/{id} [delete]
-// func (r resource) delete(c echo.Context) error {
+func (r resource) delete(c echo.Context) error {
 
-// 	_, err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
-// 	if err != nil {
-// 		return util.HandleError(err)
-// 	}
-// 	return c.JSON(http.StatusNoContent, "")
-// }
+	err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusNoContent, "")
+}
 
 // // @Description Patch user.
 // // @Tags        User
