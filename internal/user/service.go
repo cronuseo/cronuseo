@@ -14,7 +14,7 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (User, error)
-	// Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
+	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) error
@@ -121,15 +121,6 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return User{}, &util.InvalidInputError{Path: "Invalid input for user."}
 	}
 
-	// Get user.
-	user, err := s.Get(ctx, org_id, id)
-	if err != nil {
-		s.logger.Debug("User not exists.", zap.String("user_id", id))
-		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
-	}
-
-	user.FirstName = req.FirstName
-	user.LastName = req.LastName
 	if err := s.repo.Update(ctx, org_id, id, UpdateUser{
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
@@ -139,7 +130,12 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 			zap.String("user_id", id))
 		return User{}, err
 	}
-	return user, err
+	updatedUser, err := s.repo.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("User not exists.", zap.String("user_id", id))
+		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
+	}
+	return User{*updatedUser}, nil
 }
 
 // Delete user.
@@ -160,28 +156,29 @@ func (s service) Delete(ctx context.Context, org_id string, id string) error {
 	return nil
 }
 
-// // Pagination filter.
-// type Filter struct {
-// 	Cursor int    `json:"cursor" query:"cursor"`
-// 	Limit  int    `json:"limit" query:"limit"`
-// 	Name   string `json:"name" query:"name"`
-// }
+// Pagination filter.
+type Filter struct {
+	Cursor int    `json:"cursor" query:"cursor"`
+	Limit  int    `json:"limit" query:"limit"`
+	Name   string `json:"name" query:"name"`
+}
 
 // // Get all user.
-// func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]User, error) {
+func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]User, error) {
 
-// 	items, err := s.repo.Query(ctx, org_id, filter)
-// 	if err != nil {
-// 		s.logger.Error("Error while retrieving all users.",
-// 			zap.String("organization_id", org_id))
-// 		return []User{}, err
-// 	}
-// 	result := []User{}
-// 	for _, item := range items {
-// 		result = append(result, User{item})
-// 	}
-// 	return result, err
-// }
+	result := []User{}
+	items, err := s.repo.Query(ctx, org_id)
+	if err != nil {
+		s.logger.Error("Error while retrieving all resources.",
+			zap.String("organization_id", org_id))
+		return []User{}, err
+	}
+
+	for _, item := range *items {
+		result = append(result, User{item})
+	}
+	return result, err
+}
 
 // type UserPatchRequest struct {
 // 	Operations []UserPatchOperation `json:"operations"`

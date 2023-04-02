@@ -13,7 +13,7 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (*mongo_entity.User, error)
-	// Query(ctx context.Context, org_id string, filter Filter) (*[]mongo_entity.User, error)
+	Query(ctx context.Context, org_id string) (*[]mongo_entity.User, error)
 	Create(ctx context.Context, org_id string, user mongo_entity.User) error
 	Update(ctx context.Context, org_id string, id string, update_user UpdateUser) error
 	// Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) error
@@ -134,6 +134,34 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 	}
 
 	return nil
+}
+
+// Get all users.
+func (r repository) Query(ctx context.Context, org_id string) (*[]mongo_entity.User, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Define filter to find the user by its ID
+	filter := bson.M{"_id": orgId}
+	// Find the user document in the "organizations" collection
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "User"}
+		}
+		return nil, err
+	}
+
+	return &org.Users, nil
 }
 
 // Check if user exists by id.
