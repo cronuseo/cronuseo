@@ -93,7 +93,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 	exists, _ := s.repo.CheckResourceExistsByIdentifier(ctx, org_id, req.Identifier)
 	if exists {
 		s.logger.Debug("Resource already exists.")
-		return Resource{}, &util.AlreadyExistsError{Path: "Resource : " + req.Identifier + " already exists."}
+		return Resource{}, &util.AlreadyExistsError{Path: "Resource : " + req.Identifier}
 	}
 	resId := primitive.NewObjectID()
 	var actions []mongo_entity.Action
@@ -116,8 +116,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 		s.logger.Error("Error while creating resource.", zap.String("organization_id", org_id), zap.String("resource identifier", req.Identifier))
 		return Resource{}, err
 	}
-	resource, err := s.repo.Get(ctx, org_id, resId.String())
-	return Resource{*resource}, nil
+	return s.Get(ctx, org_id, resId.Hex())
 }
 
 // Update resource.
