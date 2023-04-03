@@ -172,7 +172,7 @@ func buildHandler(
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongodb), logger, permissionCache))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongodb), permissionCache, logger))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongodb), logger))
-	role.RegisterHandlers(rg, role.NewService(role.NewRepository(db, clients.WriteClient), permissionCache, logger))
+	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongodb, clients.WriteClient), permissionCache, logger))
 	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db), logger))
 	monitoring.RegisterHandlers(rg, monitoring.NewService(monitoring.NewRepository(mongodb), logger))
 

@@ -96,12 +96,10 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		return err
 	}
 
-	newName := update_resource.DisplayName
-
-	if newName != "" {
+	if *update_resource.DisplayName != "" && update_resource.DisplayName != nil {
 
 		filter := bson.M{"_id": orgId, "resources._id": resId}
-		update := bson.M{"$set": bson.M{"resources.$.display_name": newName}}
+		update := bson.M{"$set": bson.M{"resources.$.display_name": *update_resource.DisplayName}}
 		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 		if err != nil {
 			return err

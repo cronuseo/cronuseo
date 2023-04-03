@@ -38,7 +38,7 @@ func (m CreateResourceRequest) Validate() error {
 }
 
 type UpdateResourceRequest struct {
-	DisplayName    string                `json:"display_name"`
+	DisplayName    *string               `json:"display_name"`
 	AddedActions   []mongo_entity.Action `json:"added_actions"`
 	RemovedActions []string              `json:"removed_actions"`
 }
@@ -49,7 +49,7 @@ type PatchResourceRequest struct {
 }
 
 type UpdateResource struct {
-	DisplayName    string                `json:"display_name"`
+	DisplayName    *string               `json:"display_name"`
 	AddedActions   []mongo_entity.Action `json:"added_actions"`
 	RemovedActions []primitive.ObjectID  `json:"removed_actions"`
 }

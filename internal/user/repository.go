@@ -44,10 +44,10 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 		return nil, err
 	}
 
-	// Define filter to find the resource by its ID
+	// Define filter to find the user by its ID
 	filter := bson.M{"_id": orgId, "users._id": userId}
 	projection := bson.M{"users.$": 1}
-	// Find the resource document in the "organizations" collection
+	// Find the user document in the "organizations" collection
 	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 	var org mongo_entity.Organization
 	if err := result.Decode(&org); err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, &util.NotFoundError{Path: "Resource"}
+			return nil, &util.NotFoundError{Path: "User"}
 		}
 		return nil, err
 	}
@@ -97,7 +97,13 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 	}
 
 	filter := bson.M{"_id": orgId, "users._id": userId}
-	update := bson.M{"$set": bson.M{"user.$.first_name": update_user.FirstName, "user.$.last_name": update_user.LastName}}
+	update := bson.M{"$set": bson.M{}}
+	if update_user.FirstName != nil {
+		update["$set"].(bson.M)["users.$.first_name"] = *update_user.FirstName
+	}
+	if update_user.LastName != nil {
+		update["$set"].(bson.M)["users.$.last_name"] = *update_user.LastName
+	}
 	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err

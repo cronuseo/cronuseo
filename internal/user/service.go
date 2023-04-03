@@ -40,13 +40,13 @@ func (m CreateUserRequest) Validate() error {
 }
 
 type UpdateUserRequest struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
 }
 
 type UpdateUser struct {
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
+	FirstName *string `json:"first_name"`
+	LastName  *string `json:"last_name"`
 }
 
 func (m UpdateUserRequest) Validate() error {
@@ -115,10 +115,10 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 // // Update user.
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateUserRequest) (User, error) {
 
-	// Validate user request.
-	if err := req.Validate(); err != nil {
-		s.logger.Error("Error while validating user create request.")
-		return User{}, &util.InvalidInputError{Path: "Invalid input for user."}
+	_, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("User not exists.", zap.String("user_id", id))
+		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
 	}
 
 	if err := s.repo.Update(ctx, org_id, id, UpdateUser{
