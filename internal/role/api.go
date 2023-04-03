@@ -2,12 +2,10 @@ package role
 
 import (
 	"net/http"
-	"strconv"
 
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/cronuseo/internal/auth"
-	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
@@ -24,7 +22,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
-	router.GET("/user/:user_id", res.QueryByUserID)
+	// router.GET("/user/:user_id", res.QueryByUserID)
 }
 
 type role struct {
@@ -74,53 +72,7 @@ func (r role) query(c echo.Context) error {
 	if err != nil {
 		return util.HandleError(err)
 	}
-	response := entity.RoleQueryResponse{}
-	maxRoleID := -1
-	minRoleID := 10000
-	// Create roles results for the response.
-	for _, role := range roles {
-		newAction := entity.RoleResult{ID: role.ID, Name: role.Name, Key: role.Key,
-			OrgID: role.OrgID, CreatedAt: role.CreatedAt, UpdatedAt: role.UpdatedAt}
-		newAction.Links = entity.RoleLinks{Self: "/" + role.OrgID + "/role/" + role.ID}
-		response.Results = append(response.Results, newAction)
-		if i, err := strconv.Atoi(role.LogicalKey); err == nil {
-			if maxRoleID < i {
-				maxRoleID = i
-			}
-			if minRoleID > i {
-				minRoleID = i
-			}
-		}
-
-	}
-	// Pagination
-	response.Size = len(roles)
-	response.Limit = filter.Limit
-	if len(roles) > 0 {
-		response.Cursor = maxRoleID
-		links := entity.Links{}
-		links.Self = "/" + org_id + "/role/"
-		if filter.Name != "" {
-			links.Self += "?name=" + filter.Name
-		}
-		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
-		if len(roles) == filter.Limit {
-			links.Next = "/" + org_id + "/role/"
-			if filter.Name != "" {
-				links.Next += "?name=" + filter.Name
-			}
-			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-		}
-		if filter.Cursor != 0 {
-			links.Prev = "/" + org_id + "/role/"
-			if filter.Name != "" {
-				links.Prev += "?name=" + filter.Name
-			}
-			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
-		}
-		response.Links = links
-	}
-	return c.JSON(http.StatusOK, response)
+	return c.JSON(http.StatusOK, roles)
 }
 
 // @Description Create role.
@@ -180,7 +132,7 @@ func (r role) update(c echo.Context) error {
 // @Router      /{org_id}/role/{id} [delete]
 func (r role) delete(c echo.Context) error {
 
-	_, err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
+	err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)
 	}
@@ -195,64 +147,64 @@ func (r role) delete(c echo.Context) error {
 // @Success     200 {array}  entity.Role
 // @failure     500
 // @Router      /{org_id}/role/user/{user_id} [get]
-func (r role) QueryByUserID(c echo.Context) error {
+// func (r role) QueryByUserID(c echo.Context) error {
 
-	var filter Filter
-	org_id := c.Param("org_id")
-	user_id := c.Param("user_id")
-	if err := c.Bind(&filter); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-	}
-	if filter.Limit == 0 {
-		filter.Limit = 10
-	}
-	roles, err := r.service.QueryByUserID(c.Request().Context(), org_id, user_id, filter)
-	if err != nil {
-		return util.HandleError(err)
-	}
-	response := entity.RoleQueryResponse{}
-	maxRoleID := -1
-	minRoleID := 10000
-	for _, role := range roles {
-		newAction := entity.RoleResult{ID: role.ID, Name: role.Name, Key: role.Key,
-			OrgID: role.OrgID, CreatedAt: role.CreatedAt, UpdatedAt: role.UpdatedAt}
-		newAction.Links = entity.RoleLinks{Self: "/" + role.OrgID + "/role/" + role.ID}
-		response.Results = append(response.Results, newAction)
-		if i, err := strconv.Atoi(role.LogicalKey); err == nil {
-			if maxRoleID < i {
-				maxRoleID = i
-			}
-			if minRoleID > i {
-				minRoleID = i
-			}
-		}
+// 	var filter Filter
+// 	org_id := c.Param("org_id")
+// 	user_id := c.Param("user_id")
+// 	if err := c.Bind(&filter); err != nil {
+// 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+// 	}
+// 	if filter.Limit == 0 {
+// 		filter.Limit = 10
+// 	}
+// 	roles, err := r.service.QueryByUserID(c.Request().Context(), org_id, user_id, filter)
+// 	if err != nil {
+// 		return util.HandleError(err)
+// 	}
+// 	response := entity.RoleQueryResponse{}
+// 	maxRoleID := -1
+// 	minRoleID := 10000
+// 	for _, role := range roles {
+// 		newAction := entity.RoleResult{ID: role.ID, Name: role.Name, Key: role.Key,
+// 			OrgID: role.OrgID, CreatedAt: role.CreatedAt, UpdatedAt: role.UpdatedAt}
+// 		newAction.Links = entity.RoleLinks{Self: "/" + role.OrgID + "/role/" + role.ID}
+// 		response.Results = append(response.Results, newAction)
+// 		if i, err := strconv.Atoi(role.LogicalKey); err == nil {
+// 			if maxRoleID < i {
+// 				maxRoleID = i
+// 			}
+// 			if minRoleID > i {
+// 				minRoleID = i
+// 			}
+// 		}
 
-	}
-	response.Size = len(roles)
-	response.Limit = filter.Limit
-	if len(roles) > 0 {
-		response.Cursor = maxRoleID
-		links := entity.Links{}
-		links.Self = "/" + org_id + "/role/"
-		if filter.Name != "" {
-			links.Self += "?name=" + filter.Name
-		}
-		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
-		if len(roles) == filter.Limit {
-			links.Next = "/" + org_id + "/role/"
-			if filter.Name != "" {
-				links.Next += "?name=" + filter.Name
-			}
-			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-		}
-		if filter.Cursor != 0 {
-			links.Prev = "/" + org_id + "/role/"
-			if filter.Name != "" {
-				links.Prev += "?name=" + filter.Name
-			}
-			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
-		}
-		response.Links = links
-	}
-	return c.JSON(http.StatusOK, response)
-}
+// 	}
+// 	response.Size = len(roles)
+// 	response.Limit = filter.Limit
+// 	if len(roles) > 0 {
+// 		response.Cursor = maxRoleID
+// 		links := entity.Links{}
+// 		links.Self = "/" + org_id + "/role/"
+// 		if filter.Name != "" {
+// 			links.Self += "?name=" + filter.Name
+// 		}
+// 		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
+// 		if len(roles) == filter.Limit {
+// 			links.Next = "/" + org_id + "/role/"
+// 			if filter.Name != "" {
+// 				links.Next += "?name=" + filter.Name
+// 			}
+// 			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
+// 		}
+// 		if filter.Cursor != 0 {
+// 			links.Prev = "/" + org_id + "/role/"
+// 			if filter.Name != "" {
+// 				links.Prev += "?name=" + filter.Name
+// 			}
+// 			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
+// 		}
+// 		response.Links = links
+// 	}
+// 	return c.JSON(http.StatusOK, response)
+// }
