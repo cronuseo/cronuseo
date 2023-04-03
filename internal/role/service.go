@@ -95,6 +95,13 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 	// Generate role id.
 	roleId := primitive.NewObjectID()
 
+	for _, userId := range req.Users {
+		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid user id " + roleId.String()}
+		}
+	}
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.Role{
 		ID:          roleId,
 		Identifier:  req.Identifier,

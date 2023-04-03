@@ -26,10 +26,10 @@ type User struct {
 }
 
 type CreateUserRequest struct {
-	Username  string              `json:"username"`
-	FirstName string              `json:"first_name"`
-	LastName  string              `json:"last_name"`
-	Roles     []mongo_entity.Role `json:"roles"`
+	Username  string               `json:"username"`
+	FirstName string               `json:"first_name"`
+	LastName  string               `json:"last_name"`
+	Roles     []primitive.ObjectID `json:"roles"`
 }
 
 func (m CreateUserRequest) Validate() error {
@@ -61,7 +61,7 @@ type service struct {
 
 func NewService(repo Repository, permissionCache cache.PermissionCache, logger *zap.Logger) Service {
 
-	return service{repo: repo, permissionCache: permissionCache}
+	return service{repo: repo, permissionCache: permissionCache, logger: logger}
 }
 
 // Get user by id.
@@ -90,18 +90,31 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 	exists, _ := s.repo.CheckUserExistsByIdentifier(ctx, org_id, req.Username)
 	if exists {
 		s.logger.Debug("User already exists.")
-		return User{}, &util.AlreadyExistsError{Path: "User : " + req.Username + " already exists."}
+		return User{}, &util.AlreadyExistsError{Path: "User : " + req.Username}
 
 	}
 	// Generate user id.
 	userId := primitive.NewObjectID()
 
+	for _, roleId := range req.Roles {
+		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+		}
+	}
+	// roles := []primitive.ObjectID{}
+	// for _, roleId := range req.Roles {
+	// 	already_added, _ := s.repo.CheckRoleAlreadyAssignToUserById(ctx, org_id, userId.Hex(), roleId.Hex())
+	// 	if !already_added {
+	// 		roles = append(roles, roleId)
+	// 	}
+	// }
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
 		ID:        userId,
 		Username:  req.Username,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
-		Roles:     []primitive.ObjectID{},
+		Roles:     req.Roles,
 	})
 
 	if err != nil {

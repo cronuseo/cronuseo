@@ -24,6 +24,7 @@ type Repository interface {
 	Delete(ctx context.Context, org_id string, id string) error
 	CheckRoleExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckRoleExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
+	CheckUserExistById(ctx context.Context, org_id string, id string) (bool, error)
 }
 
 type repository struct {
@@ -227,6 +228,34 @@ func (r repository) CheckRoleExistsByIdentifier(ctx context.Context, org_id stri
 		return true, nil
 	}
 	return false, nil
+}
+
+// Check if user exists by id.
+func (r repository) CheckUserExistById(ctx context.Context, org_id string, id string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	roleId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "users._id": roleId}
+
+	// Search for the user in the "organizations" collection
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+
+	// Check if the user was found
+	if result.Err() == nil {
+		return true, nil
+	} else if result.Err() == mongo.ErrNoDocuments {
+		return false, nil
+	} else {
+		return false, result.Err()
+	}
 }
 
 func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {

@@ -20,6 +20,8 @@ type Repository interface {
 	Delete(ctx context.Context, org_id string, id string) error
 	CheckUserExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckUserExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
+	CheckRoleExistById(ctx context.Context, org_id string, id string) (bool, error)
+	CheckRoleAlreadyAssignToUserById(ctx context.Context, org_id string, user_id string, role_id string) (bool, error)
 }
 
 type repository struct {
@@ -217,4 +219,69 @@ func (r repository) CheckUserExistsByIdentifier(ctx context.Context, org_id stri
 		return true, nil
 	}
 	return false, nil
+}
+
+// Check if role exists by id.
+func (r repository) CheckRoleExistById(ctx context.Context, org_id string, id string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	roleId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "roles._id": roleId}
+
+	// Search for the role in the "organizations" collection
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+
+	// Check if the role was found
+	if result.Err() == nil {
+		return true, nil
+	} else if result.Err() == mongo.ErrNoDocuments {
+		return false, nil
+	} else {
+		return false, result.Err()
+	}
+}
+
+// Check if role already assign to user by id.
+func (r repository) CheckRoleAlreadyAssignToUserById(ctx context.Context, org_id string, user_id string, role_id string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	userId, err := primitive.ObjectIDFromHex(user_id)
+	if err != nil {
+		return false, err
+	}
+
+	roleId, err := primitive.ObjectIDFromHex(role_id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "users._id": userId, "users.roles": bson.M{
+		"$elemMatch": bson.M{
+			"$eq": roleId,
+		},
+	}}
+
+	// Search for the role in the "organizations" collection
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+
+	// Check if the role was found
+	if result.Err() == nil {
+		return true, nil
+	} else if result.Err() == mongo.ErrNoDocuments {
+		return false, nil
+	} else {
+		return false, result.Err()
+	}
 }
