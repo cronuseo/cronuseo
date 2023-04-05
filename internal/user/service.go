@@ -40,8 +40,10 @@ func (m CreateUserRequest) Validate() error {
 }
 
 type UpdateUserRequest struct {
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
+	FirstName    *string              `json:"first_name"`
+	LastName     *string              `json:"last_name"`
+	AddedRoles   []primitive.ObjectID `json:"added_roles"`
+	RemovedRoles []primitive.ObjectID `json:"removed_roles"`
 }
 
 type UpdateUser struct {
