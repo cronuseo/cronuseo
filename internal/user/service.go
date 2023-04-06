@@ -97,6 +97,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		return User{}, &util.AlreadyExistsError{Path: "User : " + req.Username}
 
 	}
+
 	// Generate user id.
 	userId := primitive.NewObjectID()
 
@@ -106,13 +107,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 			return User{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
 		}
 	}
-	// roles := []primitive.ObjectID{}
-	// for _, roleId := range req.Roles {
-	// 	already_added, _ := s.repo.CheckRoleAlreadyAssignToUserById(ctx, org_id, userId.Hex(), roleId.Hex())
-	// 	if !already_added {
-	// 		roles = append(roles, roleId)
-	// 	}
-	// }
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
 		ID:        userId,
 		Username:  req.Username,

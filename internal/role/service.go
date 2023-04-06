@@ -38,13 +38,15 @@ func (m CreateRoleRequest) Validate() error {
 }
 
 type UpdateRoleRequest struct {
-	DisplayName *string `json:"display_name"`
-	// AddedActions   []mongo_entity.Action `json:"added_actions"`
-	// RemovedActions []string              `json:"removed_actions"`
+	DisplayName *string              `json:"display_name"`
+	AddedUsers  []primitive.ObjectID `json:"added_users"`
+	RemovedUser []primitive.ObjectID `json:"removed_users"`
 }
 
 type UpdateRole struct {
-	DisplayName *string `json:"display_name"`
+	DisplayName *string              `json:"display_name"`
+	AddedUsers  []primitive.ObjectID `json:"added_users"`
+	RemovedUser []primitive.ObjectID `json:"removed_users"`
 }
 
 func (m UpdateRoleRequest) Validate() error {
@@ -98,7 +100,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 	for _, userId := range req.Users {
 		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
 		if !exists {
-			return Role{}, &util.InvalidInputError{Path: "Invalid user id " + roleId.String()}
+			return Role{}, &util.InvalidInputError{Path: "Invalid user id " + userId.String()}
 		}
 	}
 
@@ -127,8 +129,38 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return Role{}, &util.NotFoundError{Path: "Role " + id + " not exists."}
 	}
 
+	for _, userId := range req.AddedUsers {
+		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid role id " + userId.String()}
+		}
+	}
+	for _, userId := range req.RemovedUser {
+		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid role id " + userId.String()}
+		}
+	}
+	added_users := []primitive.ObjectID{}
+	for _, userId := range req.AddedUsers {
+		already_added, _ := s.repo.CheckUserAlreadyAssignToRoleById(ctx, org_id, id, userId.Hex())
+		if !already_added {
+			added_users = append(added_users, userId)
+		}
+	}
+
+	removed_roles := []primitive.ObjectID{}
+	for _, userId := range req.RemovedUser {
+		already_added, _ := s.repo.CheckUserAlreadyAssignToRoleById(ctx, org_id, id, userId.Hex())
+		if already_added {
+			removed_roles = append(removed_roles, userId)
+		}
+	}
+
 	if err := s.repo.Update(ctx, org_id, id, UpdateRole{
 		DisplayName: req.DisplayName,
+		AddedUsers:  added_users,
+		RemovedUser: removed_roles,
 	}); err != nil {
 		s.logger.Error("Error while updating role.", zap.String("organization_id", org_id), zap.String("role_id", id))
 		return Role{}, err
