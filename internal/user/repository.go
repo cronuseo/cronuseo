@@ -111,6 +111,30 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		return err
 	}
 
+	// add roles
+	if len(update_user.AddedRoles) > 0 {
+
+		filter := bson.M{"_id": orgId, "users._id": userId}
+		update := bson.M{"$push": bson.M{"users.$.roles": bson.M{
+			"$each": update_user.AddedRoles,
+		}}}
+		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
+		}
+	}
+
+	// remove roles
+	if len(update_user.RemovedRoles) > 0 {
+
+		filter := bson.M{"_id": orgId, "users._id": userId}
+		update := bson.M{"$pull": bson.M{"users.$.roles": bson.M{"$in": update_user.RemovedRoles}}}
+		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -267,21 +291,22 @@ func (r repository) CheckRoleAlreadyAssignToUserById(ctx context.Context, org_id
 		return false, err
 	}
 
-	filter := bson.M{"_id": orgId, "users._id": userId, "users.roles": bson.M{
-		"$elemMatch": bson.M{
-			"$eq": roleId,
-		},
-	}}
-
+	filter := bson.M{"_id": orgId, "users._id": userId}
+	projection := bson.M{"users.$": 1}
+	org := mongo_entity.Organization{}
 	// Search for the role in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
-
-	// Check if the role was found
-	if result.Err() == nil {
-		return true, nil
-	} else if result.Err() == mongo.ErrNoDocuments {
-		return false, nil
-	} else {
-		return false, result.Err()
+	err = r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
+	if err != nil {
+		return false, err
 	}
+	user := org.Users[0]
+	// Check if the role ID exists in the user's Roles field
+	for _, r := range user.Roles {
+		if r == roleId {
+			return true, nil
+		}
+	}
+
+	// Role ID not found in the user's Roles field
+	return false, nil
 }

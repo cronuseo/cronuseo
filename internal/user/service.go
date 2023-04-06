@@ -47,8 +47,10 @@ type UpdateUserRequest struct {
 }
 
 type UpdateUser struct {
-	FirstName *string `json:"first_name"`
-	LastName  *string `json:"last_name"`
+	FirstName    *string              `json:"first_name"`
+	LastName     *string              `json:"last_name"`
+	AddedRoles   []primitive.ObjectID `json:"added_roles"`
+	RemovedRoles []primitive.ObjectID `json:"removed_roles"`
 }
 
 func (m UpdateUserRequest) Validate() error {
@@ -136,9 +138,39 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
 	}
 
+	for _, roleId := range req.AddedRoles {
+		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+		}
+	}
+	for _, roleId := range req.RemovedRoles {
+		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+		}
+	}
+	added_roles := []primitive.ObjectID{}
+	for _, roleId := range req.AddedRoles {
+		already_added, _ := s.repo.CheckRoleAlreadyAssignToUserById(ctx, org_id, id, roleId.Hex())
+		if !already_added {
+			added_roles = append(added_roles, roleId)
+		}
+	}
+
+	removed_roles := []primitive.ObjectID{}
+	for _, roleId := range req.RemovedRoles {
+		already_added, _ := s.repo.CheckRoleAlreadyAssignToUserById(ctx, org_id, id, roleId.Hex())
+		if already_added {
+			removed_roles = append(removed_roles, roleId)
+		}
+	}
+
 	if err := s.repo.Update(ctx, org_id, id, UpdateUser{
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		AddedRoles:   added_roles,
+		RemovedRoles: removed_roles,
 	}); err != nil {
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),
