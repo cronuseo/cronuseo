@@ -122,6 +122,16 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		if err != nil {
 			return err
 		}
+
+		for _, roleId := range update_user.AddedRoles {
+			filter := bson.M{"_id": orgId, "roles._id": roleId}
+			update := bson.M{"$addToSet": bson.M{"roles.$.users": userId}}
+			_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	// remove roles
@@ -132,6 +142,15 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err
+		}
+
+		for _, roleId := range update_user.RemovedRoles {
+			filter := bson.M{"_id": orgId, "roles._id": roleId}
+			update := bson.M{"$pull": bson.M{"roles.$.users": userId}}
+			_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
