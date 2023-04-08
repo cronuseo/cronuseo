@@ -281,3 +281,36 @@ func (r repository) CheckResourceExistsByIdentifier(ctx context.Context, org_id 
 	}
 	return false, nil
 }
+
+// check user already added to role
+func (r repository) CheckActionAlreadyAddedToResourceById(ctx context.Context, org_id string, resource_id string, action_identifier string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	resourceId, err := primitive.ObjectIDFromHex(resource_id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "resources._id": resourceId}
+	projection := bson.M{"resources.$": 1}
+	org := mongo_entity.Organization{}
+	// Search for the resource in the "organizations" collection
+	err = r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
+	if err != nil {
+		return false, err
+	}
+	resource := org.Resources[0]
+	// Check if the action identifier exists in the resource's Actions field
+	for _, action := range resource.Actions {
+		if action.Identifier == action_identifier {
+			return true, nil
+		}
+	}
+
+	// User ID not found in the resource's Actions field
+	return false, nil
+}
