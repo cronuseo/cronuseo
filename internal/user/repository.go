@@ -100,10 +100,10 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 
 	filter := bson.M{"_id": orgId, "users._id": userId}
 	update := bson.M{"$set": bson.M{}}
-	if update_user.FirstName != nil {
+	if update_user.FirstName != nil && *update_user.FirstName != "" {
 		update["$set"].(bson.M)["users.$.first_name"] = *update_user.FirstName
 	}
-	if update_user.LastName != nil {
+	if update_user.LastName != nil && *update_user.FirstName != "" {
 		update["$set"].(bson.M)["users.$.last_name"] = *update_user.LastName
 	}
 	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))

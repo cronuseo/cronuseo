@@ -132,21 +132,32 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 	// Set added actions.
 	var addedActions []mongo_entity.Action
 	for _, action := range req.AddedActions {
-		actionId := primitive.NewObjectID()
-		addedActions = append(addedActions, mongo_entity.Action{
-			ID:          actionId,
-			Identifier:  action.Identifier,
-			DisplayName: action.DisplayName,
-		})
+		already_added, _ := s.repo.CheckActionAlreadyAddedToResourceByIdentifier(ctx, org_id, id, action.Identifier)
+		if !already_added {
+			actionId := primitive.NewObjectID()
+			addedActions = append(addedActions, mongo_entity.Action{
+				ID:          actionId,
+				Identifier:  action.Identifier,
+				DisplayName: action.DisplayName,
+			})
+		} else {
+			return Resource{}, &util.AlreadyExistsError{Path: "Action : " + action.Identifier + " already added to resource."}
+		}
 	}
 	// Set removed actions ids.
 	var removedActions []primitive.ObjectID
 	for _, actionId := range req.RemovedActions {
-		id, err := primitive.ObjectIDFromHex(actionId)
-		if err != nil {
-			return Resource{}, err
+		already_added, _ := s.repo.CheckActionExistsById(ctx, org_id, id, actionId)
+		if already_added {
+			id, err := primitive.ObjectIDFromHex(actionId)
+			if err != nil {
+				return Resource{}, err
+			}
+			removedActions = append(removedActions, id)
+		} else {
+			return Resource{}, &util.NotFoundError{Path: "Action " + actionId + " not exists."}
 		}
-		removedActions = append(removedActions, id)
+
 	}
 
 	if err := s.repo.Update(ctx, org_id, id, UpdateResource{
@@ -179,21 +190,32 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchR
 
 	var addedActions []mongo_entity.Action
 	for _, action := range req.AddedActions {
-		actionId := primitive.NewObjectID()
-		addedActions = append(addedActions, mongo_entity.Action{
-			ID:          actionId,
-			Identifier:  action.Identifier,
-			DisplayName: action.DisplayName,
-		})
+		already_added, _ := s.repo.CheckActionAlreadyAddedToResourceByIdentifier(ctx, org_id, id, action.Identifier)
+		if !already_added {
+			actionId := primitive.NewObjectID()
+			addedActions = append(addedActions, mongo_entity.Action{
+				ID:          actionId,
+				Identifier:  action.Identifier,
+				DisplayName: action.DisplayName,
+			})
+		} else {
+			return Resource{}, &util.AlreadyExistsError{Path: "Action : " + action.Identifier + " already added to resource."}
+		}
 	}
-
+	// Set removed actions ids.
 	var removedActions []primitive.ObjectID
 	for _, actionId := range req.RemovedActions {
-		id, err := primitive.ObjectIDFromHex(actionId)
-		if err != nil {
-			return Resource{}, err
+		already_added, _ := s.repo.CheckActionExistsById(ctx, org_id, id, actionId)
+		if already_added {
+			id, err := primitive.ObjectIDFromHex(actionId)
+			if err != nil {
+				return Resource{}, err
+			}
+			removedActions = append(removedActions, id)
+		} else {
+			return Resource{}, &util.NotFoundError{Path: "Action " + actionId + " not exists."}
 		}
-		removedActions = append(removedActions, id)
+
 	}
 
 	if err := s.repo.Patch(ctx, org_id, id, PatchResource{

@@ -20,6 +20,8 @@ type Repository interface {
 	Delete(ctx context.Context, org_id string, id string) error
 	CheckResourceExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckResourceExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
+	CheckActionAlreadyAddedToResourceByIdentifier(ctx context.Context, org_id string, resource_id string, action_identifier string) (bool, error)
+	CheckActionExistsById(ctx context.Context, org_id string, resource_id string, action_id string) (bool, error)
 }
 
 type repository struct {
@@ -96,7 +98,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		return err
 	}
 
-	if *update_resource.DisplayName != "" && update_resource.DisplayName != nil {
+	if update_resource.DisplayName != nil && *update_resource.DisplayName != "" {
 
 		filter := bson.M{"_id": orgId, "resources._id": resId}
 		update := bson.M{"$set": bson.M{"resources.$.display_name": *update_resource.DisplayName}}
@@ -283,7 +285,7 @@ func (r repository) CheckResourceExistsByIdentifier(ctx context.Context, org_id 
 }
 
 // check user already added to role
-func (r repository) CheckActionAlreadyAddedToResourceById(ctx context.Context, org_id string, resource_id string, action_identifier string) (bool, error) {
+func (r repository) CheckActionAlreadyAddedToResourceByIdentifier(ctx context.Context, org_id string, resource_id string, action_identifier string) (bool, error) {
 
 	orgId, err := primitive.ObjectIDFromHex(org_id)
 	if err != nil {
@@ -313,4 +315,35 @@ func (r repository) CheckActionAlreadyAddedToResourceById(ctx context.Context, o
 
 	// User ID not found in the resource's Actions field
 	return false, nil
+}
+
+func (r repository) CheckActionExistsById(ctx context.Context, org_id string, resource_id string, action_id string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	resourceId, err := primitive.ObjectIDFromHex(resource_id)
+	if err != nil {
+		return false, err
+	}
+
+	actionId, err := primitive.ObjectIDFromHex(action_id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "resources._id": resourceId, "resources.actions._id": actionId}
+
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+
+	// Check if the resource was found
+	if result.Err() == nil {
+		return true, nil
+	} else if result.Err() == mongo.ErrNoDocuments {
+		return false, nil
+	} else {
+		return false, result.Err()
+	}
 }
