@@ -22,6 +22,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
+	router.GET("/:id/permission", res.getPermissions)
 	router.PATCH("/:id/permission", res.patchPermissions)
 	// router.GET("/user/:user_id", res.QueryByUserID)
 }
@@ -157,79 +158,30 @@ func (r role) patchPermissions(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
 
-	err := r.service.PatchPermission(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
+	err := r.service.PatchPermissions(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
 	if err != nil {
 		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusOK, "")
 }
 
-// @Description Get all roles.
+// @Description Get all permissions for role.
 // @Tags        Role
 // @Param org_id path string true "Organization ID"
-// @Param user_id path string true "User ID"
+// @Param id path string true "Role ID"
 // @Produce     json
-// @Success     200 {array}  entity.Role
+// @Success     200 {array}  mongo_entity.Permission
 // @failure     500
-// @Router      /{org_id}/role/user/{user_id} [get]
-// func (r role) QueryByUserID(c echo.Context) error {
+// @Router      /{org_id}/role/{id}/permission [get]
+func (r role) getPermissions(c echo.Context) error {
 
-// 	var filter Filter
-// 	org_id := c.Param("org_id")
-// 	user_id := c.Param("user_id")
-// 	if err := c.Bind(&filter); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-// 	}
-// 	if filter.Limit == 0 {
-// 		filter.Limit = 10
-// 	}
-// 	roles, err := r.service.QueryByUserID(c.Request().Context(), org_id, user_id, filter)
-// 	if err != nil {
-// 		return util.HandleError(err)
-// 	}
-// 	response := entity.RoleQueryResponse{}
-// 	maxRoleID := -1
-// 	minRoleID := 10000
-// 	for _, role := range roles {
-// 		newAction := entity.RoleResult{ID: role.ID, Name: role.Name, Key: role.Key,
-// 			OrgID: role.OrgID, CreatedAt: role.CreatedAt, UpdatedAt: role.UpdatedAt}
-// 		newAction.Links = entity.RoleLinks{Self: "/" + role.OrgID + "/role/" + role.ID}
-// 		response.Results = append(response.Results, newAction)
-// 		if i, err := strconv.Atoi(role.LogicalKey); err == nil {
-// 			if maxRoleID < i {
-// 				maxRoleID = i
-// 			}
-// 			if minRoleID > i {
-// 				minRoleID = i
-// 			}
-// 		}
+	org_id := c.Param("org_id")
+	id := c.Param("id")
 
-// 	}
-// 	response.Size = len(roles)
-// 	response.Limit = filter.Limit
-// 	if len(roles) > 0 {
-// 		response.Cursor = maxRoleID
-// 		links := entity.Links{}
-// 		links.Self = "/" + org_id + "/role/"
-// 		if filter.Name != "" {
-// 			links.Self += "?name=" + filter.Name
-// 		}
-// 		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
-// 		if len(roles) == filter.Limit {
-// 			links.Next = "/" + org_id + "/role/"
-// 			if filter.Name != "" {
-// 				links.Next += "?name=" + filter.Name
-// 			}
-// 			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-// 		}
-// 		if filter.Cursor != 0 {
-// 			links.Prev = "/" + org_id + "/role/"
-// 			if filter.Name != "" {
-// 				links.Prev += "?name=" + filter.Name
-// 			}
-// 			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
-// 		}
-// 		response.Links = links
-// 	}
-// 	return c.JSON(http.StatusOK, response)
-// }
+	// Get all permissions.
+	permissions, err := r.service.GetPermissions(c.Request().Context(), org_id, id)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusOK, permissions)
+}

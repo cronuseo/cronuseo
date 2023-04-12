@@ -19,7 +19,8 @@ type Service interface {
 	Create(ctx context.Context, org_id string, input CreateRoleRequest) (Role, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateRoleRequest) (Role, error)
 	Delete(ctx context.Context, org_id string, id string) error
-	PatchPermission(ctx context.Context, org_id string, role_id string, req PatchRolePermissionRequest) error
+	PatchPermissions(ctx context.Context, org_id string, role_id string, req PatchRolePermissionRequest) error
+	GetPermissions(ctx context.Context, org_id string, role_id string) ([]mongo_entity.Permission, error)
 }
 
 type Role struct {
@@ -224,25 +225,8 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Rol
 	return result, err
 }
 
-// Get all roles by user id.
-// func (s service) QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]Role, error) {
-
-// 	items, err := s.repo.QueryByUserID(ctx, org_id, user_id, filter)
-// 	if err != nil {
-// 		s.logger.Error("Error while retrieving all roles.",
-// 			zap.String("organization_id", org_id),
-// 			zap.String("user_id", user_id))
-// 		return nil, err
-// 	}
-// 	result := []Role{}
-// 	for _, item := range items {
-// 		result = append(result, Role{item})
-// 	}
-// 	return result, err
-// }
-
 // Patch permissions to role.
-func (s service) PatchPermission(ctx context.Context, org_id string, role_id string, req PatchRolePermissionRequest) error {
+func (s service) PatchPermissions(ctx context.Context, org_id string, role_id string, req PatchRolePermissionRequest) error {
 
 	for _, permission := range req.AddedPermission {
 
@@ -250,14 +234,52 @@ func (s service) PatchPermission(ctx context.Context, org_id string, role_id str
 		if !exists {
 			return &util.InvalidInputError{Path: "Invalid permission, Resource : " + permission.Resource + " Action : " + permission.Action}
 		}
+
+		exists, _ = s.repo.CheckPermissionExists(ctx, org_id, role_id, permission.Resource, permission.Action)
+		if exists {
+			return &util.AlreadyExistsError{Path: "Resource : " + permission.Resource + " Action : " + permission.Action}
+		}
+
+	}
+
+	for _, permission := range req.RemovedPermission {
+
+		exists, _ := s.repo.CheckResourceActionExists(ctx, org_id, permission.Resource, permission.Action)
+		if !exists {
+			return &util.InvalidInputError{Path: "Invalid permission, Resource : " + permission.Resource + " Action : " + permission.Action}
+		}
+
+		exists, _ = s.repo.CheckPermissionExists(ctx, org_id, role_id, permission.Resource, permission.Action)
+		if !exists {
+			return &util.NotFoundError{Path: "Resource : " + permission.Resource + " Action : " + permission.Action}
+		}
+
 	}
 
 	if err := s.repo.PatchPermission(ctx, org_id, role_id, PatchRolePermission{
-		AddedPermission: req.AddedPermission,
+		AddedPermission:   req.AddedPermission,
+		RemovedPermission: req.RemovedPermission,
 	}); err != nil {
 		s.logger.Error("Error while patching role permissions.", zap.String("organization_id", org_id), zap.String("role_id", role_id))
 		return err
 	}
 
 	return nil
+}
+
+// Get permissions.
+func (s service) GetPermissions(ctx context.Context, org_id string, role_id string) ([]mongo_entity.Permission, error) {
+
+	result := []mongo_entity.Permission{}
+	items, err := s.repo.GetPermissions(ctx, org_id, role_id)
+	if err != nil {
+		s.logger.Error("Error while retrieving all permission.",
+			zap.String("organization_id", org_id), zap.String("role_id", role_id))
+		return []mongo_entity.Permission{}, err
+	}
+
+	for _, item := range *items {
+		result = append(result, mongo_entity.Permission{Action: item.Action, Resource: item.Resource})
+	}
+	return result, err
 }

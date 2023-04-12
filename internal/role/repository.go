@@ -28,6 +28,7 @@ type Repository interface {
 	CheckResourceActionExists(ctx context.Context, org_id string, resource_identifier string, action_identifier string) (bool, error)
 	PatchPermission(ctx context.Context, org_id string, role_id string, permission PatchRolePermission) error
 	CheckPermissionExists(ctx context.Context, org_id string, role_id string, resource_identifier string, action_identifier string) (bool, error)
+	GetPermissions(ctx context.Context, org_id string, role_id string) (*[]mongo_entity.Permission, error)
 }
 
 type repository struct {
@@ -460,4 +461,38 @@ func (r repository) CheckPermissionExists(ctx context.Context, org_id string, ro
 	} else {
 		return false, result.Err()
 	}
+}
+
+// Get all resources.
+func (r repository) GetPermissions(ctx context.Context, org_id string, role_id string) (*[]mongo_entity.Permission, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return nil, err
+	}
+
+	roleId, err := primitive.ObjectIDFromHex(role_id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Define filter to find the permission by role ID
+	filter := bson.M{"_id": orgId, "role_permissions.role_id": roleId}
+	projection := bson.M{"role_permissions.$": 1}
+	// Find the permission document in the "organizations" collection
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "Role Permission"}
+		}
+		return nil, err
+	}
+
+	return &org.RolePermissions[0].Permissions, nil
 }
