@@ -19,6 +19,7 @@ type Service interface {
 	Create(ctx context.Context, org_id string, input CreateRoleRequest) (Role, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateRoleRequest) (Role, error)
 	Delete(ctx context.Context, org_id string, id string) error
+	PatchPermission(ctx context.Context, org_id string, role_id string, req PatchRolePermissionRequest) error
 }
 
 type Role struct {
@@ -47,6 +48,16 @@ type UpdateRole struct {
 	DisplayName *string              `json:"display_name"`
 	AddedUsers  []primitive.ObjectID `json:"added_users"`
 	RemovedUser []primitive.ObjectID `json:"removed_users"`
+}
+
+type PatchRolePermissionRequest struct {
+	AddedPermission   []mongo_entity.Permission `json:"added_permissions"`
+	RemovedPermission []mongo_entity.Permission `json:"removed_permissions"`
+}
+
+type PatchRolePermission struct {
+	AddedPermission   []mongo_entity.Permission `json:"added_permissions"`
+	RemovedPermission []mongo_entity.Permission `json:"removed_permissions"`
 }
 
 func (m UpdateRoleRequest) Validate() error {
@@ -167,8 +178,8 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 	}
 	updatedRole, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
-		s.logger.Debug("Resource not exists.", zap.String("resource_id", id))
-		return Role{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
+		s.logger.Debug("Role not exists.", zap.String("role_id", id))
+		return Role{}, &util.NotFoundError{Path: "Role " + id + " not exists."}
 	}
 	return Role{*updatedRole}, nil
 }
@@ -229,3 +240,24 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Rol
 // 	}
 // 	return result, err
 // }
+
+// Patch permissions to role.
+func (s service) PatchPermission(ctx context.Context, org_id string, role_id string, req PatchRolePermissionRequest) error {
+
+	for _, permission := range req.AddedPermission {
+
+		exists, _ := s.repo.CheckResourceActionExists(ctx, org_id, permission.Resource, permission.Action)
+		if !exists {
+			return &util.InvalidInputError{Path: "Invalid permission, Resource : " + permission.Resource + " Action : " + permission.Action}
+		}
+	}
+
+	if err := s.repo.PatchPermission(ctx, org_id, role_id, PatchRolePermission{
+		AddedPermission: req.AddedPermission,
+	}); err != nil {
+		s.logger.Error("Error while patching role permissions.", zap.String("organization_id", org_id), zap.String("role_id", role_id))
+		return err
+	}
+
+	return nil
+}

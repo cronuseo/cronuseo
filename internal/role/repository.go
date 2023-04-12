@@ -5,7 +5,6 @@ import (
 
 	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
-	"github.com/shashimalcse/cronuseo/internal/permission"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -26,6 +25,8 @@ type Repository interface {
 	CheckRoleExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
 	CheckUserExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckUserAlreadyAssignToRoleById(ctx context.Context, org_id string, role_id string, user_id string) (bool, error)
+	CheckResourceActionExists(ctx context.Context, org_id string, resource_identifier string, action_identifier string) (bool, error)
+	PatchPermission(ctx context.Context, org_id string, role_id string, permission PatchRolePermission) error
 }
 
 type repository struct {
@@ -81,6 +82,18 @@ func (r repository) Create(ctx context.Context, org_id string, user mongo_entity
 	// Update the APIResources array for the given organization
 	filter := bson.M{"_id": orgId}
 	update := bson.M{"$push": bson.M{"roles": user}}
+	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	if err != nil {
+		return err
+	}
+
+	// Set role permissions
+	rolePermission := mongo_entity.RolePermission{
+		RoleID:      user.ID,
+		Permissions: []mongo_entity.Permission{},
+	}
+	filter = bson.M{"_id": orgId}
+	update = bson.M{"$push": bson.M{"role_permissions": rolePermission}}
 	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
@@ -177,6 +190,20 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 	update := bson.M{"$pull": bson.M{"roles": bson.M{"_id": roleId}}}
 	// Find the role document in the "organizations" collection
 	result, err := r.mongodb.Collection("organizations").UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
+	if err != nil {
+		return err
+	}
+
+	// Check if the update operation modified any documents
+	if result.ModifiedCount == 0 {
+		return err
+	}
+
+	// Delete role permission
+	filter = bson.M{"_id": orgId}
+	update = bson.M{"$pull": bson.M{"role_permissions": bson.M{"role_id": roleId}}}
+	// Find the role document in the "organizations" collection
+	result, err = r.mongodb.Collection("organizations").UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
 	if err != nil {
 		return err
 	}
@@ -309,26 +336,6 @@ func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {
 	return tuple
 }
 
-// When role is deleted, we need to delete all permissions that associated with the role.
-// Here we use keto to delete the permissions.
-func (r repository) DeleteTuple(ctx context.Context, tuple entity.Tuple) error {
-
-	_, err := r.writeClient.TransactRelationTuples(ctx, &rts.TransactRelationTuplesRequest{
-		RelationTupleDeltas: []*rts.RelationTupleDelta{
-			{
-				Action: rts.RelationTupleDelta_ACTION_DELETE,
-				RelationTuple: &rts.RelationTuple{
-					Namespace: permission.NAMESPACE,
-					Object:    tuple.Object,
-					Relation:  tuple.Relation,
-					Subject:   rts.NewSubjectID(tuple.SubjectId),
-				},
-			},
-		},
-	})
-	return err
-}
-
 // check user already added to role
 func (r repository) CheckUserAlreadyAssignToRoleById(ctx context.Context, org_id string, role_id string, user_id string) (bool, error) {
 
@@ -365,4 +372,54 @@ func (r repository) CheckUserAlreadyAssignToRoleById(ctx context.Context, org_id
 
 	// User ID not found in the role's Roles field
 	return false, nil
+}
+
+// check user already added to role
+func (r repository) CheckResourceActionExists(ctx context.Context, org_id string, resource_identifier string, action_identifier string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "resources.identifier": resource_identifier, "resources.actions.identifier": action_identifier}
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+
+	// Check if the resource was found
+	if result.Err() == nil {
+		return true, nil
+	} else if result.Err() == mongo.ErrNoDocuments {
+		return false, nil
+	} else {
+		return false, result.Err()
+	}
+}
+
+// Patch permissions.
+func (r repository) PatchPermission(ctx context.Context, org_id string, role_id string, permission PatchRolePermission) error {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return err
+	}
+
+	roleId, err := primitive.ObjectIDFromHex(role_id)
+	if err != nil {
+		return err
+	}
+
+	// add permissions
+	if len(permission.AddedPermission) > 0 {
+
+		filter := bson.M{"_id": orgId, "role_permissions.role_id": roleId}
+		update := bson.M{"$push": bson.M{"role_permissions.$.permissions": bson.M{
+			"$each": permission.AddedPermission,
+		}}}
+		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

@@ -15,7 +15,6 @@ import (
 	_ "github.com/lib/pq"
 	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 	_ "github.com/shashimalcse/cronuseo/docs"
-	"github.com/shashimalcse/cronuseo/internal/action"
 	"github.com/shashimalcse/cronuseo/internal/auth"
 	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/check"
@@ -23,7 +22,6 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/monitoring"
 	"github.com/shashimalcse/cronuseo/internal/organization"
-	"github.com/shashimalcse/cronuseo/internal/permission"
 	"github.com/shashimalcse/cronuseo/internal/resource"
 	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/user"
@@ -168,12 +166,10 @@ func buildHandler(
 	// Here we register all the handlers. Each handler handle jwt validation separately.
 	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
 	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
-	permission.RegisterHandlers(rg, permission.NewService(permission.NewRepository(clients, db), permissionCache, logger))
 	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongodb), logger, permissionCache))
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongodb), permissionCache, logger))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongodb), logger))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongodb, clients.WriteClient), permissionCache, logger))
-	action.RegisterHandlers(rg, action.NewService(action.NewRepository(db), logger))
 	monitoring.RegisterHandlers(rg, monitoring.NewService(monitoring.NewRepository(mongodb), logger))
 
 	return router
@@ -214,12 +210,13 @@ func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName stri
 		APIKey := base64.StdEncoding.EncodeToString(key)
 
 		defaultOrg := mongo_entity.Organization{
-			DisplayName: orgName,
-			Identifier:  orgName,
-			API_KEY:     APIKey,
-			Resources:   []mongo_entity.Resource{},
-			Users:       []mongo_entity.User{},
-			Roles:       []mongo_entity.Role{},
+			DisplayName:     orgName,
+			Identifier:      orgName,
+			API_KEY:         APIKey,
+			Resources:       []mongo_entity.Resource{},
+			Users:           []mongo_entity.User{},
+			Roles:           []mongo_entity.Role{},
+			RolePermissions: []mongo_entity.RolePermission{},
 		}
 		_, err = orgCollection.InsertOne(context.Background(), defaultOrg)
 		if err != nil {

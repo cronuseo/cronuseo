@@ -22,6 +22,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
+	router.PATCH("/:id/permission", res.patchPermissions)
 	// router.GET("/user/:user_id", res.QueryByUserID)
 }
 
@@ -137,6 +138,30 @@ func (r role) delete(c echo.Context) error {
 		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusNoContent, "")
+}
+
+// @Description Patch role permission.
+// @Tags        Role
+// @Accept      json
+// @Param org_id path string true "Organization ID"
+// @Param id path string true "Role ID"
+// @Param request body PatchRolePermissionRequest true "body"
+// @Produce     json
+// @Success     201 {object}  entity.Role
+// @failure     400,403,404,500
+// @Router      /{org_id}/role/{id}/permission [patch]
+func (r role) patchPermissions(c echo.Context) error {
+
+	var input PatchRolePermissionRequest
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+
+	err := r.service.PatchPermission(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusOK, "")
 }
 
 // @Description Get all roles.
