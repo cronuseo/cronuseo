@@ -27,6 +27,7 @@ type Repository interface {
 	CheckUserAlreadyAssignToRoleById(ctx context.Context, org_id string, role_id string, user_id string) (bool, error)
 	CheckResourceActionExists(ctx context.Context, org_id string, resource_identifier string, action_identifier string) (bool, error)
 	PatchPermission(ctx context.Context, org_id string, role_id string, permission PatchRolePermission) error
+	CheckPermissionExists(ctx context.Context, org_id string, role_id string, resource_identifier string, action_identifier string) (bool, error)
 }
 
 type repository struct {
@@ -408,6 +409,17 @@ func (r repository) PatchPermission(ctx context.Context, org_id string, role_id 
 		return err
 	}
 
+	// remove permissions
+	if len(permission.RemovedPermission) > 0 {
+
+		filter := bson.M{"_id": orgId, "role_permissions.role_id": roleId}
+		update := bson.M{"$pull": bson.M{"role_permissions.$.permissions": bson.M{"$in": permission.RemovedPermission}}}
+		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		if err != nil {
+			return err
+		}
+	}
+
 	// add permissions
 	if len(permission.AddedPermission) > 0 {
 
@@ -422,4 +434,30 @@ func (r repository) PatchPermission(ctx context.Context, org_id string, role_id 
 	}
 
 	return nil
+}
+
+// check user already added to role
+func (r repository) CheckPermissionExists(ctx context.Context, org_id string, role_id string, resource_identifier string, action_identifier string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	roleId, err := primitive.ObjectIDFromHex(role_id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "role_permissions.role_id": roleId, "role_permissions.permissions.resource": resource_identifier, "role_permissions.permissions.action": action_identifier}
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+
+	// Check if the resource was found
+	if result.Err() == nil {
+		return true, nil
+	} else if result.Err() == mongo.ErrNoDocuments {
+		return false, nil
+	} else {
+		return false, result.Err()
+	}
 }
