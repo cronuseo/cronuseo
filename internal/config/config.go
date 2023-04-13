@@ -9,7 +9,8 @@ import (
 
 type Config struct {
 	JWKS          string `yaml:"jwks" env:"JWKS,secret"`
-	API           string `yaml:"api" env:"API,secret"`
+	Mgt_API       string `yaml:"mgt_api" env:"Mgt_API,secret"`
+	Check_API     string `yaml:"check_api" env:"Check_API,secret"`
 	Mongo         string `yaml:"mongo" env:"Mongo,secret"`
 	MongoUser     string `yaml:"mongouser" env:"MongoUser,secret"`
 	MongoPassword string `yaml:"mongopassword" env:"MongoPassword,secret"`
@@ -22,7 +23,8 @@ func (c Config) Validate() error {
 
 	return validation.ValidateStruct(&c,
 		validation.Field(&c.JWKS, validation.Required),
-		validation.Field(&c.API, validation.Required),
+		validation.Field(&c.Mgt_API, validation.Required),
+		validation.Field(&c.Check_API, validation.Required),
 		validation.Field(&c.MongoUser, validation.Required),
 		validation.Field(&c.MongoPassword, validation.Required),
 		validation.Field(&c.DefaultOrg, validation.Required),

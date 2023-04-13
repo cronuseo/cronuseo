@@ -90,8 +90,8 @@ func main() {
 	}
 
 	e := buildHandler(cfg, logger, mongo_db, asgardeoOauthConfig)
-	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))
-	e.Logger.Fatal(e.Start(cfg.API))
+	logger.Info("Starting server", zap.String("server_endpoint", cfg.Mgt_API))
+	e.Logger.Fatal(e.Start(cfg.Mgt_API))
 
 }
 
@@ -121,7 +121,7 @@ func buildHandler(
 
 	// API endpoints.
 	rg := router.Group("/api/v1")
-	rg.Use(authmw())
+	rg.Use(authmw(cfg.JWKS))
 
 	// Here we register all the handlers. Each handler handle jwt validation separately.
 	// check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
@@ -133,9 +133,8 @@ func buildHandler(
 	return router
 }
 
-func authmw() echo.MiddlewareFunc {
+func authmw(jwksURL string) echo.MiddlewareFunc {
 
-	jwksURL := "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
 	jwks, err := keyfunc.Get(jwksURL, keyfunc.Options{
 		RefreshErrorHandler: func(err error) {
 			panic(fmt.Sprintf("There was an error with the jwt.KeyFunc\nError:%s\n", err.Error()))
