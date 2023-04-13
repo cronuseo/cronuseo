@@ -3,7 +3,6 @@ package role
 import (
 	"context"
 
-	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -326,13 +325,6 @@ func (r repository) CheckUserExistById(ctx context.Context, org_id string, id st
 	} else {
 		return false, result.Err()
 	}
-}
-
-func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {
-
-	tuple.Object = org + "/" + tuple.Object
-	tuple.SubjectId = org + "/" + tuple.SubjectId
-	return tuple
 }
 
 // check user already added to role

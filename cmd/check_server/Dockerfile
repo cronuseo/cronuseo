@@ -17,13 +17,13 @@ COPY docs docs
 COPY internal internal
 COPY vendor vendor
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o server ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o check_server ./cmd/check_server
 
 FROM alpine:latest
 
 WORKDIR /app/
-COPY --from=build /app/server .
+COPY --from=build /app/check_server .
 COPY --from=build /app/config/*.yml ./config/
 COPY --from=build /app/config/*.yml ./config/
 
-ENTRYPOINT ./server -config "./config/${APP_ENV}.yml"
+ENTRYPOINT ./check_server -config "./config/${APP_ENV}.yml"

@@ -34,7 +34,7 @@ var flagConfig = flag.String("config", "./config/local.yml", "path to the config
 // @license.name Apache 2.0
 // @license.url  http://www.apache.org/licenses/LICENSE-2.0.html
 
-// @host     localhost:8080
+// @host     localhost:8081
 // @BasePath /api/v1
 func main() {
 

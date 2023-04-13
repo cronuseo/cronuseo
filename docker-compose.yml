@@ -1,9 +1,16 @@
 version: '3.8'
 services:
-  api:
+  mgt_api:
     image: ghcr.io/shashimalcse/cronuseo
     ports:
       - "8080:8080"
+    restart: on-failure
+    environment:
+      - APP_ENV=local
+  check_api:
+    image: ghcr.io/shashimalcse/cronuseo
+    ports:
+      - "8081:8081"
     restart: on-failure
     environment:
       - APP_ENV=local
