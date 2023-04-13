@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 
-	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -58,14 +57,13 @@ func (m UpdateUserRequest) Validate() error {
 }
 
 type service struct {
-	repo            Repository
-	permissionCache cache.PermissionCache
-	logger          *zap.Logger
+	repo   Repository
+	logger *zap.Logger
 }
 
-func NewService(repo Repository, permissionCache cache.PermissionCache, logger *zap.Logger) Service {
+func NewService(repo Repository, logger *zap.Logger) Service {
 
-	return service{repo: repo, permissionCache: permissionCache, logger: logger}
+	return service{repo: repo, logger: logger}
 }
 
 // Get user by id.

@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 
-	"github.com/shashimalcse/cronuseo/internal/cache"
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.uber.org/zap"
@@ -37,13 +36,12 @@ func (m CreateOrganizationRequest) Validate() error {
 }
 
 type service struct {
-	repo            Repository
-	logger          *zap.Logger
-	permissionCache cache.PermissionCache
+	repo   Repository
+	logger *zap.Logger
 }
 
-func NewService(repo Repository, logger *zap.Logger, permissionCache cache.PermissionCache) Service {
-	return service{repo: repo, logger: logger, permissionCache: permissionCache}
+func NewService(repo Repository, logger *zap.Logger) Service {
+	return service{repo: repo, logger: logger}
 }
 
 // Get organization by id.
@@ -129,7 +127,6 @@ func (s service) RefreshAPIKey(ctx context.Context, id string) (Organization, er
 		s.logger.Error("Error while updating organization.", zap.String("organization_id", id))
 		return Organization{}, err
 	}
-	s.permissionCache.DeleteAPIKey(ctx)
 	organization, err := s.Get(ctx, id)
 	return organization, err
 }

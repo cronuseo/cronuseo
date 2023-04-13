@@ -10,8 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-
-	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 )
 
 type Repository interface {
@@ -32,13 +30,12 @@ type Repository interface {
 }
 
 type repository struct {
-	mongodb     *mongo.Database
-	writeClient rts.WriteServiceClient
+	mongodb *mongo.Database
 }
 
-func NewRepository(mongodb *mongo.Database, writeClient rts.WriteServiceClient) Repository {
+func NewRepository(mongodb *mongo.Database) Repository {
 
-	return repository{mongodb: mongodb, writeClient: writeClient}
+	return repository{mongodb: mongodb}
 }
 
 // Get role by id.

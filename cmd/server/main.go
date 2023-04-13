@@ -5,34 +5,30 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"flag"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/MicahParks/keyfunc"
+	"github.com/golang-jwt/jwt"
+	jwtv4 "github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
 	_ "github.com/shashimalcse/cronuseo/docs"
-	"github.com/shashimalcse/cronuseo/internal/auth"
-	"github.com/shashimalcse/cronuseo/internal/cache"
-	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
-	"github.com/shashimalcse/cronuseo/internal/monitoring"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/resource"
 	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/user"
-	"github.com/shashimalcse/cronuseo/internal/util"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
+	"golang.org/x/oauth2"
 )
 
 var Version = "1.0.0"
@@ -67,49 +63,6 @@ func main() {
 		os.Exit(-1)
 	}
 
-	// Connect to database.
-	db, err := sqlx.Connect("postgres", cfg.DSN)
-	if err != nil {
-		logger.Fatal("Error while connecting to the database.", zap.String("database_url", cfg.DSN))
-		os.Exit(-1)
-	}
-
-	// We need three keto client for checking, reading, and writing.
-
-	// Write client.
-	conn, err := grpc.Dial(cfg.KetoWrite, grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Error while creating keto write client", zap.String("write_client_endpoint", cfg.KetoWrite))
-		os.Exit(-1)
-	}
-	writeClient := rts.NewWriteServiceClient(conn)
-
-	// Read client.
-	conn, err = grpc.Dial(cfg.KetoRead, grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Error while creating keto read client", zap.String("read_client_endpoint", cfg.KetoWrite))
-		os.Exit(-1)
-	}
-	readClient := rts.NewReadServiceClient(conn)
-
-	// Check client.
-	conn, err = grpc.Dial(cfg.KetoRead, grpc.WithInsecure())
-	if err != nil {
-		logger.Fatal("Error while creating keto check client", zap.String("check_client_endpoint", cfg.KetoWrite))
-		os.Exit(-1)
-	}
-	checkClient := rts.NewCheckServiceClient(conn)
-
-	// Create a struct to hold all keto clients.
-	clients := util.KetoClients{
-		WriteClient: writeClient,
-		ReadClient:  readClient,
-		CheckClient: checkClient,
-	}
-
-	// Redis client.
-	permissionCache := cache.NewRedisCache(cfg.RedisEndpoint, 0, 200, cfg.RedisPassword)
-
 	// Mongo client.
 	credential := options.Credential{
 		Username: cfg.MongoUser,
@@ -123,7 +76,20 @@ func main() {
 	mongo_db := mongo_client.Database(cfg.MongoDBName)
 	InitializeOrganization(mongo_db, logger, cfg.DefaultOrg)
 
-	e := buildHandler(db, cfg, logger, clients, permissionCache, mongo_db)
+	var asgardeo = oauth2.Endpoint{
+		AuthURL:  "https://api.asgardeo.io/t/cronuseo/oauth2/authorize",
+		TokenURL: "https://api.asgardeo.io/t/cronuseo/oauth2/token",
+	}
+
+	asgardeoOauthConfig := &oauth2.Config{
+		RedirectURL:  "http://localhost:8080/api/v1/auth/callback",
+		ClientID:     "PrFxAZefrbkVPN6RkLATzUAlbUga",
+		ClientSecret: "tzMbQz83mx7HPXxIej2uKIcQtoAa",
+		Scopes:       []string{"openid", "profile"},
+		Endpoint:     asgardeo,
+	}
+
+	e := buildHandler(cfg, logger, mongo_db, asgardeoOauthConfig)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.API))
 	e.Logger.Fatal(e.Start(cfg.API))
 
@@ -131,12 +97,10 @@ func main() {
 
 // buildHandler builds the echo router.
 func buildHandler(
-	db *sqlx.DB, // Database
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
-	clients util.KetoClients, // Keto clients
-	permissionCache cache.PermissionCache, // Redis permission cache
 	mongodb *mongo.Database, // Mongo monitoring client
+	asgardeoOauthConfig *oauth2.Config,
 ) *echo.Echo {
 
 	router := echo.New()
@@ -157,22 +121,46 @@ func buildHandler(
 
 	// API endpoints.
 	rg := router.Group("/api/v1")
-
-	// Currently this health check endpoint is used by the run console script to check availability of the service.
-	rg.GET("/health", func(c echo.Context) error {
-		return c.String(http.StatusOK, "OK")
-	})
+	rg.Use(authmw())
 
 	// Here we register all the handlers. Each handler handle jwt validation separately.
-	auth.RegisterHandlers(rg, auth.NewService(auth.NewRepository(db)))
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
-	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongodb), logger, permissionCache))
-	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongodb), permissionCache, logger))
+	// check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
+	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongodb), logger))
+	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongodb), logger))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongodb), logger))
-	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongodb, clients.WriteClient), permissionCache, logger))
-	monitoring.RegisterHandlers(rg, monitoring.NewService(monitoring.NewRepository(mongodb), logger))
+	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongodb), logger))
 
 	return router
+}
+
+func authmw() echo.MiddlewareFunc {
+
+	jwksURL := "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
+	jwks, err := keyfunc.Get(jwksURL, keyfunc.Options{
+		RefreshErrorHandler: func(err error) {
+			panic(fmt.Sprintf("There was an error with the jwt.KeyFunc\nError:%s\n", err.Error()))
+		},
+	})
+
+	if err != nil {
+		panic(fmt.Sprintf("Failed to create JWKs from resource at the given URL.\nError:%s\n", err.Error()))
+	}
+
+	// initialize JWT middleware instance
+	return middleware.JWTWithConfig(middleware.JWTConfig{
+		// skip public endpoints
+		// Skipper: func(context echo.Context) bool {
+		// 	return context.Path() == "/"
+		// },
+		KeyFunc: func(token *jwt.Token) (interface{}, error) {
+			// a hack to convert jwt -> v4 tokens
+			t, _, err := new(jwtv4.Parser).ParseUnverified(token.Raw, jwtv4.MapClaims{})
+			if err != nil {
+				return nil, err
+			}
+			return jwks.Keyfunc(t)
+		},
+	})
 }
 
 func InitializeLogger() *zap.Logger {
