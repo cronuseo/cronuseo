@@ -22,16 +22,12 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 > Note : cronuseo still in the experimental stage. Only tested in the local environemnt.
 
 * ``` git clone https://github.com/shashimalcse/cronuseo```
-* ``` docker compose up --build```
 * ``` docker compose -f docker-compose-database.yml up```
-* ``` make run-console```
-* Heading to http://localhost:3000 to continue your c6o journey.
+* ``` docker compose up --build```
 
 ## cronuseo SDKs for applications
 use these sdks to check permisisons for the user.
 * python - https://pypi.org/project/cronuseosdk
 * nodejs - https://www.npmjs.com/package/cronuseosdk
 * golang - https://github.com/shashimalcse/cronuseogosdk
-
-> cronuseo uses environment variables for configuration, along with .env file support.
 
