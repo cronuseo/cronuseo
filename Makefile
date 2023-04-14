@@ -15,15 +15,39 @@ help: ## help information about make commands
 
 .PHONY: run
 run: ## run the c6o server
+	make -j 2 run-mgt-server run-check-server
+
+.PHONY: run-mgt-server
+run-mgt-server: ## run the c6o mgt server
 	go run ${LDFLAGS} cmd/server/main.go -config ${CONFIG_FILE}
+
+.PHONY: run-check-server
+run-check-server: ## run the c6o check server
+	go run ${LDFLAGS} cmd/check_server/main.go -config ${CONFIG_FILE}
 
 .PHONY: build
 build:  ## build the c6o server binary
+	make -j 2 build-mgt-server build-check-server
+
+.PHONY: build-mgt-server
+build-mgt-server:  ## build the c6o mgt server binary
 	CGO_ENABLED=0 go build ${LDFLAGS} -a -o server $(MODULE)/cmd/server
 
+.PHONY: build-check-server
+build-check-server:  ## build the c6o check server binary
+	CGO_ENABLED=0 go build ${LDFLAGS} -a -o server $(MODULE)/cmd/check_server
+
 .PHONY: build-docker
-build-docker: ## build the API server as a docker image
+build-docker: ## build the servers as a docker image
+	make -j 2  build-mgt-server-docker build-check-server-docker
+
+.PHONY: build-mgt-server-docker
+build-mgt-server-docker: ## build the mgt server as a docker image
 	docker build -f cmd/server/Dockerfile -t server .
+
+.PHONY: build-check-server-docker
+build-check-server-docker: ## build the check server as a docker image
+	docker build -f cmd/check_server/Dockerfile -t server .
 
 .PHONY: version
 version: ## display the version of the API server
@@ -35,7 +59,7 @@ lint: ## run golint on all Go package
 
 .PHONY: setup-db
 setup-db: ## strat the databases
-	docker compose -f docker-compose-db.yml up -d && bash update_db.sh
+	docker compose -f docker-compose-db.yml up -d
 	
 .PHONY: start
 start: ## start backend, frontend, keto and redis

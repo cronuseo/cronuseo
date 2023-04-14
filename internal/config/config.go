@@ -8,33 +8,29 @@ import (
 )
 
 type Config struct {
-	ServerPort    int    `yaml:"server_port" env:"SERVER_PORT"`
-	DSN           string `yaml:"dsn" env:"DSN,secret"`
 	JWKS          string `yaml:"jwks" env:"JWKS,secret"`
-	KetoRead      string `yaml:"keto_read" env:"KetoRead,secret"`
-	KetoWrite     string `yaml:"keto_write" env:"KetoWrite,secret"`
-	API           string `yaml:"api" env:"API,secret"`
-	RedisEndpoint string `yaml:"redis_endpoint" env:"REDIS_ENDPOINT"`
-	RedisPassword string `yaml:"redis_password" env:"REDIS_PASSWORD"`
+	Mgt_API       string `yaml:"mgt_api" env:"Mgt_API,secret"`
+	Check_API     string `yaml:"check_api" env:"Check_API,secret"`
 	Mongo         string `yaml:"mongo" env:"Mongo,secret"`
 	MongoUser     string `yaml:"mongouser" env:"MongoUser,secret"`
 	MongoPassword string `yaml:"mongopassword" env:"MongoPassword,secret"`
+	MongoDBName   string `yaml:"mongodbname" env:"MongoDBName,secret"`
+	DefaultOrg    string `yaml:"default_org" env:"DEFAULT_ORG"`
+	RBACPolicy    string `yaml:"rbac_policy" env:"RBACPolicy"`
 }
 
 // Validate the configuration values.
 func (c Config) Validate() error {
 
 	return validation.ValidateStruct(&c,
-		validation.Field(&c.DSN, validation.Required),
 		validation.Field(&c.JWKS, validation.Required),
-		validation.Field(&c.KetoRead, validation.Required),
-		validation.Field(&c.KetoRead, validation.Required),
-		validation.Field(&c.API, validation.Required),
-		validation.Field(&c.RedisEndpoint, validation.Required),
-		validation.Field(&c.RedisPassword, validation.Required),
-		validation.Field(&c.Mongo, validation.Required),
+		validation.Field(&c.Mgt_API, validation.Required),
+		validation.Field(&c.Check_API, validation.Required),
 		validation.Field(&c.MongoUser, validation.Required),
 		validation.Field(&c.MongoPassword, validation.Required),
+		validation.Field(&c.DefaultOrg, validation.Required),
+		validation.Field(&c.MongoDBName, validation.Required),
+		validation.Field(&c.RBACPolicy, validation.Required),
 	)
 }
 

@@ -2,279 +2,107 @@ package check
 
 import (
 	"context"
+	"fmt"
 	"strconv"
-	"strings"
 
-	"github.com/shashimalcse/cronuseo/internal/cache"
-	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/open-policy-agent/opa/rego"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.uber.org/zap"
 )
 
 type Service interface {
-	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error)
-	CheckByUsername(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithUser, apiKey string) (bool, error)
-	CheckPermissions(ctx context.Context, org string, namespace string, tuple entity.CheckRequestWithPermissions, apiKey string) ([]string, error)
-	CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll, apiKey string) (entity.CheckAllResponse, error)
-	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
-	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
+	Check(ctx context.Context, org_identifier string, req CheckRequest, apiKey string) (bool, error)
 }
 
-type Tuple struct {
-	entity.Tuple
+type CheckRequest struct {
+	Username string `json:"username"`
+	Action   string `json:"action"`
+	Resource string `json:"resource"`
+}
+
+type data struct {
+	user_roles       []string
+	role_permissions map[string][]permission
+}
+
+type permission struct {
+	action   string
+	resource string
+}
+
+type OPAInput struct {
+	user     string
+	action   string
+	resource string
+	data     data
 }
 
 type service struct {
-	repo            Repository
-	permissionCache cache.PermissionCache
-	logger          *zap.Logger
+	repo   Repository
+	logger *zap.Logger
+	query  rego.PreparedEvalQuery
 }
 
-func NewService(repo Repository, cache cache.PermissionCache, logger *zap.Logger) Service {
+func NewService(repo Repository, logger *zap.Logger, query rego.PreparedEvalQuery) Service {
 
-	return service{repo: repo, permissionCache: cache, logger: logger}
+	return service{repo: repo, logger: logger, query: query}
 }
 
-// Checks permission is allowed or not.
-func (s service) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple, apiKey string) (bool, error) {
+func (s service) Check(ctx context.Context, org_identifier string, req CheckRequest, apiKey string) (bool, error) {
 
-	// Checking API Key is valid or not.
-	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
-	if api_key == "" {
-		s.logger.Debug("API_KEY is not in the cache.")
-		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
-		if err != nil {
-			s.logger.Error("Error while getting organization from database.",
-				zap.String("organization key", org),
-			)
-			return false, &util.NotFoundError{Path: "Organization"}
-		}
-		api_key = orgObject.API_KEY
-		s.logger.Debug("Adding API_KEY into the cache.")
-		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
-	}
-
-	if apiKey != api_key {
+	// Check resource already exists.
+	validated, _ := s.repo.ValidateAPIKey(ctx, org_identifier, apiKey)
+	if !validated {
 		s.logger.Debug("API_KEY is not valid.")
 		return false, &util.UnauthorizedError{}
 	}
 
-	tuple = qualifiedTuple(org, tuple)
-	value, _ := s.permissionCache.Get(ctx, tuple)
-	if value == "true" {
-		s.logger.Debug("Checking permission is in the cache.")
-		return true, nil
-	}
-	if value == "false" {
-		s.logger.Debug("Checking permission is in the cache.")
-		return false, nil
-	}
-	s.logger.Debug("Checking permission is not in the cache. Hence checking from keto.")
-	allow, err := s.repo.CheckTuple(ctx, org, namespace, tuple)
+	user_roles, err := s.repo.GetUserRoles(ctx, org_identifier, req.Username)
 	if err != nil {
-		s.logger.Error("Error while checking tuple with keto.",
-			zap.String("organization", org),
-			zap.String("subject", tuple.SubjectId),
-			zap.String("object", tuple.Object),
-			zap.String("relation", tuple.Relation),
-		)
+		s.logger.Error("Error while retrieving user roles.",
+			zap.String("org_identifier", org_identifier), zap.String("username", req.Username))
 		return false, err
 	}
-	b := strconv.FormatBool(allow)
-	s.permissionCache.Set(ctx, tuple, b)
-	return allow, nil
-
-}
-
-// Checks if the user has the permission to perform the action by username.
-func (s service) CheckByUsername(ctx context.Context, org string, namespace string, tupleUsername entity.CheckRequestWithUser, apiKey string) (bool, error) {
-
-	// Checking API Key is valid or not.
-	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
-	if api_key == "" {
-		s.logger.Debug("API_KEY is not in the cache.")
-		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
-		if err != nil {
-			s.logger.Error("Error while getting organization from database.",
-				zap.String("organization key", org),
-			)
-			return false, &util.NotFoundError{Path: "Organization"}
-		}
-		api_key = orgObject.API_KEY
-		s.logger.Debug("Adding API_KEY into the cache.")
-		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
+	var user_roles_map []string
+	for _, role := range *user_roles {
+		user_roles_map = append(user_roles_map, role.Hex())
 	}
 
-	if apiKey != api_key {
-		s.logger.Debug("API_KEY is not valid.")
-		return false, &util.UnauthorizedError{}
-	}
-
-	tuple := entity.Tuple{SubjectId: tupleUsername.Username, Object: tupleUsername.Resource, Relation: tupleUsername.Permission}
-	qTuple := qualifiedTuple(org, tuple)
-	value, _ := s.permissionCache.Get(ctx, qTuple)
-	if value == "true" {
-		s.logger.Debug("Checking permission is in the cache.")
-		return true, nil
-	}
-	if value == "false" {
-		s.logger.Debug("Checking permission is in the cache.")
-		return false, nil
-	}
-
-	s.logger.Debug("Checking permission is not in the cache. Hence checking from keto.")
-	roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, qTuple)
+	role_permissions, err := s.repo.GetRolePermissions(ctx, org_identifier)
 	if err != nil {
-		s.logger.Error("Error while retrieving subjects with keto.",
-			zap.String("organization", org),
-			zap.String("subject", tuple.SubjectId),
-			zap.String("object", tuple.Object),
-			zap.String("relation", tuple.Relation),
-		)
+		s.logger.Error("Error while retrieving user roles.",
+			zap.String("org_identifier", org_identifier), zap.String("username", req.Username))
 		return false, err
 	}
-	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.SubjectId)
+	permissions := map[string]interface{}{}
+	for _, role_permission := range *role_permissions {
+		var p []map[string]interface{}
+		for _, permission_obj := range role_permission.Permissions {
+			p = append(p, map[string]interface{}{"action": permission_obj.Action, "resource": permission_obj.Resource})
+		}
+		permissions[role_permission.RoleID.Hex()] = p
+	}
+
+	opa := map[string]interface{}{
+		"user":     req.Username,
+		"action":   req.Action,
+		"resource": req.Resource,
+		"data": map[string]interface{}{
+			"user_roles":       user_roles_map,
+			"role_permissions": permissions,
+		},
+	}
+
+	rs, err := s.query.Eval(ctx, rego.EvalInput(opa))
+
 	if err != nil {
-		s.logger.Error("Error while retrieving roles from database.",
-			zap.String("organization", org),
-			zap.String("username", tuple.SubjectId),
-		)
 		return false, err
 	}
-	allow := false
-	for _, val := range roles_from_db {
-		if contains(roles_from_keto, val) {
-			s.logger.Debug("User has the role. hence we are allowing the permission.")
-			allow = true
-		}
-	}
-	b := strconv.FormatBool(allow)
-	s.permissionCache.Set(ctx, qTuple, b)
-	return allow, nil
-}
 
-func (s service) CheckPermissions(ctx context.Context, org string, namespace string, permissions entity.CheckRequestWithPermissions, apiKey string) ([]string, error) {
-
-	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
-	if api_key == "" {
-		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
-		if err != nil {
-			return []string{}, err
-		}
-		api_key = orgObject.API_KEY
-		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
-	}
-	if apiKey != api_key {
-		return []string{}, &util.UnauthorizedError{}
-	}
-
-	allowedPermissions := []string{}
-	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, permissions.Username)
+	allow := fmt.Sprint(rs[0].Bindings["x"])
+	boolValue, err := strconv.ParseBool(allow)
 	if err != nil {
-		return []string{}, err
+		return false, err
 	}
-	for _, permission := range permissions.Permissions {
-		tuple := entity.Tuple{Object: permissions.Resource, Relation: permission.Permission}
-		qTuple := qualifiedTuple(org, tuple)
-		roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, qTuple)
-		if err != nil {
-			return []string{}, err
-		}
-		for _, val := range roles_from_db {
-			if contains(roles_from_keto, val) {
-				allowedPermissions = append(allowedPermissions, permission.Permission)
-			}
-		}
-	}
-	return allowedPermissions, nil
-}
-
-func (s service) CheckAll(ctx context.Context, org string, namespace string, tuple entity.CheckRequestAll, apiKey string) (entity.CheckAllResponse, error) {
-
-	api_key, _ := s.permissionCache.GetAPIKey(ctx, "API_KEY")
-	if api_key == "" {
-		orgObject, err := s.repo.GetOrganizationByKey(ctx, org)
-		if err != nil {
-			return entity.CheckAllResponse{}, err
-		}
-		api_key = orgObject.API_KEY
-		s.permissionCache.SetAPIKey(ctx, "API_KEY", api_key)
-	}
-
-	if apiKey != api_key {
-		return entity.CheckAllResponse{}, &util.UnauthorizedError{}
-	}
-	response := entity.CheckAllResponse{}
-
-	roles_from_db, err := s.repo.GetRolesByUsername(ctx, org, tuple.Username)
-	if err != nil {
-		return response, err
-	}
-	for _, resource := range tuple.Resources {
-		res_name := resource.Resource
-		allowedPermissions := []string{}
-		for _, permission := range resource.Permissions {
-			tuple := entity.Tuple{Object: res_name, Relation: permission.Permission}
-			qTuple := qualifiedTuple(org, tuple)
-			roles_from_keto, err := s.GetSubjectListByObject(ctx, org, namespace, qTuple)
-			if err != nil {
-				return response, err
-			}
-			for _, val := range roles_from_db {
-				if contains(roles_from_keto, val) {
-					allowedPermissions = append(allowedPermissions, permission.Permission)
-				}
-			}
-		}
-		response.Values = append(response.Values, entity.CheckAllResult{Resource: res_name, Permissions: allowedPermissions})
-
-	}
-	return response, nil
-}
-
-func (s service) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
-
-	objects, err := s.repo.GetObjectListBySubject(ctx, org, namespace, tuple)
-	if err != nil {
-		return []string{}, err
-	}
-	values := []string{}
-	for _, val := range objects {
-		slc := strings.Split(val, "/")
-		values = append(values, strings.TrimSpace(slc[1]))
-	}
-	return values, nil
-
-}
-
-func (s service) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
-
-	subjects, err := s.repo.GetSubjectListByObject(ctx, org, namespace, tuple)
-	if err != nil {
-		return []string{}, err
-	}
-	values := []string{}
-	for _, val := range subjects {
-		slc := strings.Split(val, "/")
-		values = append(values, strings.TrimSpace(slc[1]))
-	}
-	return values, nil
-
-}
-
-func qualifiedTuple(org string, tuple entity.Tuple) entity.Tuple {
-
-	tuple.Object = org + "/" + tuple.Object
-	tuple.SubjectId = org + "/" + tuple.SubjectId
-	return tuple
-}
-
-func contains(s []string, str string) bool {
-	for _, v := range s {
-		if v == str {
-			return true
-		}
-	}
-
-	return false
+	return boolValue, nil
 }

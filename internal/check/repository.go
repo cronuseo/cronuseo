@@ -3,96 +3,85 @@ package check
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/shashimalcse/cronuseo/internal/entity"
+	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
-
-	rts "github.com/ory/keto/proto/ory/keto/relation_tuples/v1alpha2"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Repository interface {
-	CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error)
-	GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
-	GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error)
-	GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error)
-	GetOrganization(ctx context.Context, id string) (entity.Organization, error)
-	GetOrganizationByKey(ctx context.Context, key string) (entity.Organization, error)
+	ValidateAPIKey(ctx context.Context, org_identifier string, apiKey string) (bool, error)
+	GetUserRoles(ctx context.Context, org_identifier string, username string) (*[]primitive.ObjectID, error)
+	GetRolePermissions(ctx context.Context, org_identifier string) (*[]mongo_entity.RolePermission, error)
 }
 
-type repo struct {
-	writeClient rts.WriteServiceClient
-	readClient  rts.ReadServiceClient
-	checkClient rts.CheckServiceClient
-	db          *sqlx.DB
+type repository struct {
+	mongodb *mongo.Database
 }
 
-func NewRepository(ketoClients util.KetoClients, db *sqlx.DB) Repository {
-	return repo{writeClient: ketoClients.WriteClient, readClient: ketoClients.ReadClient, checkClient: ketoClients.CheckClient, db: db}
+func NewRepository(mongodb *mongo.Database) Repository {
+	return repository{mongodb: mongodb}
 }
 
-func (r repo) CheckTuple(ctx context.Context, org string, namespace string, tuple entity.Tuple) (bool, error) {
+func (r repository) ValidateAPIKey(ctx context.Context, org_identifier string, apiKey string) (bool, error) {
 
-	check, err := r.checkClient.Check(ctx, &rts.CheckRequest{
-		Namespace: namespace,
-		Object:    tuple.Object,
-		Relation:  tuple.Relation,
-		Subject:   rts.NewSubjectID(tuple.SubjectId),
-	})
-	return check.Allowed, err
-}
+	filter := bson.M{"identifier": org_identifier, "api_key": apiKey}
 
-func (r repo) GetObjectListBySubject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
+	// Search for the resource in the "organizations" collection
+	count, err := r.mongodb.Collection("organizations").CountDocuments(context.Background(), filter)
 
-	res, err := r.readClient.ListRelationTuples(ctx, &rts.ListRelationTuplesRequest{
-		Query: &rts.ListRelationTuplesRequest_Query{
-			Namespace: namespace,
-			Relation:  tuple.Relation,
-			Subject:   rts.NewSubjectID(tuple.SubjectId),
-		},
-	})
 	if err != nil {
-		return []string{}, err
+		return false, err
 	}
-	obejcts := []string{}
-	for _, rt := range res.RelationTuples {
-		obejcts = append(obejcts, rt.Object)
+	if count > 0 {
+		return true, nil
 	}
-	return obejcts, nil
+	return false, nil
 }
 
-func (r repo) GetSubjectListByObject(ctx context.Context, org string, namespace string, tuple entity.Tuple) ([]string, error) {
+func (r repository) GetUserRoles(ctx context.Context, org_identifier string, username string) (*[]primitive.ObjectID, error) {
 
-	res, err := r.readClient.ListRelationTuples(ctx, &rts.ListRelationTuplesRequest{
-		Query: &rts.ListRelationTuplesRequest_Query{
-			Namespace: namespace,
-			Object:    tuple.Object,
-			Relation:  tuple.Relation,
-		},
-	})
-	if err != nil {
-		return []string{}, err
+	// Define filter to find the user by its ID
+	filter := bson.M{"identifier": org_identifier, "users.username": username}
+	projection := bson.M{"users.$": 1}
+	// Find the user document in the "organizations" collection
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	if err := result.Err(); err != nil {
+		return nil, err
 	}
-	obejcts := []string{}
-	for _, rt := range res.RelationTuples {
-		obejcts = append(obejcts, rt.Subject.Ref.(*rts.Subject_Id).Id)
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "User"}
+		}
+		return nil, err
 	}
-	return obejcts, nil
+
+	return &org.Users[0].Roles, nil
 }
 
-func (r repo) GetRolesByUsername(ctx context.Context, org string, username string) ([]string, error) {
-	var roles entity.Roles
-	err := r.db.Select(&roles, "select * from org_role where role_id in (select role_id from user_role where user_id in (select user_id from org_user inner join org on org_user.org_id = org.org_id where org_user.username = $1 AND org.org_key = $2))", username, org)
-	return roles.RoleKeys(), err
-}
+func (r repository) GetRolePermissions(ctx context.Context, org_identifier string) (*[]mongo_entity.RolePermission, error) {
 
-func (r repo) GetOrganization(ctx context.Context, id string) (entity.Organization, error) {
-	organization := entity.Organization{}
-	err := r.db.Get(&organization, "SELECT * FROM org WHERE org_id = $1", id)
-	return organization, err
-}
+	// Define filter to find the role permissions by its ID
+	filter := bson.M{"identifier": org_identifier}
+	// Find the user document in the "organizations" collection
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
 
-func (r repo) GetOrganizationByKey(ctx context.Context, key string) (entity.Organization, error) {
-	organization := entity.Organization{}
-	err := r.db.Get(&organization, "SELECT * FROM org WHERE org_key = $1", key)
-	return organization, err
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "Role Permissions"}
+		}
+		return nil, err
+	}
+
+	return &org.RolePermissions, nil
 }

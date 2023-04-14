@@ -1,0 +1,22 @@
+{
+    "user": "shashimal20",
+    "action": "read",
+    "resource": "sales",
+    "data": {
+        "user_roles": [
+            "64370a7dd5ef6a84229f223d"
+            ],
+        "role_permissions": {
+            "64370a7dd5ef6a84229f223d": [
+                {
+                    "resource": "sales",
+                    "action": "read"
+                },
+                {
+                    "resource": "sales",
+                    "action": "write"
+                }
+            ]
+        }
+    }
+}

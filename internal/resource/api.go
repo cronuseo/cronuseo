@@ -2,27 +2,20 @@ package resource
 
 import (
 	"net/http"
-	"strconv"
 
-	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/labstack/echo/v4"
-	"github.com/shashimalcse/cronuseo/internal/auth"
-	"github.com/shashimalcse/cronuseo/internal/entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
 	res := resource{service}
 	router := r.Group("/:org_id/resource")
-	config := echojwt.Config{
-		SigningKey: []byte(auth.SecretKey),
-	}
-	router.Use(echojwt.WithConfig(config))
 	router.GET("", res.query)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
+	router.PATCH("/:id", res.patch)
 }
 
 type resource struct {
@@ -72,54 +65,54 @@ func (r resource) query(c echo.Context) error {
 	if err != nil {
 		return util.HandleError(err)
 	}
-	response := entity.ResourceQueryResponse{}
-	maxResourceID := -1
-	minResourceID := 10000
+	// response := entity.ResourceQueryResponse{}
+	// maxResourceID := -1
+	// minResourceID := 10000
 
-	// Create resource results for the response.
-	for _, resource := range resources {
-		newResource := entity.ResourceResult{ID: resource.ID, Name: resource.Name, Key: resource.Key,
-			OrgID: resource.OrgID, CreatedAt: resource.CreatedAt, UpdatedAt: resource.UpdatedAt}
-		newResource.Links = entity.ResourceLinks{Self: "/" + org_id + "/resource/" + resource.ID}
-		response.Results = append(response.Results, newResource)
-		if i, err := strconv.Atoi(resource.LogicalKey); err == nil {
-			if maxResourceID < i {
-				maxResourceID = i
-			}
-			if minResourceID > i {
-				minResourceID = i
-			}
-		}
+	// // Create resource results for the response.
+	// for _, resource := range resources {
+	// 	newResource := entity.ResourceResult{ID: resource.ID, Name: resource.Name, Key: resource.Key,
+	// 		OrgID: resource.OrgID, CreatedAt: resource.CreatedAt, UpdatedAt: resource.UpdatedAt}
+	// 	newResource.Links = entity.ResourceLinks{Self: "/" + org_id + "/resource/" + resource.ID}
+	// 	response.Results = append(response.Results, newResource)
+	// 	if i, err := strconv.Atoi(resource.LogicalKey); err == nil {
+	// 		if maxResourceID < i {
+	// 			maxResourceID = i
+	// 		}
+	// 		if minResourceID > i {
+	// 			minResourceID = i
+	// 		}
+	// 	}
 
-	}
-	// Pagination
-	response.Size = len(resources)
-	response.Limit = filter.Limit
-	if len(resources) > 0 {
-		response.Cursor = maxResourceID
-		links := entity.Links{}
-		links.Self = "/" + org_id + "/resource/"
-		if filter.Name != "" {
-			links.Self += "?name=" + filter.Name
-		}
-		links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
-		if len(resources) == filter.Limit {
-			links.Next = "/" + org_id + "/resource/"
-			if filter.Name != "" {
-				links.Next += "?name=" + filter.Name
-			}
-			links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-		}
-		if filter.Cursor != 0 {
-			links.Prev = "/" + org_id + "/resource/"
-			if filter.Name != "" {
-				links.Prev += "?name=" + filter.Name
-			}
-			links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
-		}
-		response.Links = links
-	}
-	return c.JSON(http.StatusOK, response)
+	// }
+	// // Pagination
+	// response.Size = len(resources)
+	// response.Limit = filter.Limit
+	// if len(resources) > 0 {
+	// 	response.Cursor = maxResourceID
+	// 	links := entity.Links{}
+	// 	links.Self = "/" + org_id + "/resource/"
+	// 	if filter.Name != "" {
+	// 		links.Self += "?name=" + filter.Name
+	// 	}
+	// 	links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
+	// 	if len(resources) == filter.Limit {
+	// 		links.Next = "/" + org_id + "/resource/"
+	// 		if filter.Name != "" {
+	// 			links.Next += "?name=" + filter.Name
+	// 		}
+	// 		links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
+	// 	}
+	// 	if filter.Cursor != 0 {
+	// 		links.Prev = "/" + org_id + "/resource/"
+	// 		if filter.Name != "" {
+	// 			links.Prev += "?name=" + filter.Name
+	// 		}
+	// 		links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
+	// 	}
+	// 	response.Links = links
+	// }
+	return c.JSON(http.StatusOK, resources)
 }
 
 // @Description Create resource.
@@ -169,6 +162,30 @@ func (r resource) update(c echo.Context) error {
 	return c.JSON(http.StatusCreated, resource)
 }
 
+// @Description Patch resource.
+// @Tags        Resource
+// @Accept      json
+// @Param org_id path string true "Organization ID"
+// @Param id path string true "Resource ID"
+// @Param request body PatchResourceRequest true "body"
+// @Produce     json
+// @Success     201 {object}  entity.Resource
+// @failure     400,403,404,500
+// @Router      /{org_id}/resource/{id} [put]
+func (r resource) patch(c echo.Context) error {
+
+	var input PatchResourceRequest
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+
+	resource, err := r.service.Patch(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusCreated, resource)
+}
+
 // @Description Delete resource.
 // @Tags        Resource
 // @Param org_id path string true "Organization ID"
@@ -179,7 +196,7 @@ func (r resource) update(c echo.Context) error {
 // @Router      /{org_id}/resource/{id} [delete]
 func (r resource) delete(c echo.Context) error {
 
-	_, err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
+	err := r.service.Delete(c.Request().Context(), c.Param("org_id"), c.Param("id"))
 	if err != nil {
 		return util.HandleError(err)
 	}
