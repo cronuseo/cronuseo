@@ -9,12 +9,12 @@ import (
 )
 
 func RegisterHandlers(r *echo.Group, service Service) {
-	res := permission{service: service}
+	res := permission_service{service: service}
 	router := r.Group("/:org/permission/check")
 	router.POST("", res.check)
 }
 
-type permission struct {
+type permission_service struct {
 	service Service
 }
 
@@ -27,7 +27,7 @@ type permission struct {
 // @Success     201
 // @failure     400,403,500
 // @Router      /{org}/permission/check [post]
-func (r permission) check(c echo.Context) error {
+func (r permission_service) check(c echo.Context) error {
 	var input CheckRequest
 	api_key := c.Request().Header.Get("API_KEY")
 	if err := c.Bind(&input); err != nil {

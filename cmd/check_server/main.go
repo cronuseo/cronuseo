@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
+	"github.com/open-policy-agent/opa/rego"
 	_ "github.com/shashimalcse/cronuseo/docs"
 	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
@@ -61,7 +62,15 @@ func main() {
 
 	mongo_db := mongo_client.Database(cfg.MongoDBName)
 
-	e := buildHandler(cfg, logger, mongo_db)
+	r := rego.New(
+		rego.Query("x = data.example.allow"),
+		rego.Load([]string{"/Users/thilinashashimal/Desktop/Cronuseo/example/policy.rego"}, nil))
+	ctx := context.Background()
+	query, err := r.PrepareForEval(ctx)
+	if err != nil {
+		panic(err)
+	}
+	e := buildHandler(cfg, logger, mongo_db, query)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.Check_API))
 	e.Logger.Fatal(e.Start(cfg.Check_API))
 
@@ -72,6 +81,7 @@ func buildHandler(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
 	mongodb *mongo.Database, // Mongo monitoring client
+	query rego.PreparedEvalQuery,
 ) *echo.Echo {
 
 	router := echo.New()
@@ -91,7 +101,7 @@ func buildHandler(
 	rg := router.Group("/api/v1")
 
 	// Here we register all the handlers. Each handler handle jwt validation separately.
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongodb), logger))
+	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongodb), logger, query))
 
 	return router
 }
