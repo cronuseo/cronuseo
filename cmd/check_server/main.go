@@ -64,7 +64,7 @@ func main() {
 
 	r := rego.New(
 		rego.Query("x = data.example.allow"),
-		rego.Load([]string{"/Users/thilinashashimal/Desktop/Cronuseo/example/policy.rego"}, nil))
+		rego.Load([]string{cfg.RBACPolicy}, nil))
 	ctx := context.Background()
 	query, err := r.PrepareForEval(ctx)
 	if err != nil {

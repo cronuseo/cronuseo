@@ -16,6 +16,7 @@ type Config struct {
 	MongoPassword string `yaml:"mongopassword" env:"MongoPassword,secret"`
 	MongoDBName   string `yaml:"mongodbname" env:"MongoDBName,secret"`
 	DefaultOrg    string `yaml:"default_org" env:"DEFAULT_ORG"`
+	RBACPolicy    string `yaml:"rbac_policy" env:"RBACPolicy"`
 }
 
 // Validate the configuration values.
@@ -29,6 +30,7 @@ func (c Config) Validate() error {
 		validation.Field(&c.MongoPassword, validation.Required),
 		validation.Field(&c.DefaultOrg, validation.Required),
 		validation.Field(&c.MongoDBName, validation.Required),
+		validation.Field(&c.RBACPolicy, validation.Required),
 	)
 }
 
