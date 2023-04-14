@@ -1,25 +1,16 @@
 version: '3.8'
 services:
-  # mgt_api:
-  #   image: ghcr.io/shashimalcse/cronuseo
-  #   ports:
-  #     - "8080:8080"
-  #   restart: on-failure
-  #   environment:
-  #     - APP_ENV=local
-  # check_api:
-  #   image: ghcr.io/shashimalcse/cronuseo
-  #   ports:
-  #     - "8081:8081"
-  #   restart: on-failure
-  #   environment:
-  #     - APP_ENV=local
-  opa:
-    image: openpolicyagent/opa
+  mgt_api:
+    image: ghcr.io/shashimalcse/cronuseo
     ports:
-      - "8181:8181"
-    volumes:
-      - "${PWD}/example"
-    command: ["run", "--server", "--log-level", "debug"]
-volumes:
-  opa:
+      - "8080:8080"
+    restart: on-failure
+    environment:
+      - APP_ENV=local
+  check_api:
+    image: ghcr.io/shashimalcse/cronuseo
+    ports:
+      - "8081:8081"
+    restart: on-failure
+    environment:
+      - APP_ENV=local
