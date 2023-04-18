@@ -10,6 +10,7 @@ type Organization struct {
 	Resources       []Resource         `json:"resources,omitempty" bson:"resources"`
 	Users           []User             `json:"users,omitempty" bson:"users"`
 	Roles           []Role             `json:"roles,omitempty" bson:"roles"`
+	Groups          []Group            `json:"groups,omitempty" bson:"groups"`
 	RolePermissions []RolePermission   `json:"role_permissions,omitempty" bson:"role_permissions"`
 }
 
@@ -33,6 +34,7 @@ type User struct {
 	FirstName string               `json:"first_name" bson:"first_name"`
 	LastName  string               `json:"last_name" bson:"last_name"`
 	Roles     []primitive.ObjectID `json:"roles,omitempty" bson:"roles"`
+	Groups    []primitive.ObjectID `json:"groups,omitempty" bson:"groups"`
 }
 
 type Role struct {
@@ -40,6 +42,15 @@ type Role struct {
 	Identifier  string               `json:"identifier" bson:"identifier"`
 	DisplayName string               `json:"display_name" bson:"display_name"`
 	Users       []primitive.ObjectID `json:"users,omitempty" bson:"users"`
+	Groups      []primitive.ObjectID `json:"groups,omitempty" bson:"groups"`
+}
+
+type Group struct {
+	ID          primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
+	Identifier  string               `json:"identifier" bson:"identifier"`
+	DisplayName string               `json:"display_name" bson:"display_name"`
+	Users       []primitive.ObjectID `json:"users,omitempty" bson:"users"`
+	Roles       []primitive.ObjectID `json:"roles,omitempty" bson:"roles"`
 }
 
 type RolePermission struct {

@@ -30,6 +30,7 @@ type CreateRoleRequest struct {
 	Identifier  string               `json:"identifier"`
 	DisplayName string               `json:"display_name"`
 	Users       []primitive.ObjectID `json:"users"`
+	Groups      []primitive.ObjectID `json:"groups"`
 }
 
 func (m CreateRoleRequest) Validate() error {
@@ -39,15 +40,19 @@ func (m CreateRoleRequest) Validate() error {
 }
 
 type UpdateRoleRequest struct {
-	DisplayName *string              `json:"display_name"`
-	AddedUsers  []primitive.ObjectID `json:"added_users"`
-	RemovedUser []primitive.ObjectID `json:"removed_users"`
+	DisplayName   *string              `json:"display_name"`
+	AddedUsers    []primitive.ObjectID `json:"added_users"`
+	RemovedUser   []primitive.ObjectID `json:"removed_users"`
+	AddedGroups   []primitive.ObjectID `json:"added_groups"`
+	RemovedGroups []primitive.ObjectID `json:"removed_groups"`
 }
 
 type UpdateRole struct {
-	DisplayName *string              `json:"display_name"`
-	AddedUsers  []primitive.ObjectID `json:"added_users"`
-	RemovedUser []primitive.ObjectID `json:"removed_users"`
+	DisplayName   *string              `json:"display_name"`
+	AddedUsers    []primitive.ObjectID `json:"added_users"`
+	RemovedUser   []primitive.ObjectID `json:"removed_users"`
+	AddedGroups   []primitive.ObjectID `json:"added_groups"`
+	RemovedGroups []primitive.ObjectID `json:"removed_groups"`
 }
 
 type PatchRolePermissionRequest struct {
@@ -114,11 +119,19 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 		}
 	}
 
+	for _, groupId := range req.Groups {
+		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+		}
+	}
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.Role{
 		ID:          roleId,
 		Identifier:  req.Identifier,
 		DisplayName: req.DisplayName,
 		Users:       req.Users,
+		Groups:      req.Groups,
 	})
 
 	if err != nil {
@@ -167,10 +180,41 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		}
 	}
 
+	// groups
+	for _, groupId := range req.AddedGroups {
+		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+		}
+	}
+	for _, groupId := range req.RemovedGroups {
+		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+		}
+	}
+	added_groups := []primitive.ObjectID{}
+	for _, groupId := range req.AddedGroups {
+		already_added, _ := s.repo.CheckGroupAlreadyAssignToRoleById(ctx, org_id, id, groupId.Hex())
+		if !already_added {
+			added_groups = append(added_groups, groupId)
+		}
+	}
+
+	removed_groups := []primitive.ObjectID{}
+	for _, groupId := range req.RemovedGroups {
+		already_added, _ := s.repo.CheckGroupAlreadyAssignToRoleById(ctx, org_id, id, groupId.Hex())
+		if already_added {
+			removed_groups = append(removed_groups, groupId)
+		}
+	}
+
 	if err := s.repo.Update(ctx, org_id, id, UpdateRole{
-		DisplayName: req.DisplayName,
-		AddedUsers:  added_users,
-		RemovedUser: removed_roles,
+		DisplayName:   req.DisplayName,
+		AddedUsers:    added_users,
+		RemovedUser:   removed_roles,
+		AddedGroups:   added_groups,
+		RemovedGroups: removed_groups,
 	}); err != nil {
 		s.logger.Error("Error while updating role.", zap.String("organization_id", org_id), zap.String("role_id", id))
 		return Role{}, err

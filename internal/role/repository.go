@@ -26,6 +26,8 @@ type Repository interface {
 	PatchPermission(ctx context.Context, org_id string, role_id string, permission PatchRolePermission) error
 	CheckPermissionExists(ctx context.Context, org_id string, role_id string, resource_identifier string, action_identifier string) (bool, error)
 	GetPermissions(ctx context.Context, org_id string, role_id string) (*[]mongo_entity.Permission, error)
+	CheckGroupExistById(ctx context.Context, org_id string, id string) (bool, error)
+	CheckGroupAlreadyAssignToRoleById(ctx context.Context, org_id string, role_id string, group_id string) (bool, error)
 }
 
 type repository struct {
@@ -167,6 +169,49 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		}
 	}
 
+	// add groups
+	if len(update_role.AddedGroups) > 0 {
+
+		filter := bson.M{"_id": orgId, "roles._id": roleId}
+		update := bson.M{"$push": bson.M{"roles.$.groups": bson.M{
+			"$each": update_role.AddedGroups,
+		}}}
+		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
+		}
+
+		for _, groupId := range update_role.AddedGroups {
+			filter := bson.M{"_id": orgId, "groups._id": groupId}
+			update := bson.M{"$addToSet": bson.M{"groups.$.roles": roleId}}
+			_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
+		}
+
+	}
+
+	// remove groups
+	if len(update_role.RemovedGroups) > 0 {
+
+		filter := bson.M{"_id": orgId, "roles._id": roleId}
+		update := bson.M{"$pull": bson.M{"roles.$.groups": bson.M{"$in": update_role.RemovedGroups}}}
+		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		if err != nil {
+			return err
+		}
+
+		for _, groupId := range update_role.RemovedGroups {
+			filter := bson.M{"_id": orgId, "groups._id": groupId}
+			update := bson.M{"$pull": bson.M{"groups.$.roles": roleId}}
+			_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -194,6 +239,20 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 
 	// Check if the update operation modified any documents
 	if result.ModifiedCount == 0 {
+		return err
+	}
+
+	filter = bson.M{"_id": orgId}
+	update = bson.M{"$pull": bson.M{"groups.$[].roles": roleId}}
+	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
+
+	filter = bson.M{"_id": orgId}
+	update = bson.M{"$pull": bson.M{"users.$[].roles": roleId}}
+	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+	if err != nil {
 		return err
 	}
 
@@ -484,4 +543,70 @@ func (r repository) GetPermissions(ctx context.Context, org_id string, role_id s
 	}
 
 	return &org.RolePermissions[0].Permissions, nil
+}
+
+// Check if group exists by id.
+func (r repository) CheckGroupExistById(ctx context.Context, org_id string, id string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	groupId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "groups._id": groupId}
+
+	// Search for the group in the "organizations" collection
+	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+
+	// Check if the group was found
+	if result.Err() == nil {
+		return true, nil
+	} else if result.Err() == mongo.ErrNoDocuments {
+		return false, nil
+	} else {
+		return false, result.Err()
+	}
+}
+
+// Check if group already assign to user by id.
+func (r repository) CheckGroupAlreadyAssignToRoleById(ctx context.Context, org_id string, role_id string, group_id string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	roleId, err := primitive.ObjectIDFromHex(role_id)
+	if err != nil {
+		return false, err
+	}
+
+	groupId, err := primitive.ObjectIDFromHex(group_id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "roles._id": roleId}
+	projection := bson.M{"roles.$": 1}
+	org := mongo_entity.Organization{}
+	// Search for the role in the "organizations" collection
+	err = r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
+	if err != nil {
+		return false, err
+	}
+	user := org.Users[0]
+	// Check if the group ID exists in the user's Groups field
+	for _, r := range user.Groups {
+		if r == groupId {
+			return true, nil
+		}
+	}
+
+	// Group ID not found in the user's Groups field
+	return false, nil
 }

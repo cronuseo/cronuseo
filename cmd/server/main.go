@@ -17,6 +17,7 @@ import (
 	_ "github.com/lib/pq"
 	_ "github.com/shashimalcse/cronuseo/docs"
 	"github.com/shashimalcse/cronuseo/internal/config"
+	"github.com/shashimalcse/cronuseo/internal/group"
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/resource"
@@ -129,6 +130,7 @@ func buildHandler(
 	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongodb), logger))
 	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongodb), logger))
 	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongodb), logger))
+	group.RegisterHandlers(rg, group.NewService(group.NewRepository(mongodb), logger))
 
 	return router
 }
@@ -203,6 +205,7 @@ func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName stri
 			Resources:       []mongo_entity.Resource{},
 			Users:           []mongo_entity.User{},
 			Roles:           []mongo_entity.Role{},
+			Groups:          []mongo_entity.Group{},
 			RolePermissions: []mongo_entity.RolePermission{},
 		}
 		_, err = orgCollection.InsertOne(context.Background(), defaultOrg)

@@ -29,6 +29,7 @@ type CreateUserRequest struct {
 	FirstName string               `json:"first_name"`
 	LastName  string               `json:"last_name"`
 	Roles     []primitive.ObjectID `json:"roles"`
+	Groups    []primitive.ObjectID `json:"groups"`
 }
 
 func (m CreateUserRequest) Validate() error {
@@ -39,17 +40,21 @@ func (m CreateUserRequest) Validate() error {
 }
 
 type UpdateUserRequest struct {
-	FirstName    *string              `json:"first_name"`
-	LastName     *string              `json:"last_name"`
-	AddedRoles   []primitive.ObjectID `json:"added_roles"`
-	RemovedRoles []primitive.ObjectID `json:"removed_roles"`
+	FirstName     *string              `json:"first_name"`
+	LastName      *string              `json:"last_name"`
+	AddedRoles    []primitive.ObjectID `json:"added_roles"`
+	RemovedRoles  []primitive.ObjectID `json:"removed_roles"`
+	AddedGroups   []primitive.ObjectID `json:"added_groups"`
+	RemovedGroups []primitive.ObjectID `json:"removed_groups"`
 }
 
 type UpdateUser struct {
-	FirstName    *string              `json:"first_name"`
-	LastName     *string              `json:"last_name"`
-	AddedRoles   []primitive.ObjectID `json:"added_roles"`
-	RemovedRoles []primitive.ObjectID `json:"removed_roles"`
+	FirstName     *string              `json:"first_name"`
+	LastName      *string              `json:"last_name"`
+	AddedRoles    []primitive.ObjectID `json:"added_roles"`
+	RemovedRoles  []primitive.ObjectID `json:"removed_roles"`
+	AddedGroups   []primitive.ObjectID `json:"added_groups"`
+	RemovedGroups []primitive.ObjectID `json:"removed_groups"`
 }
 
 func (m UpdateUserRequest) Validate() error {
@@ -106,12 +111,20 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		}
 	}
 
+	for _, groupId := range req.Groups {
+		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+		}
+	}
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
 		ID:        userId,
 		Username:  req.Username,
 		FirstName: req.FirstName,
 		LastName:  req.LastName,
 		Roles:     req.Roles,
+		Groups:    req.Groups,
 	})
 
 	if err != nil {
@@ -131,6 +144,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
 	}
 
+	// roles
 	for _, roleId := range req.AddedRoles {
 		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
 		if !exists {
@@ -159,11 +173,42 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		}
 	}
 
+	// groups
+	for _, groupId := range req.AddedGroups {
+		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+		}
+	}
+	for _, groupId := range req.RemovedGroups {
+		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+		}
+	}
+	added_groups := []primitive.ObjectID{}
+	for _, groupId := range req.AddedGroups {
+		already_added, _ := s.repo.CheckGroupAlreadyAssignToUserById(ctx, org_id, id, groupId.Hex())
+		if !already_added {
+			added_groups = append(added_groups, groupId)
+		}
+	}
+
+	removed_groups := []primitive.ObjectID{}
+	for _, groupId := range req.RemovedGroups {
+		already_added, _ := s.repo.CheckGroupAlreadyAssignToUserById(ctx, org_id, id, groupId.Hex())
+		if already_added {
+			removed_groups = append(removed_groups, groupId)
+		}
+	}
+
 	if err := s.repo.Update(ctx, org_id, id, UpdateUser{
-		FirstName:    req.FirstName,
-		LastName:     req.LastName,
-		AddedRoles:   added_roles,
-		RemovedRoles: removed_roles,
+		FirstName:     req.FirstName,
+		LastName:      req.LastName,
+		AddedRoles:    added_roles,
+		RemovedRoles:  removed_roles,
+		AddedGroups:   added_groups,
+		RemovedGroups: removed_groups,
 	}); err != nil {
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),

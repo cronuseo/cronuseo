@@ -63,8 +63,18 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 			zap.String("org_identifier", org_identifier), zap.String("username", req.Username))
 		return false, err
 	}
+	group_roles, err := s.repo.GetGroupRoles(ctx, org_identifier, req.Username)
+	if err != nil {
+		s.logger.Error("Error while retrieving group roles.",
+			zap.String("org_identifier", org_identifier), zap.String("username", req.Username))
+		return false, err
+	}
+
 	var user_roles_map []string
 	for _, role := range *user_roles {
+		user_roles_map = append(user_roles_map, role.Hex())
+	}
+	for _, role := range *group_roles {
 		user_roles_map = append(user_roles_map, role.Hex())
 	}
 
