@@ -9,7 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
 type Repository interface {
@@ -103,59 +102,42 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		return err
 	}
 
-	wc := writeconcern.New(writeconcern.WMajority())
-	txnOptions := options.Transaction().SetWriteConcern(wc)
+	if update_resource.DisplayName != nil && *update_resource.DisplayName != "" {
 
-	session, err := r.mongoClient.StartSession()
-	if err != nil {
-		panic(err)
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$set": bson.M{"resources.$.display_name": *update_resource.DisplayName}}
+		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+		if err != nil {
+			return err
+		}
 	}
-	defer session.EndSession(context.TODO())
 
-	_, err = session.WithTransaction(context.TODO(), func(ctx mongo.SessionContext) (interface{}, error) {
+	// add actions
+	if len(update_resource.AddedActions) > 0 {
 
-		// update display name
-		if update_resource.DisplayName != nil && *update_resource.DisplayName != "" {
-
-			filter := bson.M{"_id": orgId, "resources._id": resId}
-			update := bson.M{"$set": bson.M{"resources.$.display_name": *update_resource.DisplayName}}
-			_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
-			if err != nil {
-				return nil, err
-			}
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
+			"$each": update_resource.AddedActions,
+		}}}
+		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
 		}
+	}
 
-		// add actions
-		if len(update_resource.AddedActions) > 0 {
+	if len(update_resource.RemovedActions) > 0 {
 
-			filter := bson.M{"_id": orgId, "resources._id": resId}
-			update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
-				"$each": update_resource.AddedActions,
-			}}}
-			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
-			if err != nil {
-				return nil, err
-			}
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
+			"_id": bson.M{"$in": update_resource.RemovedActions},
+		}}}
+		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		if err != nil {
+			return err
 		}
+	}
 
-		// remove actions
-		if len(update_resource.RemovedActions) > 0 {
-
-			filter := bson.M{"_id": orgId, "resources._id": resId}
-			update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
-				"_id": bson.M{"$in": update_resource.RemovedActions},
-			}}}
-			_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return nil, err
-
-	}, txnOptions)
-
-	return err
+	return nil
 }
 
 func (r repository) Patch(ctx context.Context, org_id string, id string, patch_resource PatchResource) error {
@@ -170,48 +152,32 @@ func (r repository) Patch(ctx context.Context, org_id string, id string, patch_r
 		return err
 	}
 
-	wc := writeconcern.New(writeconcern.WMajority())
-	txnOptions := options.Transaction().SetWriteConcern(wc)
+	// add actions
+	if len(patch_resource.AddedActions) > 0 {
 
-	session, err := r.mongoClient.StartSession()
-	if err != nil {
-		panic(err)
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
+			"$each": patch_resource.AddedActions,
+		}}}
+		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
+		}
 	}
-	defer session.EndSession(context.TODO())
 
-	_, err = session.WithTransaction(context.TODO(), func(ctx mongo.SessionContext) (interface{}, error) {
+	if len(patch_resource.RemovedActions) > 0 {
 
-		// add actions
-		if len(patch_resource.AddedActions) > 0 {
-
-			filter := bson.M{"_id": orgId, "resources._id": resId}
-			update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
-				"$each": patch_resource.AddedActions,
-			}}}
-			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
-			if err != nil {
-				return nil, err
-			}
+		filter := bson.M{"_id": orgId, "resources._id": resId}
+		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
+			"_id": bson.M{"$in": patch_resource.RemovedActions},
+		}}}
+		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		if err != nil {
+			return err
 		}
+	}
 
-		// remove actions
-		if len(patch_resource.RemovedActions) > 0 {
-
-			filter := bson.M{"_id": orgId, "resources._id": resId}
-			update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
-				"_id": bson.M{"$in": patch_resource.RemovedActions},
-			}}}
-			_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return nil, err
-
-	}, txnOptions)
-
-	return err
+	return nil
 }
 
 // Get all resources.

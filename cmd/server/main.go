@@ -30,7 +30,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"golang.org/x/oauth2"
 )
 
 var Version = "1.0.0"
@@ -83,20 +82,7 @@ func main() {
 	mongo_db := mongo_client.Database(cfg.MongoDBName)
 	InitializeOrganization(mongo_db, logger, cfg.DefaultOrg)
 
-	var asgardeo = oauth2.Endpoint{
-		AuthURL:  "https://api.asgardeo.io/t/cronuseo/oauth2/authorize",
-		TokenURL: "https://api.asgardeo.io/t/cronuseo/oauth2/token",
-	}
-
-	asgardeoOauthConfig := &oauth2.Config{
-		RedirectURL:  "http://localhost:8080/api/v1/auth/callback",
-		ClientID:     "PrFxAZefrbkVPN6RkLATzUAlbUga",
-		ClientSecret: "tzMbQz83mx7HPXxIej2uKIcQtoAa",
-		Scopes:       []string{"openid", "profile"},
-		Endpoint:     asgardeo,
-	}
-
-	e := buildHandler(cfg, logger, mongo_client, mongo_db_config, asgardeoOauthConfig)
+	e := buildHandler(cfg, logger, mongo_client, mongo_db_config)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.Mgt_API))
 	e.Logger.Fatal(e.Start(cfg.Mgt_API))
 
@@ -108,7 +94,6 @@ func buildHandler(
 	logger *zap.Logger, // Logger
 	mongoClient *mongo.Client, // Mongo client
 	mongoDBConfig util.MongoDBConfig, // Mongo collection name
-	asgardeoOauthConfig *oauth2.Config,
 ) *echo.Echo {
 
 	router := echo.New()
