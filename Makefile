@@ -53,7 +53,8 @@ build-check-server-docker: ## build the check server as a docker image
 version: ## display the version of the API server
 	@echo $(VERSION)
 
-.PHONY: lint
+.PHONY: lint4
+
 lint: ## run golint on all Go package
 	@golint $(PACKAGES)
 
