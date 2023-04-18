@@ -1,373 +1,352 @@
 basePath: /api/v1
 definitions:
-  action.CreateActionRequest:
-    properties:
-      action_key:
-        type: string
-      name:
-        type: string
-    type: object
-  action.UpdateActionRequest:
-    properties:
-      name:
-        type: string
-    type: object
-  auth.AdminUserRequest:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    type: object
-  check.Tuple:
-    properties:
-      object:
-        type: string
-      relation:
-        type: string
-      subject:
-        type: string
-    type: object
-  entity.Action:
-    properties:
-      action_id:
-        type: string
-      action_key:
-        type: string
-      created_at:
-        type: string
-      name:
-        type: string
-      resource_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  entity.CheckRequestAll:
-    properties:
-      resources:
-        items:
-          $ref: '#/definitions/entity.ResourceObject'
-        type: array
-      username:
-        type: string
-    type: object
-  entity.CheckRequestWithPermissions:
-    properties:
-      permissions:
-        items:
-          $ref: '#/definitions/entity.PermissionObject'
-        type: array
-      resource:
-        type: string
-      username:
-        type: string
-    type: object
-  entity.CheckRequestWithUser:
-    properties:
-      permission:
-        type: string
-      resource:
-        type: string
-      username:
-        type: string
-    type: object
-  entity.Links:
-    properties:
-      next:
-        type: string
-      prev:
-        type: string
-      self:
-        type: string
-    type: object
-  entity.Organization:
-    properties:
-      created_at:
-        type: string
-      name:
-        type: string
-      org_api_key:
-        type: string
-      org_id:
-        type: string
-      org_key:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  entity.Permission:
+  check.CheckRequest:
     properties:
       action:
         type: string
       resource:
         type: string
-      role:
-        type: string
-    type: object
-  entity.PermissionObject:
-    properties:
-      permission:
-        type: string
-    type: object
-  entity.Resource:
-    properties:
-      created_at:
-        type: string
-      name:
-        type: string
-      org_id:
-        type: string
-      resource_id:
-        type: string
-      resource_key:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  entity.ResourceLinks:
-    properties:
-      self:
-        type: string
-    type: object
-  entity.ResourceObject:
-    properties:
-      permissions:
-        items:
-          $ref: '#/definitions/entity.PermissionObject'
-        type: array
-      resource:
-        type: string
-    type: object
-  entity.ResourceQueryResponse:
-    properties:
-      _links:
-        $ref: '#/definitions/entity.Links'
-      cursor:
-        type: integer
-      limit:
-        type: integer
-      results:
-        items:
-          $ref: '#/definitions/entity.ResourceResult'
-        type: array
-      size:
-        type: integer
-    type: object
-  entity.ResourceResult:
-    properties:
-      _links:
-        $ref: '#/definitions/entity.ResourceLinks'
-      created_at:
-        type: string
-      name:
-        type: string
-      org_id:
-        type: string
-      resource_id:
-        type: string
-      resource_key:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  entity.Role:
-    properties:
-      created_at:
-        type: string
-      name:
-        type: string
-      org_id:
-        type: string
-      role_id:
-        type: string
-      role_key:
-        type: string
-      updated_at:
-        type: string
-      users:
-        items:
-          $ref: '#/definitions/entity.UserID'
-        type: array
-    type: object
-  entity.RoleID:
-    properties:
-      role_id:
-        type: string
-    type: object
-  entity.User:
-    properties:
-      created_at:
-        type: string
-      firstname:
-        type: string
-      lastname:
-        type: string
-      org_id:
-        type: string
-      roles:
-        items:
-          $ref: '#/definitions/entity.RoleID'
-        type: array
-      updated_at:
-        type: string
-      user_id:
-        type: string
       username:
         type: string
     type: object
-  entity.UserID:
+  group.CreateGroupRequest:
     properties:
-      user_id:
+      display_name:
         type: string
-    type: object
-  entity.UserLinks:
-    properties:
-      self:
+      identifier:
         type: string
-    type: object
-  entity.UserQueryResponse:
-    properties:
-      _links:
-        $ref: '#/definitions/entity.Links'
-      cursor:
-        type: integer
-      limit:
-        type: integer
-      results:
+      roles:
         items:
-          $ref: '#/definitions/entity.UserResult'
+          type: string
         type: array
-      size:
-        type: integer
+      users:
+        items:
+          type: string
+        type: array
     type: object
-  entity.UserResult:
+  group.UpdateGroupRequest:
     properties:
-      _links:
-        $ref: '#/definitions/entity.UserLinks'
-      created_at:
+      added_roles:
+        items:
+          type: string
+        type: array
+      added_users:
+        items:
+          type: string
+        type: array
+      display_name:
         type: string
-      firstname:
+      removed_roles:
+        items:
+          type: string
+        type: array
+      removed_users:
+        items:
+          type: string
+        type: array
+    type: object
+  mongo_entity.Action:
+    properties:
+      display_name:
         type: string
-      lastname:
+      id:
         type: string
-      org_id:
+      identifier:
         type: string
-      updated_at:
+    type: object
+  mongo_entity.Group:
+    properties:
+      display_name:
         type: string
-      user_id:
+      id:
         type: string
+      identifier:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      users:
+        items:
+          type: string
+        type: array
+    type: object
+  mongo_entity.Permission:
+    properties:
+      action:
+        type: string
+      resource:
+        type: string
+    type: object
+  mongo_entity.Resource:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/mongo_entity.Action'
+        type: array
+      display_name:
+        type: string
+      id:
+        type: string
+      identifier:
+        type: string
+    type: object
+  mongo_entity.Role:
+    properties:
+      display_name:
+        type: string
+      groups:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      identifier:
+        type: string
+      users:
+        items:
+          type: string
+        type: array
+    type: object
+  mongo_entity.RolePermission:
+    properties:
+      permissions:
+        items:
+          $ref: '#/definitions/mongo_entity.Permission'
+        type: array
+      role_id:
+        type: string
+    type: object
+  mongo_entity.User:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      groups:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      last_name:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
       username:
         type: string
     type: object
   organization.CreateOrganizationRequest:
     properties:
-      name:
+      display_name:
         type: string
-      org_key:
-        type: string
-    type: object
-  organization.UpdateOrganizationRequest:
-    properties:
-      name:
+      identifier:
         type: string
     type: object
-  permission.CheckActionsRequest:
+  organization.Organization:
     properties:
-      actions:
+      api_key:
+        type: string
+      display_name:
+        type: string
+      groups:
         items:
-          type: string
+          $ref: '#/definitions/mongo_entity.Group'
         type: array
-      resource:
+      id:
         type: string
-      role:
+      identifier:
         type: string
-    type: object
-  permission.PermissionPatchOperation:
-    properties:
-      op:
-        type: string
-      permissions:
+      resources:
         items:
-          $ref: '#/definitions/entity.Permission'
+          $ref: '#/definitions/mongo_entity.Resource'
         type: array
-    type: object
-  permission.PermissionPatchRequest:
-    properties:
-      operations:
+      role_permissions:
         items:
-          $ref: '#/definitions/permission.PermissionPatchOperation'
+          $ref: '#/definitions/mongo_entity.RolePermission'
+        type: array
+      roles:
+        items:
+          $ref: '#/definitions/mongo_entity.Role'
+        type: array
+      users:
+        items:
+          $ref: '#/definitions/mongo_entity.User'
         type: array
     type: object
   resource.CreateResourceRequest:
     properties:
-      name:
+      actions:
+        items:
+          $ref: '#/definitions/mongo_entity.Action'
+        type: array
+      display_name:
         type: string
-      resource_key:
+      identifier:
+        type: string
+    type: object
+  resource.PatchResourceRequest:
+    properties:
+      added_actions:
+        items:
+          $ref: '#/definitions/mongo_entity.Action'
+        type: array
+      removed_actions:
+        items:
+          type: string
+        type: array
+    type: object
+  resource.Resource:
+    properties:
+      actions:
+        items:
+          $ref: '#/definitions/mongo_entity.Action'
+        type: array
+      display_name:
+        type: string
+      id:
+        type: string
+      identifier:
         type: string
     type: object
   resource.UpdateResourceRequest:
     properties:
-      name:
+      added_actions:
+        items:
+          $ref: '#/definitions/mongo_entity.Action'
+        type: array
+      display_name:
         type: string
+      removed_actions:
+        items:
+          type: string
+        type: array
     type: object
   role.CreateRoleRequest:
     properties:
-      name:
+      display_name:
         type: string
-      role_key:
+      groups:
+        items:
+          type: string
+        type: array
+      identifier:
         type: string
       users:
         items:
-          $ref: '#/definitions/entity.UserID'
+          type: string
+        type: array
+    type: object
+  role.PatchRolePermissionRequest:
+    properties:
+      added_permissions:
+        items:
+          $ref: '#/definitions/mongo_entity.Permission'
+        type: array
+      removed_permissions:
+        items:
+          $ref: '#/definitions/mongo_entity.Permission'
+        type: array
+    type: object
+  role.Role:
+    properties:
+      display_name:
+        type: string
+      groups:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      identifier:
+        type: string
+      users:
+        items:
+          type: string
         type: array
     type: object
   role.UpdateRoleRequest:
     properties:
-      name:
+      added_groups:
+        items:
+          type: string
+        type: array
+      added_users:
+        items:
+          type: string
+        type: array
+      display_name:
         type: string
+      removed_groups:
+        items:
+          type: string
+        type: array
+      removed_users:
+        items:
+          type: string
+        type: array
     type: object
   user.CreateUserRequest:
     properties:
-      firstname:
+      first_name:
         type: string
-      lastname:
+      groups:
+        items:
+          type: string
+        type: array
+      last_name:
         type: string
       roles:
         items:
-          $ref: '#/definitions/entity.RoleID'
+          type: string
         type: array
       username:
         type: string
     type: object
   user.UpdateUserRequest:
     properties:
-      firstname:
-        type: string
-      lastname:
-        type: string
-    type: object
-  user.UserPatchOperation:
-    properties:
-      op:
-        type: string
-      path:
-        type: string
-      values:
+      added_groups:
         items:
-          $ref: '#/definitions/user.Value'
+          type: string
+        type: array
+      added_roles:
+        items:
+          type: string
+        type: array
+      first_name:
+        type: string
+      last_name:
+        type: string
+      removed_groups:
+        items:
+          type: string
+        type: array
+      removed_roles:
+        items:
+          type: string
         type: array
     type: object
-  user.UserPatchRequest:
+  user.User:
     properties:
-      operations:
+      email:
+        type: string
+      first_name:
+        type: string
+      groups:
         items:
-          $ref: '#/definitions/user.UserPatchOperation'
+          type: string
         type: array
-    type: object
-  user.Value:
-    properties:
-      value:
+      id:
+        type: string
+      last_name:
+        type: string
+      roles:
+        items:
+          type: string
+        type: array
+      username:
         type: string
     type: object
 host: localhost:8080
@@ -384,13 +363,46 @@ info:
   title: Cronuseo API
   version: "1.0"
 paths:
-  /{org_id}/permission/check_actions:
+  /{org_id}/group:
+    get:
+      description: Get all groups.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: name
+        in: query
+        name: name
+        type: string
+      - description: limit
+        in: query
+        name: limit
+        type: integer
+      - description: cursor
+        in: query
+        name: cursor
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/mongo_entity.Group'
+            type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
     post:
       consumes:
       - application/json
-      description: Check by username.
+      description: Create group.
       parameters:
-      - description: Organization
+      - description: Organization ID
         in: path
         name: org_id
         required: true
@@ -400,12 +412,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/permission.CheckActionsRequest'
+          $ref: '#/definitions/group.CreateGroupRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
+          schema:
+            $ref: '#/definitions/mongo_entity.Group'
         "400":
           description: Bad Request
         "403":
@@ -413,16 +427,47 @@ paths:
         "500":
           description: Internal Server Error
       tags:
-      - Permission
-  /{org_id}/permission/update:
-    patch:
+      - Group
+  /{org_id}/group/{id}:
+    get:
+      description: Get group by ID.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Group ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/mongo_entity.Group'
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      tags:
+      - Group
+    put:
       consumes:
       - application/json
-      description: Patch Permissions.
+      description: Update group.
       parameters:
-      - description: Organization
+      - description: Organization ID
         in: path
         name: org_id
+        required: true
+        type: string
+      - description: Group ID
+        in: path
+        name: id
         required: true
         type: string
       - description: body
@@ -430,20 +475,24 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/permission.PermissionPatchRequest'
+          $ref: '#/definitions/group.UpdateGroupRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
+          schema:
+            $ref: '#/definitions/mongo_entity.Group'
         "400":
           description: Bad Request
         "403":
           description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
-      - Permission
+      - Group
   /{org_id}/resource:
     get:
       description: Get all resources.
@@ -472,7 +521,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.ResourceQueryResponse'
+              $ref: '#/definitions/resource.Resource'
             type: array
         "500":
           description: Internal Server Error
@@ -500,7 +549,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.Resource'
+            $ref: '#/definitions/resource.Resource'
         "400":
           description: Bad Request
         "403":
@@ -553,7 +602,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.Resource'
+            $ref: '#/definitions/resource.Resource'
         "404":
           description: Not Found
         "500":
@@ -563,7 +612,7 @@ paths:
     put:
       consumes:
       - application/json
-      description: Update resource.
+      description: Patch resource.
       parameters:
       - description: Organization ID
         in: path
@@ -580,14 +629,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/resource.UpdateResourceRequest'
+          $ref: '#/definitions/resource.PatchResourceRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.Resource'
+            $ref: '#/definitions/resource.Resource'
         "400":
           description: Bad Request
         "403":
@@ -626,7 +675,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.Role'
+              $ref: '#/definitions/role.Role'
             type: array
         "500":
           description: Internal Server Error
@@ -654,7 +703,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.Role'
+            $ref: '#/definitions/role.Role'
         "400":
           description: Bad Request
         "403":
@@ -707,7 +756,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.Role'
+            $ref: '#/definitions/role.Role'
         "404":
           description: Not Found
         "500":
@@ -741,7 +790,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.Role'
+            $ref: '#/definitions/role.Role'
         "400":
           description: Bad Request
         "403":
@@ -752,18 +801,18 @@ paths:
           description: Internal Server Error
       tags:
       - Role
-  /{org_id}/role/user/{user_id}:
+  /{org_id}/role/{id}/permission:
     get:
-      description: Get all roles.
+      description: Get all permissions for role.
       parameters:
       - description: Organization ID
         in: path
         name: org_id
         required: true
         type: string
-      - description: User ID
+      - description: Role ID
         in: path
-        name: user_id
+        name: id
         required: true
         type: string
       produces:
@@ -773,8 +822,46 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.Role'
+              $ref: '#/definitions/mongo_entity.Permission'
             type: array
+        "500":
+          description: Internal Server Error
+      tags:
+      - Role
+    patch:
+      consumes:
+      - application/json
+      description: Patch role permission.
+      parameters:
+      - description: Organization ID
+        in: path
+        name: org_id
+        required: true
+        type: string
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/role.PatchRolePermissionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/role.Role'
+        "400":
+          description: Bad Request
+        "403":
+          description: Forbidden
+        "404":
+          description: Not Found
         "500":
           description: Internal Server Error
       tags:
@@ -807,7 +894,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.UserQueryResponse'
+              $ref: '#/definitions/user.User'
             type: array
         "500":
           description: Internal Server Error
@@ -835,7 +922,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.User'
+            $ref: '#/definitions/user.User'
         "400":
           description: Bad Request
         "403":
@@ -845,30 +932,6 @@ paths:
       tags:
       - User
   /{org_id}/user/{id}:
-    delete:
-      description: Delete user.
-      parameters:
-      - description: Organization ID
-        in: path
-        name: org_id
-        required: true
-        type: string
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - User
     get:
       description: Get user by ID.
       parameters:
@@ -888,45 +951,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.User'
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - User
-    patch:
-      consumes:
-      - application/json
-      description: Patch user.
-      parameters:
-      - description: Organization ID
-        in: path
-        name: org_id
-        required: true
-        type: string
-      - description: User ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/user.UserPatchRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/entity.User'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
+            $ref: '#/definitions/user.User'
         "404":
           description: Not Found
         "500":
@@ -960,7 +985,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.User'
+            $ref: '#/definitions/user.User'
         "400":
           description: Bad Request
         "403":
@@ -975,7 +1000,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Check tuple.
+      description: Check.
       parameters:
       - description: Organization
         in: path
@@ -987,7 +1012,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/check.Tuple'
+          $ref: '#/definitions/check.CheckRequest'
       produces:
       - application/json
       responses:
@@ -1001,336 +1026,6 @@ paths:
           description: Internal Server Error
       tags:
       - Permission
-  /{org}/permission/check/multi_actions:
-    post:
-      consumes:
-      - application/json
-      description: Check by username.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.CheckRequestWithPermissions'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{org}/permission/check/multi_resources:
-    post:
-      consumes:
-      - application/json
-      description: Check by username.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.CheckRequestAll'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{org}/permission/check/username:
-    post:
-      consumes:
-      - application/json
-      description: Check by username.
-      parameters:
-      - description: Organization
-        in: path
-        name: org
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/entity.CheckRequestWithUser'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Permission
-  /{resource_id}/action:
-    get:
-      description: Get all resources.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: string
-      - description: name
-        in: query
-        name: name
-        type: string
-      - description: limit
-        in: query
-        name: limit
-        type: integer
-      - description: cursor
-        in: query
-        name: cursor
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/entity.Action'
-            type: array
-        "500":
-          description: Internal Server Error
-      tags:
-      - Action
-    post:
-      consumes:
-      - application/json
-      description: Create action.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/action.CreateActionRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/entity.Action'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Action
-  /{resource_id}/action/{id}:
-    delete:
-      description: Delete action.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: string
-      - description: Action ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Action
-    get:
-      description: Get action by ID.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: string
-      - description: Action ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/entity.Action'
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Action
-    put:
-      consumes:
-      - application/json
-      description: Update action.
-      parameters:
-      - description: Resource ID
-        in: path
-        name: resource_id
-        required: true
-        type: string
-      - description: Action ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/action.UpdateActionRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/entity.Action'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Action
-  /auth/login:
-    post:
-      consumes:
-      - application/json
-      description: Login.
-      parameters:
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/auth.AdminUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Auth
-  /auth/logout:
-    post:
-      consumes:
-      - application/json
-      description: Logout.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Auth
-  /auth/me:
-    get:
-      consumes:
-      - application/json
-      description: GetMe.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Auth
-  /auth/register:
-    post:
-      consumes:
-      - application/json
-      description: Register.
-      parameters:
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/auth.AdminUserRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
-        "500":
-          description: Internal Server Error
-      tags:
-      - Auth
   /organization:
     get:
       description: Get all organizations.
@@ -1341,7 +1036,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/entity.Organization'
+              $ref: '#/definitions/organization.Organization'
             type: array
         "500":
           description: Internal Server Error
@@ -1364,7 +1059,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.Organization'
+            $ref: '#/definitions/organization.Organization'
         "400":
           description: Bad Request
         "403":
@@ -1407,40 +1102,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/entity.Organization'
-        "404":
-          description: Not Found
-        "500":
-          description: Internal Server Error
-      tags:
-      - Organization
-    put:
-      consumes:
-      - application/json
-      description: Update organization.
-      parameters:
-      - description: Organization ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: body
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/organization.UpdateOrganizationRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/entity.Organization'
-        "400":
-          description: Bad Request
-        "403":
-          description: Forbidden
+            $ref: '#/definitions/organization.Organization'
         "404":
           description: Not Found
         "500":
@@ -1464,7 +1126,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/entity.Organization'
+            $ref: '#/definitions/organization.Organization'
         "400":
           description: Bad Request
         "403":

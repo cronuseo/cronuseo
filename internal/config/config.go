@@ -8,15 +8,16 @@ import (
 )
 
 type Config struct {
-	JWKS          string `yaml:"jwks" env:"JWKS,secret"`
-	Mgt_API       string `yaml:"mgt_api" env:"Mgt_API,secret"`
-	Check_API     string `yaml:"check_api" env:"Check_API,secret"`
-	Mongo         string `yaml:"mongo" env:"Mongo,secret"`
-	MongoUser     string `yaml:"mongouser" env:"MongoUser,secret"`
-	MongoPassword string `yaml:"mongopassword" env:"MongoPassword,secret"`
-	MongoDBName   string `yaml:"mongodbname" env:"MongoDBName,secret"`
-	DefaultOrg    string `yaml:"default_org" env:"DEFAULT_ORG"`
-	RBACPolicy    string `yaml:"rbac_policy" env:"RBACPolicy"`
+	JWKS             string `yaml:"jwks" env:"JWKS,secret"`
+	Mgt_API          string `yaml:"mgt_api" env:"Mgt_API,secret"`
+	Check_API        string `yaml:"check_api" env:"Check_API,secret"`
+	Mongo            string `yaml:"mongo" env:"Mongo,secret"`
+	MongoUser        string `yaml:"mongouser" env:"MongoUser,secret"`
+	MongoPassword    string `yaml:"mongopassword" env:"MongoPassword,secret"`
+	MongoDBName      string `yaml:"mongodbname" env:"MongoDBName,secret"`
+	MongoOrgCollName string `yaml:"mongo_org_coll_name" env:"MongoOrgCollName,secret"`
+	DefaultOrg       string `yaml:"default_org" env:"DEFAULT_ORG"`
+	RBACPolicy       string `yaml:"rbac_policy" env:"RBACPolicy"`
 }
 
 // Validate the configuration values.
@@ -31,6 +32,7 @@ func (c Config) Validate() error {
 		validation.Field(&c.DefaultOrg, validation.Required),
 		validation.Field(&c.MongoDBName, validation.Required),
 		validation.Field(&c.RBACPolicy, validation.Required),
+		validation.Field(&c.MongoOrgCollName, validation.Required),
 	)
 }
 

@@ -76,7 +76,7 @@ func main() {
 
 	mongo_db_config := util.MongoDBConfig{
 		DBName:                     cfg.MongoDBName,
-		OrganizationCollectionName: "organizations",
+		OrganizationCollectionName: cfg.MongoOrgCollName,
 	}
 
 	mongo_db := mongo_client.Database(cfg.MongoDBName)
