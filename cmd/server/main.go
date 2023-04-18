@@ -23,6 +23,7 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/resource"
 	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/user"
+	"github.com/shashimalcse/cronuseo/internal/util"
 	echoSwagger "github.com/swaggo/echo-swagger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -74,6 +75,11 @@ func main() {
 		panic(err)
 	}
 
+	mongo_db_config := util.MongoDBConfig{
+		DBName:                     cfg.MongoDBName,
+		OrganizationCollectionName: "organizations",
+	}
+
 	mongo_db := mongo_client.Database(cfg.MongoDBName)
 	InitializeOrganization(mongo_db, logger, cfg.DefaultOrg)
 
@@ -90,7 +96,7 @@ func main() {
 		Endpoint:     asgardeo,
 	}
 
-	e := buildHandler(cfg, logger, mongo_db, asgardeoOauthConfig)
+	e := buildHandler(cfg, logger, mongo_client, mongo_db_config, asgardeoOauthConfig)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.Mgt_API))
 	e.Logger.Fatal(e.Start(cfg.Mgt_API))
 
@@ -100,7 +106,8 @@ func main() {
 func buildHandler(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
-	mongodb *mongo.Database, // Mongo monitoring client
+	mongoClient *mongo.Client, // Mongo client
+	mongoDBConfig util.MongoDBConfig, // Mongo collection name
 	asgardeoOauthConfig *oauth2.Config,
 ) *echo.Echo {
 
@@ -126,11 +133,11 @@ func buildHandler(
 
 	// Here we register all the handlers. Each handler handle jwt validation separately.
 	// check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
-	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongodb), logger))
-	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongodb), logger))
-	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongodb), logger))
-	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongodb), logger))
-	group.RegisterHandlers(rg, group.NewService(group.NewRepository(mongodb), logger))
+	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongoClient, mongoDBConfig), logger))
+	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongoClient, mongoDBConfig), logger))
+	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongoClient, mongoDBConfig), logger))
+	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongoClient, mongoDBConfig), logger))
+	group.RegisterHandlers(rg, group.NewService(group.NewRepository(mongoClient, mongoDBConfig), logger))
 
 	return router
 }

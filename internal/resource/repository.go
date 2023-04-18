@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
 type Repository interface {
@@ -25,12 +26,16 @@ type Repository interface {
 }
 
 type repository struct {
-	mongodb *mongo.Database
+	mongoClient   *mongo.Client
+	mongoDBConfig util.MongoDBConfig
+	mongoColl     *mongo.Collection
 }
 
-func NewRepository(mongodb *mongo.Database) Repository {
+func NewRepository(mongoClient *mongo.Client, mongoDBConfig util.MongoDBConfig) Repository {
 
-	return repository{mongodb: mongodb}
+	orgCollection := mongoClient.Database(mongoDBConfig.DBName).Collection(mongoDBConfig.OrganizationCollectionName)
+
+	return repository{mongoClient: mongoClient, mongoDBConfig: mongoDBConfig, mongoColl: orgCollection}
 }
 
 // Get resource by id.
@@ -50,7 +55,7 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 	filter := bson.M{"_id": orgId, "resources._id": resId}
 	projection := bson.M{"resources.$": 1}
 	// Find the resource document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -77,7 +82,7 @@ func (r repository) Create(ctx context.Context, org_id string, resource mongo_en
 	// Update the APIResources array for the given organization
 	filter := bson.M{"_id": orgId}
 	update := bson.M{"$push": bson.M{"resources": resource}}
-	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	_, err = r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
 	}
@@ -98,42 +103,59 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		return err
 	}
 
-	if update_resource.DisplayName != nil && *update_resource.DisplayName != "" {
+	wc := writeconcern.New(writeconcern.WMajority())
+	txnOptions := options.Transaction().SetWriteConcern(wc)
 
-		filter := bson.M{"_id": orgId, "resources._id": resId}
-		update := bson.M{"$set": bson.M{"resources.$.display_name": *update_resource.DisplayName}}
-		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
-		if err != nil {
-			return err
-		}
+	session, err := r.mongoClient.StartSession()
+	if err != nil {
+		panic(err)
 	}
+	defer session.EndSession(context.TODO())
 
-	// add actions
-	if len(update_resource.AddedActions) > 0 {
+	_, err = session.WithTransaction(context.TODO(), func(ctx mongo.SessionContext) (interface{}, error) {
 
-		filter := bson.M{"_id": orgId, "resources._id": resId}
-		update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
-			"$each": update_resource.AddedActions,
-		}}}
-		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
-		if err != nil {
-			return err
+		// update display name
+		if update_resource.DisplayName != nil && *update_resource.DisplayName != "" {
+
+			filter := bson.M{"_id": orgId, "resources._id": resId}
+			update := bson.M{"$set": bson.M{"resources.$.display_name": *update_resource.DisplayName}}
+			_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
 
-	if len(update_resource.RemovedActions) > 0 {
+		// add actions
+		if len(update_resource.AddedActions) > 0 {
 
-		filter := bson.M{"_id": orgId, "resources._id": resId}
-		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
-			"_id": bson.M{"$in": update_resource.RemovedActions},
-		}}}
-		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
-		if err != nil {
-			return err
+			filter := bson.M{"_id": orgId, "resources._id": resId}
+			update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
+				"$each": update_resource.AddedActions,
+			}}}
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
 
-	return nil
+		// remove actions
+		if len(update_resource.RemovedActions) > 0 {
+
+			filter := bson.M{"_id": orgId, "resources._id": resId}
+			update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
+				"_id": bson.M{"$in": update_resource.RemovedActions},
+			}}}
+			_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return nil, err
+
+	}, txnOptions)
+
+	return err
 }
 
 func (r repository) Patch(ctx context.Context, org_id string, id string, patch_resource PatchResource) error {
@@ -148,32 +170,48 @@ func (r repository) Patch(ctx context.Context, org_id string, id string, patch_r
 		return err
 	}
 
-	// add actions
-	if len(patch_resource.AddedActions) > 0 {
+	wc := writeconcern.New(writeconcern.WMajority())
+	txnOptions := options.Transaction().SetWriteConcern(wc)
 
-		filter := bson.M{"_id": orgId, "resources._id": resId}
-		update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
-			"$each": patch_resource.AddedActions,
-		}}}
-		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
-		if err != nil {
-			return err
-		}
+	session, err := r.mongoClient.StartSession()
+	if err != nil {
+		panic(err)
 	}
+	defer session.EndSession(context.TODO())
 
-	if len(patch_resource.RemovedActions) > 0 {
+	_, err = session.WithTransaction(context.TODO(), func(ctx mongo.SessionContext) (interface{}, error) {
 
-		filter := bson.M{"_id": orgId, "resources._id": resId}
-		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
-			"_id": bson.M{"$in": patch_resource.RemovedActions},
-		}}}
-		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
-		if err != nil {
-			return err
+		// add actions
+		if len(patch_resource.AddedActions) > 0 {
+
+			filter := bson.M{"_id": orgId, "resources._id": resId}
+			update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
+				"$each": patch_resource.AddedActions,
+			}}}
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+			if err != nil {
+				return nil, err
+			}
 		}
-	}
 
-	return nil
+		// remove actions
+		if len(patch_resource.RemovedActions) > 0 {
+
+			filter := bson.M{"_id": orgId, "resources._id": resId}
+			update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
+				"_id": bson.M{"$in": patch_resource.RemovedActions},
+			}}}
+			_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return nil, err
+
+	}, txnOptions)
+
+	return err
 }
 
 // Get all resources.
@@ -188,7 +226,7 @@ func (r repository) Query(ctx context.Context, org_id string) (*[]mongo_entity.R
 	filter := bson.M{"_id": orgId}
 	projection := bson.M{"resources.actions": 0}
 	// Find the resource document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -222,7 +260,7 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 	filter := bson.M{"_id": orgId}
 	update := bson.M{"$pull": bson.M{"resources": bson.M{"_id": resId}}}
 	// Find the resource document in the "organizations" collection
-	result, err := r.mongodb.Collection("organizations").UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
+	result, err := r.mongoColl.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
 	if err != nil {
 		return err
 	}
@@ -251,7 +289,7 @@ func (r repository) CheckResourceExistById(ctx context.Context, org_id string, i
 	filter := bson.M{"_id": orgId, "resources._id": resId}
 
 	// Search for the resource in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the resource was found
 	if result.Err() == nil {
@@ -273,7 +311,7 @@ func (r repository) CheckResourceExistsByIdentifier(ctx context.Context, org_id 
 	filter := bson.M{"_id": orgId, "resources.identifier": identifier}
 
 	// Search for the resource in the "organizations" collection
-	count, err := r.mongodb.Collection("organizations").CountDocuments(context.Background(), filter)
+	count, err := r.mongoColl.CountDocuments(context.Background(), filter)
 
 	if err != nil {
 		return false, err
@@ -301,7 +339,7 @@ func (r repository) CheckActionAlreadyAddedToResourceByIdentifier(ctx context.Co
 	projection := bson.M{"resources.$": 1}
 	org := mongo_entity.Organization{}
 	// Search for the resource in the "organizations" collection
-	err = r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
+	err = r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
 	if err != nil {
 		return false, err
 	}
@@ -336,7 +374,7 @@ func (r repository) CheckActionExistsById(ctx context.Context, org_id string, re
 
 	filter := bson.M{"_id": orgId, "resources._id": resourceId, "resources.actions._id": actionId}
 
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the resource was found
 	if result.Err() == nil {

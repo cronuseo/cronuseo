@@ -12,6 +12,7 @@ import (
 	_ "github.com/shashimalcse/cronuseo/docs"
 	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
+	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -60,7 +61,10 @@ func main() {
 		panic(err)
 	}
 
-	mongo_db := mongo_client.Database(cfg.MongoDBName)
+	mongo_db_config := util.MongoDBConfig{
+		DBName:                     cfg.MongoDBName,
+		OrganizationCollectionName: "organizations",
+	}
 
 	r := rego.New(
 		rego.Query("x = data.example.allow"),
@@ -70,7 +74,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	e := buildHandler(cfg, logger, mongo_db, query)
+	e := buildHandler(cfg, logger, mongo_client, mongo_db_config, query)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.Check_API))
 	e.Logger.Fatal(e.Start(cfg.Check_API))
 
@@ -80,7 +84,8 @@ func main() {
 func buildHandler(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
-	mongodb *mongo.Database, // Mongo monitoring client
+	mongoClient *mongo.Client, // Mongo client
+	mongoDBConfig util.MongoDBConfig, // Mongo collection name
 	query rego.PreparedEvalQuery,
 ) *echo.Echo {
 
@@ -101,7 +106,7 @@ func buildHandler(
 	rg := router.Group("/api/v1")
 
 	// Here we register all the handlers. Each handler handle jwt validation separately.
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongodb), logger, query))
+	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongoClient, mongoDBConfig), logger, query))
 
 	return router
 }
