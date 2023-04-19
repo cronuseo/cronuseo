@@ -14,6 +14,7 @@ COPY go.sum .
 COPY cmd cmd
 COPY config config
 COPY docs docs
+COPY policy policy
 COPY internal internal
 COPY vendor vendor
 
@@ -25,5 +26,6 @@ WORKDIR /app/
 COPY --from=build /app/server .
 COPY --from=build /app/config/*.yml ./config/
 COPY --from=build /app/config/*.yml ./config/
+COPY --from=build /app/policy/*.rego ./policy/
 
 ENTRYPOINT ./server -config "./config/${APP_ENV}.yml"

@@ -47,7 +47,7 @@ build-mgt-server-docker: ## build the mgt server as a docker image
 
 .PHONY: build-check-server-docker
 build-check-server-docker: ## build the check server as a docker image
-	docker build -f cmd/check_server/Dockerfile -t server .
+	docker build -f cmd/check_server/Dockerfile -t check_server .
 
 .PHONY: version
 version: ## display the version of the API server
