@@ -18,7 +18,6 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.PUT("/:id", res.update)
 	router.GET("/:id/permission", res.getPermissions)
 	router.PATCH("/:id/permission", res.patchPermissions)
-	// router.GET("/user/:user_id", res.QueryByUserID)
 }
 
 type role struct {

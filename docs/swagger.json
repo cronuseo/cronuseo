@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "description": "This is a sample server celler server.",
+        "description": "This is a cronuseo server.",
         "title": "Cronuseo API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {

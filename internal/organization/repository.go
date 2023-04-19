@@ -44,9 +44,9 @@ func (r repository) Get(ctx context.Context, id string) (*mongo_entity.Organizat
 	}
 	// Define filter to find the organization by its ID
 	filter := bson.M{"_id": objID}
-
+	projection := bson.M{"resources": 0, "users": 0, "roles": 0, "groups": 0, "role_permissions": 0}
 	// Find the organization document in the "organizations" collection
-	result := r.mongoColl.FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -138,8 +138,10 @@ func (r repository) Query(ctx context.Context) ([]mongo_entity.Organization, err
 	// Define an empty slice to store the organizations
 	var orgs []mongo_entity.Organization
 
+	projection := bson.M{"resources": 0, "users": 0, "roles": 0, "groups": 0, "role_permissions": 0}
+
 	// Search for all organizations in the "organizations" collection
-	cursor, err := r.mongoColl.Find(context.Background(), bson.M{})
+	cursor, err := r.mongoColl.Find(context.Background(), bson.M{}, options.Find().SetProjection(projection))
 	if err != nil {
 		return orgs, err
 	}

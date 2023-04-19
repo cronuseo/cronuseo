@@ -1747,7 +1747,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Cronuseo API",
-	Description:      "This is a sample server celler server.",
+	Description:      "This is a cronuseo server.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

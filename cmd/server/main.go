@@ -39,7 +39,7 @@ var flagConfig = flag.String("config", "./config/local.yml", "path to the config
 
 // @title          Cronuseo API
 // @version        1.0
-// @description    This is a sample server celler server.
+// @description    This is a cronuseo server.
 // @termsOfService http://swagger.io/terms/
 
 // @contact.name  API Support
