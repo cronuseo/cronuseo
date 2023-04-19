@@ -43,9 +43,6 @@ func (r resource) get(c echo.Context) error {
 // @Description Get all resources.
 // @Tags        Resource
 // @Param org_id path string true "Organization ID"
-// @Param name query string false "name"
-// @Param limit query integer false "limit"
-// @Param cursor query integer false "cursor"
 // @Produce     json
 // @Success     200 {array}  Resource
 // @failure     500

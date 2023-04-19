@@ -260,8 +260,9 @@ func (r repository) Query(ctx context.Context, org_id string) (*[]mongo_entity.U
 
 	// Define filter to find the user by its ID
 	filter := bson.M{"_id": orgId}
+	projection := bson.M{"users.roles": 0, "users.groups": 0}
 	// Find the user document in the "organizations" collection
-	result := r.mongoColl.FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}

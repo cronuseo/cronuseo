@@ -257,8 +257,9 @@ func (r repository) Query(ctx context.Context, org_id string) (*[]mongo_entity.G
 
 	// Define filter to find the group by its ID
 	filter := bson.M{"_id": orgId}
+	projection := bson.M{"groups.roles": 0, "groups.users": 0}
 	// Find the group document in the "organizations" collection
-	result := r.mongoColl.FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}

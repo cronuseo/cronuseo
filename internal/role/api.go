@@ -45,9 +45,6 @@ func (r role) get(c echo.Context) error {
 // @Description Get all roles.
 // @Tags        Role
 // @Param org_id path string true "Organization ID"
-// @Param name query string false "name"
-// @Param limit query integer false "limit"
-// @Param cursor query integer false "cursor"
 // @Produce     json
 // @Success     200 {array}  Role
 // @failure     500
