@@ -25,140 +25,6 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/auth/login": {
-            "post": {
-                "description": "Login.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/auth.AdminUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/auth/logout": {
-            "post": {
-                "description": "Logout.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/auth/me": {
-            "get": {
-                "description": "GetMe.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/auth/register": {
-            "post": {
-                "description": "Register.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "parameters": [
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/auth.AdminUserRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
         "/organization": {
             "get": {
                 "description": "Get all organizations.",
@@ -174,7 +40,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.Organization"
+                                "$ref": "#/definitions/organization.Organization"
                             }
                         }
                     },
@@ -209,7 +75,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.Organization"
+                            "$ref": "#/definitions/organization.Organization"
                         }
                     },
                     "400": {
@@ -246,58 +112,8 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.Organization"
+                            "$ref": "#/definitions/organization.Organization"
                         }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            },
-            "put": {
-                "description": "Update organization.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Organization"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/organization.UpdateOrganizationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Organization"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
                     },
                     "404": {
                         "description": "Not Found"
@@ -362,7 +178,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.Organization"
+                            "$ref": "#/definitions/organization.Organization"
                         }
                     },
                     "400": {
@@ -380,9 +196,59 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org_id}/permission/check_actions": {
+        "/{org_id}/group": {
+            "get": {
+                "description": "Get all groups.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Group"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "name",
+                        "name": "name",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "cursor",
+                        "name": "cursor",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/mongo_entity.Group"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
             "post": {
-                "description": "Check by username.",
+                "description": "Create group.",
                 "consumes": [
                     "application/json"
                 ],
@@ -390,12 +256,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Permission"
+                    "Group"
                 ],
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization",
+                        "description": "Organization ID",
                         "name": "org_id",
                         "in": "path",
                         "required": true
@@ -406,13 +272,16 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/permission.CheckActionsRequest"
+                            "$ref": "#/definitions/group.CreateGroupRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created"
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/mongo_entity.Group"
+                        }
                     },
                     "400": {
                         "description": "Bad Request"
@@ -426,9 +295,48 @@ const docTemplate = `{
                 }
             }
         },
-        "/{org_id}/permission/update": {
-            "patch": {
-                "description": "Patch Permissions.",
+        "/{org_id}/group/{id}": {
+            "get": {
+                "description": "Get group by ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Group"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Group ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/mongo_entity.Group"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "put": {
+                "description": "Update group.",
                 "consumes": [
                     "application/json"
                 ],
@@ -436,13 +344,20 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Permission"
+                    "Group"
                 ],
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Organization",
+                        "description": "Organization ID",
                         "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Group ID",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -452,19 +367,25 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/permission.PermissionPatchRequest"
+                            "$ref": "#/definitions/group.UpdateGroupRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created"
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/mongo_entity.Group"
+                        }
                     },
                     "400": {
                         "description": "Bad Request"
                     },
                     "403": {
                         "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
                     },
                     "500": {
                         "description": "Internal Server Error"
@@ -514,7 +435,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.ResourceQueryResponse"
+                                "$ref": "#/definitions/resource.Resource"
                             }
                         }
                     },
@@ -556,7 +477,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.Resource"
+                            "$ref": "#/definitions/resource.Resource"
                         }
                     },
                     "400": {
@@ -600,7 +521,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.Resource"
+                            "$ref": "#/definitions/resource.Resource"
                         }
                     },
                     "404": {
@@ -612,7 +533,7 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Update resource.",
+                "description": "Patch resource.",
                 "consumes": [
                     "application/json"
                 ],
@@ -643,7 +564,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/resource.UpdateResourceRequest"
+                            "$ref": "#/definitions/resource.PatchResourceRequest"
                         }
                     }
                 ],
@@ -651,7 +572,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.Resource"
+                            "$ref": "#/definitions/resource.Resource"
                         }
                     },
                     "400": {
@@ -747,7 +668,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.Role"
+                                "$ref": "#/definitions/role.Role"
                             }
                         }
                     },
@@ -789,7 +710,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.Role"
+                            "$ref": "#/definitions/role.Role"
                         }
                     },
                     "400": {
@@ -797,47 +718,6 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org_id}/role/user/{user_id}": {
-            "get": {
-                "description": "Get all roles.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Role"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization ID",
-                        "name": "org_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "user_id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Role"
-                            }
-                        }
                     },
                     "500": {
                         "description": "Internal Server Error"
@@ -874,7 +754,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.Role"
+                            "$ref": "#/definitions/role.Role"
                         }
                     },
                     "404": {
@@ -925,7 +805,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.Role"
+                            "$ref": "#/definitions/role.Role"
                         }
                     },
                     "400": {
@@ -979,6 +859,104 @@ const docTemplate = `{
                 }
             }
         },
+        "/{org_id}/role/{id}/permission": {
+            "get": {
+                "description": "Get all permissions for role.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/mongo_entity.Permission"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            },
+            "patch": {
+                "description": "Patch role permission.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Role"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID",
+                        "name": "org_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Role ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/role.PatchRolePermissionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/role.Role"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "403": {
+                        "description": "Forbidden"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/{org_id}/user": {
             "get": {
                 "description": "Get all users.",
@@ -1021,7 +999,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/entity.UserQueryResponse"
+                                "$ref": "#/definitions/user.User"
                             }
                         }
                     },
@@ -1063,7 +1041,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "400": {
@@ -1107,7 +1085,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/entity.User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "404": {
@@ -1158,100 +1136,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/entity.User"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete user.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization ID",
-                        "name": "org_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            },
-            "patch": {
-                "description": "Patch user.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization ID",
-                        "name": "org_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/user.UserPatchRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/entity.User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "400": {
@@ -1271,7 +1156,7 @@ const docTemplate = `{
         },
         "/{org}/permission/check": {
             "post": {
-                "description": "Check tuple.",
+                "description": "Check.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1295,7 +1180,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/check.Tuple"
+                            "$ref": "#/definitions/check.CheckRequest"
                         }
                     }
                 ],
@@ -1308,377 +1193,6 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/check/multi_actions": {
-            "post": {
-                "description": "Check by username.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.CheckRequestWithPermissions"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/check/multi_resources": {
-            "post": {
-                "description": "Check by username.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.CheckRequestAll"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{org}/permission/check/username": {
-            "post": {
-                "description": "Check by username.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Permission"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Organization",
-                        "name": "org",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.CheckRequestWithUser"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created"
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{resource_id}/action": {
-            "get": {
-                "description": "Get all resources.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Action"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Resource ID",
-                        "name": "resource_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "name",
-                        "name": "name",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "limit",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "cursor",
-                        "name": "cursor",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/entity.Action"
-                            }
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            },
-            "post": {
-                "description": "Create action.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Action"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Resource ID",
-                        "name": "resource_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/action.CreateActionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Action"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/{resource_id}/action/{id}": {
-            "get": {
-                "description": "Get action by ID.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Action"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Resource ID",
-                        "name": "resource_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Action ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Action"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            },
-            "put": {
-                "description": "Update action.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Action"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Resource ID",
-                        "name": "resource_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Action ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "body",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/action.UpdateActionRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Action"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request"
-                    },
-                    "403": {
-                        "description": "Forbidden"
-                    },
-                    "404": {
-                        "description": "Not Found"
-                    },
-                    "500": {
-                        "description": "Internal Server Error"
-                    }
-                }
-            },
-            "delete": {
-                "description": "Delete action.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Action"
-                ],
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Resource ID",
-                        "name": "resource_id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Action ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No Content"
-                    },
-                    "404": {
-                        "description": "Not Found"
                     },
                     "500": {
                         "description": "Internal Server Error"
@@ -1688,156 +1202,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "action.CreateActionRequest": {
-            "type": "object",
-            "properties": {
-                "action_key": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "action.UpdateActionRequest": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "auth.AdminUserRequest": {
-            "type": "object",
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "check.Tuple": {
-            "type": "object",
-            "properties": {
-                "object": {
-                    "type": "string"
-                },
-                "relation": {
-                    "type": "string"
-                },
-                "subject": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Action": {
-            "type": "object",
-            "properties": {
-                "action_id": {
-                    "type": "string"
-                },
-                "action_key": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "resource_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.CheckRequestAll": {
-            "type": "object",
-            "properties": {
-                "resources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.ResourceObject"
-                    }
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.CheckRequestWithPermissions": {
-            "type": "object",
-            "properties": {
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.PermissionObject"
-                    }
-                },
-                "resource": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.CheckRequestWithUser": {
-            "type": "object",
-            "properties": {
-                "permission": {
-                    "type": "string"
-                },
-                "resource": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Links": {
-            "type": "object",
-            "properties": {
-                "next": {
-                    "type": "string"
-                },
-                "prev": {
-                    "type": "string"
-                },
-                "self": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Organization": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "org_api_key": {
-                    "type": "string"
-                },
-                "org_id": {
-                    "type": "string"
-                },
-                "org_key": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Permission": {
+        "check.CheckRequest": {
             "type": "object",
             "properties": {
                 "action": {
@@ -1846,244 +1211,203 @@ const docTemplate = `{
                 "resource": {
                     "type": "string"
                 },
-                "role": {
+                "username": {
                     "type": "string"
                 }
             }
         },
-        "entity.PermissionObject": {
+        "group.CreateGroupRequest": {
             "type": "object",
             "properties": {
-                "permission": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.Resource": {
-            "type": "object",
-            "properties": {
-                "created_at": {
+                "display_name": {
                     "type": "string"
                 },
-                "name": {
+                "identifier": {
                     "type": "string"
                 },
-                "org_id": {
-                    "type": "string"
-                },
-                "resource_id": {
-                    "type": "string"
-                },
-                "resource_key": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ResourceLinks": {
-            "type": "object",
-            "properties": {
-                "self": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.ResourceObject": {
-            "type": "object",
-            "properties": {
-                "permissions": {
+                "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.PermissionObject"
+                        "type": "string"
                     }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "group.UpdateGroupRequest": {
+            "type": "object",
+            "properties": {
+                "added_roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "added_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "removed_roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "removed_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "mongo_entity.Action": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "identifier": {
+                    "type": "string"
+                }
+            }
+        },
+        "mongo_entity.Group": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "identifier": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "mongo_entity.Permission": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
                 },
                 "resource": {
                     "type": "string"
                 }
             }
         },
-        "entity.ResourceQueryResponse": {
+        "mongo_entity.Resource": {
             "type": "object",
             "properties": {
-                "_links": {
-                    "$ref": "#/definitions/entity.Links"
-                },
-                "cursor": {
-                    "type": "integer"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "results": {
+                "actions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.ResourceResult"
+                        "$ref": "#/definitions/mongo_entity.Action"
                     }
                 },
-                "size": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.ResourceResult": {
-            "type": "object",
-            "properties": {
-                "_links": {
-                    "$ref": "#/definitions/entity.ResourceLinks"
-                },
-                "created_at": {
+                "display_name": {
                     "type": "string"
                 },
-                "name": {
+                "id": {
                     "type": "string"
                 },
-                "org_id": {
-                    "type": "string"
-                },
-                "resource_id": {
-                    "type": "string"
-                },
-                "resource_key": {
-                    "type": "string"
-                },
-                "updated_at": {
+                "identifier": {
                     "type": "string"
                 }
             }
         },
-        "entity.Role": {
+        "mongo_entity.Role": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "display_name": {
                     "type": "string"
                 },
-                "name": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
                     "type": "string"
                 },
-                "org_id": {
-                    "type": "string"
-                },
-                "role_id": {
-                    "type": "string"
-                },
-                "role_key": {
-                    "type": "string"
-                },
-                "updated_at": {
+                "identifier": {
                     "type": "string"
                 },
                 "users": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.UserID"
+                        "type": "string"
                     }
                 }
             }
         },
-        "entity.RoleID": {
+        "mongo_entity.RolePermission": {
             "type": "object",
             "properties": {
+                "permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.Permission"
+                    }
+                },
                 "role_id": {
                     "type": "string"
                 }
             }
         },
-        "entity.User": {
+        "mongo_entity.User": {
             "type": "object",
             "properties": {
-                "created_at": {
+                "email": {
                     "type": "string"
                 },
-                "firstname": {
+                "first_name": {
                     "type": "string"
                 },
-                "lastname": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
                     "type": "string"
                 },
-                "org_id": {
+                "last_name": {
                     "type": "string"
                 },
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.RoleID"
+                        "type": "string"
                     }
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserID": {
-            "type": "object",
-            "properties": {
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserLinks": {
-            "type": "object",
-            "properties": {
-                "self": {
-                    "type": "string"
-                }
-            }
-        },
-        "entity.UserQueryResponse": {
-            "type": "object",
-            "properties": {
-                "_links": {
-                    "$ref": "#/definitions/entity.Links"
-                },
-                "cursor": {
-                    "type": "integer"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/entity.UserResult"
-                    }
-                },
-                "size": {
-                    "type": "integer"
-                }
-            }
-        },
-        "entity.UserResult": {
-            "type": "object",
-            "properties": {
-                "_links": {
-                    "$ref": "#/definitions/entity.UserLinks"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "firstname": {
-                    "type": "string"
-                },
-                "lastname": {
-                    "type": "string"
-                },
-                "org_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
                 },
                 "username": {
                     "type": "string"
@@ -2093,60 +1417,57 @@ const docTemplate = `{
         "organization.CreateOrganizationRequest": {
             "type": "object",
             "properties": {
-                "name": {
+                "display_name": {
                     "type": "string"
                 },
-                "org_key": {
+                "identifier": {
                     "type": "string"
                 }
             }
         },
-        "organization.UpdateOrganizationRequest": {
+        "organization.Organization": {
             "type": "object",
             "properties": {
-                "name": {
+                "api_key": {
                     "type": "string"
-                }
-            }
-        },
-        "permission.CheckActionsRequest": {
-            "type": "object",
-            "properties": {
-                "actions": {
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "groups": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/mongo_entity.Group"
                     }
                 },
-                "resource": {
+                "id": {
                     "type": "string"
                 },
-                "role": {
-                    "type": "string"
-                }
-            }
-        },
-        "permission.PermissionPatchOperation": {
-            "type": "object",
-            "properties": {
-                "op": {
+                "identifier": {
                     "type": "string"
                 },
-                "permissions": {
+                "resources": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.Permission"
+                        "$ref": "#/definitions/mongo_entity.Resource"
                     }
-                }
-            }
-        },
-        "permission.PermissionPatchRequest": {
-            "type": "object",
-            "properties": {
-                "operations": {
+                },
+                "role_permissions": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/permission.PermissionPatchOperation"
+                        "$ref": "#/definitions/mongo_entity.RolePermission"
+                    }
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.Role"
+                    }
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.User"
                     }
                 }
             }
@@ -2154,10 +1475,53 @@ const docTemplate = `{
         "resource.CreateResourceRequest": {
             "type": "object",
             "properties": {
-                "name": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.Action"
+                    }
+                },
+                "display_name": {
                     "type": "string"
                 },
-                "resource_key": {
+                "identifier": {
+                    "type": "string"
+                }
+            }
+        },
+        "resource.PatchResourceRequest": {
+            "type": "object",
+            "properties": {
+                "added_actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.Action"
+                    }
+                },
+                "removed_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "resource.Resource": {
+            "type": "object",
+            "properties": {
+                "actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.Action"
+                    }
+                },
+                "display_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "identifier": {
                     "type": "string"
                 }
             }
@@ -2165,24 +1529,85 @@ const docTemplate = `{
         "resource.UpdateResourceRequest": {
             "type": "object",
             "properties": {
-                "name": {
+                "added_actions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.Action"
+                    }
+                },
+                "display_name": {
                     "type": "string"
+                },
+                "removed_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
         "role.CreateRoleRequest": {
             "type": "object",
             "properties": {
-                "name": {
+                "display_name": {
                     "type": "string"
                 },
-                "role_key": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "identifier": {
                     "type": "string"
                 },
                 "users": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.UserID"
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "role.PatchRolePermissionRequest": {
+            "type": "object",
+            "properties": {
+                "added_permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.Permission"
+                    }
+                },
+                "removed_permissions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/mongo_entity.Permission"
+                    }
+                }
+            }
+        },
+        "role.Role": {
+            "type": "object",
+            "properties": {
+                "display_name": {
+                    "type": "string"
+                },
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "id": {
+                    "type": "string"
+                },
+                "identifier": {
+                    "type": "string"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }
@@ -2190,24 +1615,54 @@ const docTemplate = `{
         "role.UpdateRoleRequest": {
             "type": "object",
             "properties": {
-                "name": {
+                "added_groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "added_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "display_name": {
                     "type": "string"
+                },
+                "removed_groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "removed_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
         "user.CreateUserRequest": {
             "type": "object",
             "properties": {
-                "firstname": {
+                "first_name": {
                     "type": "string"
                 },
-                "lastname": {
+                "groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "last_name": {
                     "type": "string"
                 },
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/entity.RoleID"
+                        "type": "string"
                     }
                 },
                 "username": {
@@ -2218,46 +1673,66 @@ const docTemplate = `{
         "user.UpdateUserRequest": {
             "type": "object",
             "properties": {
-                "firstname": {
-                    "type": "string"
-                },
-                "lastname": {
-                    "type": "string"
-                }
-            }
-        },
-        "user.UserPatchOperation": {
-            "type": "object",
-            "properties": {
-                "op": {
-                    "type": "string"
-                },
-                "path": {
-                    "type": "string"
-                },
-                "values": {
+                "added_groups": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/user.Value"
+                        "type": "string"
+                    }
+                },
+                "added_roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "removed_groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "removed_roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
                     }
                 }
             }
         },
-        "user.UserPatchRequest": {
+        "user.User": {
             "type": "object",
             "properties": {
-                "operations": {
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "groups": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/user.UserPatchOperation"
+                        "type": "string"
                     }
-                }
-            }
-        },
-        "user.Value": {
-            "type": "object",
-            "properties": {
-                "value": {
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -2272,7 +1747,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "Cronuseo API",
-	Description:      "This is a sample server celler server.",
+	Description:      "This is a cronuseo server.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 }

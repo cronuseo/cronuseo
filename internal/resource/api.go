@@ -27,7 +27,7 @@ type resource struct {
 // @Param org_id path string true "Organization ID"
 // @Param id path string true "Resource ID"
 // @Produce     json
-// @Success     200 {object}  entity.Resource
+// @Success     200 {object}  Resource
 // @failure     404,500
 // @Router      /{org_id}/resource/{id} [get]
 func (r resource) get(c echo.Context) error {
@@ -43,11 +43,8 @@ func (r resource) get(c echo.Context) error {
 // @Description Get all resources.
 // @Tags        Resource
 // @Param org_id path string true "Organization ID"
-// @Param name query string false "name"
-// @Param limit query integer false "limit"
-// @Param cursor query integer false "cursor"
 // @Produce     json
-// @Success     200 {array}  entity.ResourceQueryResponse
+// @Success     200 {array}  Resource
 // @failure     500
 // @Router      /{org_id}/resource [get]
 func (r resource) query(c echo.Context) error {
@@ -65,53 +62,7 @@ func (r resource) query(c echo.Context) error {
 	if err != nil {
 		return util.HandleError(err)
 	}
-	// response := entity.ResourceQueryResponse{}
-	// maxResourceID := -1
-	// minResourceID := 10000
 
-	// // Create resource results for the response.
-	// for _, resource := range resources {
-	// 	newResource := entity.ResourceResult{ID: resource.ID, Name: resource.Name, Key: resource.Key,
-	// 		OrgID: resource.OrgID, CreatedAt: resource.CreatedAt, UpdatedAt: resource.UpdatedAt}
-	// 	newResource.Links = entity.ResourceLinks{Self: "/" + org_id + "/resource/" + resource.ID}
-	// 	response.Results = append(response.Results, newResource)
-	// 	if i, err := strconv.Atoi(resource.LogicalKey); err == nil {
-	// 		if maxResourceID < i {
-	// 			maxResourceID = i
-	// 		}
-	// 		if minResourceID > i {
-	// 			minResourceID = i
-	// 		}
-	// 	}
-
-	// }
-	// // Pagination
-	// response.Size = len(resources)
-	// response.Limit = filter.Limit
-	// if len(resources) > 0 {
-	// 	response.Cursor = maxResourceID
-	// 	links := entity.Links{}
-	// 	links.Self = "/" + org_id + "/resource/"
-	// 	if filter.Name != "" {
-	// 		links.Self += "?name=" + filter.Name
-	// 	}
-	// 	links.Self += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor)
-	// 	if len(resources) == filter.Limit {
-	// 		links.Next = "/" + org_id + "/resource/"
-	// 		if filter.Name != "" {
-	// 			links.Next += "?name=" + filter.Name
-	// 		}
-	// 		links.Next += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(response.Cursor)
-	// 	}
-	// 	if filter.Cursor != 0 {
-	// 		links.Prev = "/" + org_id + "/resource/"
-	// 		if filter.Name != "" {
-	// 			links.Prev += "?name=" + filter.Name
-	// 		}
-	// 		links.Prev += "&limit=" + strconv.Itoa(filter.Limit) + "&cursor=" + strconv.Itoa(filter.Cursor-filter.Limit)
-	// 	}
-	// 	response.Links = links
-	// }
 	return c.JSON(http.StatusOK, resources)
 }
 
@@ -121,7 +72,7 @@ func (r resource) query(c echo.Context) error {
 // @Param org_id path string true "Organization ID"
 // @Param request body CreateResourceRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.Resource
+// @Success     201 {object}  Resource
 // @failure     400,403,500
 // @Router      /{org_id}/resource [post]
 func (r resource) create(c echo.Context) error {
@@ -145,7 +96,7 @@ func (r resource) create(c echo.Context) error {
 // @Param id path string true "Resource ID"
 // @Param request body UpdateResourceRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.Resource
+// @Success     201 {object}  Resource
 // @failure     400,403,404,500
 // @Router      /{org_id}/resource/{id} [put]
 func (r resource) update(c echo.Context) error {
@@ -169,7 +120,7 @@ func (r resource) update(c echo.Context) error {
 // @Param id path string true "Resource ID"
 // @Param request body PatchResourceRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.Resource
+// @Success     201 {object}  Resource
 // @failure     400,403,404,500
 // @Router      /{org_id}/resource/{id} [put]
 func (r resource) patch(c echo.Context) error {

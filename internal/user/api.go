@@ -27,7 +27,7 @@ type resource struct {
 // @Param org_id path string true "Organization ID"
 // @Param id path string true "User ID"
 // @Produce     json
-// @Success     200 {object}  mongo_entity.User
+// @Success     200 {object}  User
 // @failure     404,500
 // @Router      /{org_id}/user/{id} [get]
 func (r resource) get(c echo.Context) error {
@@ -43,11 +43,8 @@ func (r resource) get(c echo.Context) error {
 // @Description Get all users.
 // @Tags        User
 // @Param org_id path string true "Organization ID"
-// @Param name query string false "name"
-// @Param limit query integer false "limit"
-// @Param cursor query integer false "cursor"
 // @Produce     json
-// @Success     200 {array}  entity.UserQueryResponse
+// @Success     200 {array}  User
 // @failure     500
 // @Router      /{org_id}/user [get]
 func (r resource) query(c echo.Context) error {
@@ -73,7 +70,7 @@ func (r resource) query(c echo.Context) error {
 // @Param org_id path string true "Organization ID"
 // @Param request body CreateUserRequest true "body"
 // @Produce     json
-// @Success     201 {object}  mongo_entity.User
+// @Success     201 {object}  User
 // @failure     400,403,500
 // @Router      /{org_id}/user [post]
 func (r resource) create(c echo.Context) error {
@@ -97,7 +94,7 @@ func (r resource) create(c echo.Context) error {
 // @Param id path string true "User ID"
 // @Param request body UpdateUserRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.User
+// @Success     201 {object}  User
 // @failure     400,403,404,500
 // @Router      /{org_id}/user/{id} [put]
 func (r resource) update(c echo.Context) error {
@@ -130,27 +127,3 @@ func (r resource) delete(c echo.Context) error {
 	}
 	return c.JSON(http.StatusNoContent, "")
 }
-
-// // @Description Patch user.
-// // @Tags        User
-// // @Accept      json
-// // @Param org_id path string true "Organization ID"
-// // @Param id path string true "User ID"
-// // @Param request body UserPatchRequest true "body"
-// // @Produce     json
-// // @Success     201 {object}  entity.User
-// // @failure     400,403,404,500
-// // @Router      /{org_id}/user/{id} [patch]
-// func (r resource) patch(c echo.Context) error {
-
-// 	var input UserPatchRequest
-// 	if err := c.Bind(&input); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-// 	}
-
-// 	user, err := r.service.Patch(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
-// 	if err != nil {
-// 		return util.HandleError(err)
-// 	}
-// 	return c.JSON(http.StatusCreated, user)
-// }

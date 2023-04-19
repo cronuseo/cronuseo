@@ -18,7 +18,6 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.PUT("/:id", res.update)
 	router.GET("/:id/permission", res.getPermissions)
 	router.PATCH("/:id/permission", res.patchPermissions)
-	// router.GET("/user/:user_id", res.QueryByUserID)
 }
 
 type role struct {
@@ -30,7 +29,7 @@ type role struct {
 // @Param org_id path string true "Organization ID"
 // @Param id path string true "Role ID"
 // @Produce     json
-// @Success     200 {object}  entity.Role
+// @Success     200 {object}  Role
 // @failure     404,500
 // @Router      /{org_id}/role/{id} [get]
 func (r role) get(c echo.Context) error {
@@ -46,11 +45,8 @@ func (r role) get(c echo.Context) error {
 // @Description Get all roles.
 // @Tags        Role
 // @Param org_id path string true "Organization ID"
-// @Param name query string false "name"
-// @Param limit query integer false "limit"
-// @Param cursor query integer false "cursor"
 // @Produce     json
-// @Success     200 {array}  entity.Role
+// @Success     200 {array}  Role
 // @failure     500
 // @Router      /{org_id}/role [get]
 func (r role) query(c echo.Context) error {
@@ -77,7 +73,7 @@ func (r role) query(c echo.Context) error {
 // @Param org_id path string true "Organization ID"
 // @Param request body CreateRoleRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.Role
+// @Success     201 {object}  Role
 // @failure     400,403,500
 // @Router      /{org_id}/role [post]
 func (r role) create(c echo.Context) error {
@@ -101,7 +97,7 @@ func (r role) create(c echo.Context) error {
 // @Param id path string true "Role ID"
 // @Param request body UpdateRoleRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.Role
+// @Success     201 {object}  Role
 // @failure     400,403,404,500
 // @Router      /{org_id}/role/{id} [put]
 func (r role) update(c echo.Context) error {
@@ -142,7 +138,7 @@ func (r role) delete(c echo.Context) error {
 // @Param id path string true "Role ID"
 // @Param request body PatchRolePermissionRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.Role
+// @Success     201 {object}  Role
 // @failure     400,403,404,500
 // @Router      /{org_id}/role/{id}/permission [patch]
 func (r role) patchPermissions(c echo.Context) error {

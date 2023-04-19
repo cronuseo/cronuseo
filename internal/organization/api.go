@@ -25,7 +25,7 @@ type resource struct {
 // @Tags        Organization
 // @Param id path string true "Organization ID"
 // @Produce     json
-// @Success     200 {object}  entity.Organization
+// @Success     200 {object}  Organization
 // @failure     404,500
 // @Router      /organization/{id} [get]
 func (r resource) get(c echo.Context) error {
@@ -40,7 +40,7 @@ func (r resource) get(c echo.Context) error {
 // @Description Get all organizations.
 // @Tags        Organization
 // @Produce     json
-// @Success     200 {array}  entity.Organization
+// @Success     200 {array}  Organization
 // @failure     500
 // @Router      /organization [get]
 func (r resource) query(c echo.Context) error {
@@ -56,7 +56,7 @@ func (r resource) query(c echo.Context) error {
 // @Accept      json
 // @Param request body CreateOrganizationRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.Organization
+// @Success     201 {object}  Organization
 // @failure     400,403,500
 // @Router      /organization [post]
 func (r resource) create(c echo.Context) error {
@@ -92,7 +92,7 @@ func (r resource) delete(c echo.Context) error {
 // @Accept      json
 // @Param id path string true "Organization ID"
 // @Produce     json
-// @Success     201 {object}  entity.Organization
+// @Success     201 {object}  Organization
 // @failure     400,403,404,500
 // @Router      /organization/{id}/refresh [post]
 func (r resource) refreshAPIKey(c echo.Context) error {

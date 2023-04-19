@@ -19,11 +19,16 @@ type Repository interface {
 }
 
 type repository struct {
-	mongodb *mongo.Database
+	mongoClient   *mongo.Client
+	mongoDBConfig util.MongoDBConfig
+	mongoColl     *mongo.Collection
 }
 
-func NewRepository(mongodb *mongo.Database) Repository {
-	return repository{mongodb: mongodb}
+func NewRepository(mongoClient *mongo.Client, mongoDBConfig util.MongoDBConfig) Repository {
+
+	orgCollection := mongoClient.Database(mongoDBConfig.DBName).Collection(mongoDBConfig.OrganizationCollectionName)
+
+	return repository{mongoClient: mongoClient, mongoDBConfig: mongoDBConfig, mongoColl: orgCollection}
 }
 
 func (r repository) ValidateAPIKey(ctx context.Context, org_identifier string, apiKey string) (bool, error) {
@@ -31,7 +36,7 @@ func (r repository) ValidateAPIKey(ctx context.Context, org_identifier string, a
 	filter := bson.M{"identifier": org_identifier, "api_key": apiKey}
 
 	// Search for the resource in the "organizations" collection
-	count, err := r.mongodb.Collection("organizations").CountDocuments(context.Background(), filter)
+	count, err := r.mongoColl.CountDocuments(context.Background(), filter)
 
 	if err != nil {
 		return false, err
@@ -48,7 +53,7 @@ func (r repository) GetUserRoles(ctx context.Context, org_identifier string, use
 	filter := bson.M{"identifier": org_identifier, "users.username": username}
 	projection := bson.M{"users.$": 1}
 	// Find the user document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -71,7 +76,7 @@ func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, us
 	filter := bson.M{"identifier": org_identifier, "users.username": username}
 	projection := bson.M{"users.$": 1}
 	// Find the user document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -97,7 +102,7 @@ func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, us
 	projection = bson.M{"groups.$": 1, "_id": 0}
 
 	var org2 mongo_entity.Organization
-	err := r.mongodb.Collection("organizations").FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&org2)
+	err := r.mongoColl.FindOne(ctx, filter, options.FindOne().SetProjection(projection)).Decode(&org2)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +124,7 @@ func (r repository) GetRolePermissions(ctx context.Context, org_identifier strin
 	// Define filter to find the role permissions by its ID
 	filter := bson.M{"identifier": org_identifier}
 	// Find the user document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 	if err := result.Err(); err != nil {
 		return nil, err
 	}

@@ -31,12 +31,16 @@ type Repository interface {
 }
 
 type repository struct {
-	mongodb *mongo.Database
+	mongoClient   *mongo.Client
+	mongoDBConfig util.MongoDBConfig
+	mongoColl     *mongo.Collection
 }
 
-func NewRepository(mongodb *mongo.Database) Repository {
+func NewRepository(mongoClient *mongo.Client, mongoDBConfig util.MongoDBConfig) Repository {
 
-	return repository{mongodb: mongodb}
+	orgCollection := mongoClient.Database(mongoDBConfig.DBName).Collection(mongoDBConfig.OrganizationCollectionName)
+
+	return repository{mongoClient: mongoClient, mongoDBConfig: mongoDBConfig, mongoColl: orgCollection}
 }
 
 // Get role by id.
@@ -56,7 +60,7 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 	filter := bson.M{"_id": orgId, "roles._id": roleId}
 	projection := bson.M{"roles.$": 1}
 	// Find the role document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -82,7 +86,7 @@ func (r repository) Create(ctx context.Context, org_id string, user mongo_entity
 	// Update the APIResources array for the given organization
 	filter := bson.M{"_id": orgId}
 	update := bson.M{"$push": bson.M{"roles": user}}
-	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	_, err = r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
 	}
@@ -94,7 +98,7 @@ func (r repository) Create(ctx context.Context, org_id string, user mongo_entity
 	}
 	filter = bson.M{"_id": orgId}
 	update = bson.M{"$push": bson.M{"role_permissions": rolePermission}}
-	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	_, err = r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
 	}
@@ -122,7 +126,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 	if update_role.DisplayName != nil && *update_role.DisplayName != "" {
 		update["$set"].(bson.M)["roles.$.display_name"] = *update_role.DisplayName
 	}
-	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
+	_, err = r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
 	}
@@ -134,7 +138,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		update := bson.M{"$push": bson.M{"roles.$.users": bson.M{
 			"$each": update_role.AddedUsers,
 		}}}
-		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 		if err != nil {
 			return err
 		}
@@ -142,7 +146,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		for _, userId := range update_role.AddedUsers {
 			filter := bson.M{"_id": orgId, "users._id": userId}
 			update := bson.M{"$addToSet": bson.M{"users.$.roles": roleId}}
-			_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 			if err != nil {
 				return err
 			}
@@ -154,7 +158,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
 		update := bson.M{"$pull": bson.M{"roles.$.users": bson.M{"$in": update_role.RemovedUser}}}
-		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err
 		}
@@ -162,7 +166,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		for _, userId := range update_role.RemovedUser {
 			filter := bson.M{"_id": orgId, "users._id": userId}
 			update := bson.M{"$pull": bson.M{"users.$.roles": roleId}}
-			_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 			if err != nil {
 				return err
 			}
@@ -176,7 +180,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		update := bson.M{"$push": bson.M{"roles.$.groups": bson.M{
 			"$each": update_role.AddedGroups,
 		}}}
-		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 		if err != nil {
 			return err
 		}
@@ -184,7 +188,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		for _, groupId := range update_role.AddedGroups {
 			filter := bson.M{"_id": orgId, "groups._id": groupId}
 			update := bson.M{"$addToSet": bson.M{"groups.$.roles": roleId}}
-			_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 			if err != nil {
 				return err
 			}
@@ -197,7 +201,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
 		update := bson.M{"$pull": bson.M{"roles.$.groups": bson.M{"$in": update_role.RemovedGroups}}}
-		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err
 		}
@@ -205,7 +209,7 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 		for _, groupId := range update_role.RemovedGroups {
 			filter := bson.M{"_id": orgId, "groups._id": groupId}
 			update := bson.M{"$pull": bson.M{"groups.$.roles": roleId}}
-			_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 			if err != nil {
 				return err
 			}
@@ -232,7 +236,7 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 	filter := bson.M{"_id": orgId}
 	update := bson.M{"$pull": bson.M{"roles": bson.M{"_id": roleId}}}
 	// Find the role document in the "organizations" collection
-	result, err := r.mongodb.Collection("organizations").UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
+	result, err := r.mongoColl.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
 	if err != nil {
 		return err
 	}
@@ -244,14 +248,14 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 
 	filter = bson.M{"_id": orgId}
 	update = bson.M{"$pull": bson.M{"groups.$[].roles": roleId}}
-	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+	_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
 
 	filter = bson.M{"_id": orgId}
 	update = bson.M{"$pull": bson.M{"users.$[].roles": roleId}}
-	_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+	_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 	if err != nil {
 		return err
 	}
@@ -260,7 +264,7 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 	filter = bson.M{"_id": orgId}
 	update = bson.M{"$pull": bson.M{"role_permissions": bson.M{"role_id": roleId}}}
 	// Find the role document in the "organizations" collection
-	result, err = r.mongodb.Collection("organizations").UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
+	result, err = r.mongoColl.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
 	if err != nil {
 		return err
 	}
@@ -283,8 +287,9 @@ func (r repository) Query(ctx context.Context, org_id string) (*[]mongo_entity.R
 
 	// Define filter to find the role by its ID
 	filter := bson.M{"_id": orgId}
+	projection := bson.M{"roles.groups": 0, "roles.users": 0}
 	// Find the role document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -325,7 +330,7 @@ func (r repository) CheckRoleExistById(ctx context.Context, org_id string, id st
 	filter := bson.M{"_id": orgId, "roles._id": roleId}
 
 	// Search for the role in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the role was found
 	if result.Err() == nil {
@@ -347,7 +352,7 @@ func (r repository) CheckRoleExistsByIdentifier(ctx context.Context, org_id stri
 	filter := bson.M{"_id": orgId, "roles.identifier": identifier}
 
 	// Search for the user in the "organizations" collection
-	count, err := r.mongodb.Collection("organizations").CountDocuments(context.Background(), filter)
+	count, err := r.mongoColl.CountDocuments(context.Background(), filter)
 
 	if err != nil {
 		return false, err
@@ -374,7 +379,7 @@ func (r repository) CheckUserExistById(ctx context.Context, org_id string, id st
 	filter := bson.M{"_id": orgId, "users._id": roleId}
 
 	// Search for the user in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the user was found
 	if result.Err() == nil {
@@ -408,7 +413,7 @@ func (r repository) CheckUserAlreadyAssignToRoleById(ctx context.Context, org_id
 	projection := bson.M{"roles.$": 1}
 	org := mongo_entity.Organization{}
 	// Search for the role in the "organizations" collection
-	err = r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
+	err = r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
 	if err != nil {
 		return false, err
 	}
@@ -433,7 +438,7 @@ func (r repository) CheckResourceActionExists(ctx context.Context, org_id string
 	}
 
 	filter := bson.M{"_id": orgId, "resources.identifier": resource_identifier, "resources.actions.identifier": action_identifier}
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the resource was found
 	if result.Err() == nil {
@@ -463,7 +468,7 @@ func (r repository) PatchPermission(ctx context.Context, org_id string, role_id 
 
 		filter := bson.M{"_id": orgId, "role_permissions.role_id": roleId}
 		update := bson.M{"$pull": bson.M{"role_permissions.$.permissions": bson.M{"$in": permission.RemovedPermission}}}
-		_, err := r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err
 		}
@@ -476,7 +481,7 @@ func (r repository) PatchPermission(ctx context.Context, org_id string, role_id 
 		update := bson.M{"$push": bson.M{"role_permissions.$.permissions": bson.M{
 			"$each": permission.AddedPermission,
 		}}}
-		_, err = r.mongodb.Collection("organizations").UpdateOne(ctx, filter, update)
+		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 		if err != nil {
 			return err
 		}
@@ -499,7 +504,7 @@ func (r repository) CheckPermissionExists(ctx context.Context, org_id string, ro
 	}
 
 	filter := bson.M{"_id": orgId, "role_permissions.role_id": roleId, "role_permissions.permissions.resource": resource_identifier, "role_permissions.permissions.action": action_identifier}
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the resource was found
 	if result.Err() == nil {
@@ -528,7 +533,7 @@ func (r repository) GetPermissions(ctx context.Context, org_id string, role_id s
 	filter := bson.M{"_id": orgId, "role_permissions.role_id": roleId}
 	projection := bson.M{"role_permissions.$": 1}
 	// Find the permission document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -561,7 +566,7 @@ func (r repository) CheckGroupExistById(ctx context.Context, org_id string, id s
 	filter := bson.M{"_id": orgId, "groups._id": groupId}
 
 	// Search for the group in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the group was found
 	if result.Err() == nil {
@@ -595,7 +600,7 @@ func (r repository) CheckGroupAlreadyAssignToRoleById(ctx context.Context, org_i
 	projection := bson.M{"roles.$": 1}
 	org := mongo_entity.Organization{}
 	// Search for the role in the "organizations" collection
-	err = r.mongodb.Collection("organizations").FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
+	err = r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
 	if err != nil {
 		return false, err
 	}

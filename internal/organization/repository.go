@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
+	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,12 +23,16 @@ type Repository interface {
 }
 
 type repository struct {
-	mongodb *mongo.Database
+	mongoClient   *mongo.Client
+	mongoDBConfig util.MongoDBConfig
+	mongoColl     *mongo.Collection
 }
 
-func NewRepository(mongodb *mongo.Database) Repository {
+func NewRepository(mongoClient *mongo.Client, mongoDBConfig util.MongoDBConfig) Repository {
 
-	return repository{mongodb: mongodb}
+	orgCollection := mongoClient.Database(mongoDBConfig.DBName).Collection(mongoDBConfig.OrganizationCollectionName)
+
+	return repository{mongoClient: mongoClient, mongoDBConfig: mongoDBConfig, mongoColl: orgCollection}
 }
 
 // Get organization by id.
@@ -37,12 +42,11 @@ func (r repository) Get(ctx context.Context, id string) (*mongo_entity.Organizat
 	if err != nil {
 		return nil, err
 	}
-
 	// Define filter to find the organization by its ID
 	filter := bson.M{"_id": objID}
-
+	projection := bson.M{"resources": 0, "users": 0, "roles": 0, "groups": 0, "role_permissions": 0}
 	// Find the organization document in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -59,7 +63,7 @@ func (r repository) Get(ctx context.Context, id string) (*mongo_entity.Organizat
 // Create new organization.
 func (r repository) Create(ctx context.Context, organization mongo_entity.Organization) (string, error) {
 
-	result, err := r.mongodb.Collection("organizations").InsertOne(context.Background(), organization)
+	result, err := r.mongoColl.InsertOne(context.Background(), organization)
 	if err != nil {
 		return "", err
 	}
@@ -85,7 +89,7 @@ func (r repository) Delete(ctx context.Context, id string) error {
 	filter := bson.M{"_id": objID}
 
 	// Delete the organization from the "organizations" collection
-	result, err := r.mongodb.Collection("organizations").DeleteOne(context.Background(), filter)
+	result, err := r.mongoColl.DeleteOne(context.Background(), filter)
 	if err != nil {
 		return err
 	}
@@ -116,7 +120,7 @@ func (r repository) RefreshAPIKey(ctx context.Context, apiKey string, id string)
 	options := options.Update().SetUpsert(false)
 
 	// Update the organization document in the "organizations" collection
-	result, err := r.mongodb.Collection("organizations").UpdateOne(context.Background(), filter, update, options)
+	result, err := r.mongoColl.UpdateOne(context.Background(), filter, update, options)
 	if err != nil {
 		return err
 	}
@@ -134,8 +138,10 @@ func (r repository) Query(ctx context.Context) ([]mongo_entity.Organization, err
 	// Define an empty slice to store the organizations
 	var orgs []mongo_entity.Organization
 
+	projection := bson.M{"resources": 0, "users": 0, "roles": 0, "groups": 0, "role_permissions": 0}
+
 	// Search for all organizations in the "organizations" collection
-	cursor, err := r.mongodb.Collection("organizations").Find(context.Background(), bson.M{})
+	cursor, err := r.mongoColl.Find(context.Background(), bson.M{}, options.Find().SetProjection(projection))
 	if err != nil {
 		return orgs, err
 	}
@@ -168,7 +174,7 @@ func (r repository) CheckOrgExistById(ctx context.Context, id string) (bool, err
 	filter := bson.M{"_id": orgId}
 
 	// Search for the organization in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the organization was found
 	if result.Err() == nil {
@@ -186,7 +192,7 @@ func (r repository) CheckOrgExistByIdentifier(ctx context.Context, identifier st
 	filter := bson.M{"identifier": identifier}
 
 	// Search for the organization in the "organizations" collection
-	result := r.mongodb.Collection("organizations").FindOne(context.Background(), filter)
+	result := r.mongoColl.FindOne(context.Background(), filter)
 
 	// Check if the organization was found
 	if result.Err() == nil {

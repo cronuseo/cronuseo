@@ -43,11 +43,8 @@ func (r resource) get(c echo.Context) error {
 // @Description Get all groups.
 // @Tags        Group
 // @Param org_id path string true "Organization ID"
-// @Param name query string false "name"
-// @Param limit query integer false "limit"
-// @Param cursor query integer false "cursor"
 // @Produce     json
-// @Success     200 {array}  entity.GroupQueryResponse
+// @Success     200 {array}  mongo_entity.Group
 // @failure     500
 // @Router      /{org_id}/group [get]
 func (r resource) query(c echo.Context) error {
@@ -97,7 +94,7 @@ func (r resource) create(c echo.Context) error {
 // @Param id path string true "Group ID"
 // @Param request body UpdateGroupRequest true "body"
 // @Produce     json
-// @Success     201 {object}  entity.Group
+// @Success     201 {object}  mongo_entity.Group
 // @failure     400,403,404,500
 // @Router      /{org_id}/group/{id} [put]
 func (r resource) update(c echo.Context) error {
@@ -130,27 +127,3 @@ func (r resource) delete(c echo.Context) error {
 	}
 	return c.JSON(http.StatusNoContent, "")
 }
-
-// // @Description Patch group.
-// // @Tags        Group
-// // @Accept      json
-// // @Param org_id path string true "Organization ID"
-// // @Param id path string true "Group ID"
-// // @Param request body GroupPatchRequest true "body"
-// // @Produce     json
-// // @Success     201 {object}  entity.Group
-// // @failure     400,403,404,500
-// // @Router      /{org_id}/group/{id} [patch]
-// func (r resource) patch(c echo.Context) error {
-
-// 	var input GroupPatchRequest
-// 	if err := c.Bind(&input); err != nil {
-// 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-// 	}
-
-// 	group, err := r.service.Patch(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
-// 	if err != nil {
-// 		return util.HandleError(err)
-// 	}
-// 	return c.JSON(http.StatusCreated, group)
-// }
