@@ -1,9 +1,8 @@
-<p align="center">
-<img alt="Screenshot 2022-11-05 at 14 41 11" src="https://user-images.githubusercontent.com/43197743/205511091-bed0ace7-705d-4372-8980-872bcd71a200.png">
-</p>
+<h1 align="center"><img src="https://user-images.githubusercontent.com/43197743/233458042-c0b08684-87fa-471b-8f13-5b23d84ecd0a.png" alt="cronuseo - open-source authorization solution"></h1>
 
-<h1 align="center">Authorization as a Service</h1>
-<h2 align="center">Let's make auth-z easy!</h2>
+<p align="left">
+    <a href="https://goreportcard.com/report/github.com/shashimalcse/cronuseo"><img src="https://goreportcard.com/badge/github.com/shashimalcse/cronuseo" alt="Go Report Card"></a>
+</p>
 
 ## What is cronuseo ?
 
