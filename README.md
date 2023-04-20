@@ -21,12 +21,15 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 
 > Note : cronuseo still in the experimental stage. Only tested in the local environemnt.
 
-* ``` git clone https://github.com/shashimalcse/cronuseo```
-* ``` docker compose -f docker-compose-database.yml up```
-* ``` docker compose up --build```
+### Set up the local environment
+
+* ``` curl -LJO https://raw.githubusercontent.com/shashimalcse/cronuseo/HEAD/docker-compose-db.yml | curl -LJO https://raw.githubusercontent.com/shashimalcse/cronuseo/HEAD/docker-compose.yml ```
+* Prepare a [mongodb](https://hub.docker.com/_/mongo) instance ``` docker compose -f docker-compose-database.yml up```
+* Make sure to update the necessary configuration in the `config/local.yml` file, and don't forget to replace the jwks endpoint with the ones provided by your own identity provider. (only tested with [asgardeo](https://wso2.com/asgardeo/))
+* Start management server and check server (Policy Decision Point) ``` docker compose up --build```
 
 ## cronuseo SDKs for applications
-use these sdks to check permisisons for the user.
+use these sdks to check permissions for the user.
 * python - https://pypi.org/project/cronuseosdk
 * nodejs - https://www.npmjs.com/package/cronuseosdk
 * golang - https://github.com/shashimalcse/cronuseogosdk
