@@ -20,6 +20,7 @@ cronuseo is based on modern, open-source foundation which includes Open Policy A
 
 > Note : cronuseo still in the experimental stage. Only tested in the local environemnt.
 
+You can use Docker to run cronuseo locally
 ### Set up the local environment
 
 * ``` curl -LJO https://raw.githubusercontent.com/shashimalcse/cronuseo/HEAD/docker-compose-db.yml | curl -LJO https://raw.githubusercontent.com/shashimalcse/cronuseo/HEAD/docker-compose.yml ```
