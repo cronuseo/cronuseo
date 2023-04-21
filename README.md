@@ -10,7 +10,7 @@ Cronuseo is an open-source authorization solution that allows developers to easi
 
 > Example: A developer can call the cronuseo and get a clear answer if User A has the permissions to create Resource B.
 
-cronuseo is based on modern, open-source foundation which includes Open Policy Agent (OPA), Zanzibar.
+By using Cronuseo, it is possible to create a separate authorization service, effectively separating our policies from our code. Controlling access management centrally via a separate authorization service enables you to provide this service to any system that needs to check whether a user can or cannot access its resources. Cronuseo is based on modern, open-source foundation which includes Open Policy Agent (OPA), Zanzibar.
 
 ## Main features:
 
