@@ -28,6 +28,22 @@ You can use Docker to run cronuseo locally
 * Make sure to update the necessary configuration in the `config/local.yml` file, and don't forget to replace the jwks endpoint with the ones provided by your own identity provider. (only tested with [asgardeo](https://wso2.com/asgardeo/))
 * Start management server and check server (Policy Decision Point) ``` docker compose up --build```
 
+## How to implement RBAC using cronuseo
+
+In order to use RBAC, we need two types of information:
+- Which `users/groups` have which `roles`
+- Which `roles` have which `permissions`
+
+Once we provide RBAC with this information, we decide how to make an authorization decision; A user/group is assigned to a role and is authorized to do what the role permits. 
+
+For example, let us look at the following role assignments:
+
+| User/Group | Role |
+| :---:   | :---: |
+| John | Director   |
+| Bob | Coordinator |
+| Engineering Team | Engineer |
+
 ## cronuseo SDKs for applications
 use these sdks to check permissions for the user.
 * python - https://pypi.org/project/cronuseosdk
