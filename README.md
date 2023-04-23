@@ -157,6 +157,8 @@ curl --location --request POST 'localhost:8081/api/v1/<org_identifier>/permissio
 }'
 ```
 
+> Response will be `true` or `false`
+
 ## cronuseo SDKs for applications
 use these sdks to check permissions for the user.
 * python - https://pypi.org/project/cronuseosdk
