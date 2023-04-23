@@ -55,7 +55,7 @@ And this role/permission assignment:
 In this example, RBAC will make the following authorization decisions:
 
 | User/Group | Action | Resource | Decision (Should the action be allowed, and why?)|
-| :---:   | :---: | :---: |
+| :---:   | :---: | :---: | :---: |
 | John | Write | Budget | `Allow` because John is in Director |
 | Bob | Read | Budget | `Allow` because Bob is in Coordinator |
 | Bob | Write | Budget | `Deny` because Bob is in Coordinator |
