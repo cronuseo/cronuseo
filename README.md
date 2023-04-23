@@ -44,6 +44,53 @@ For example, let us look at the following role assignments:
 | Bob | Coordinator |
 | Finance Department | Accountant |
 
+> Use user and group endpoints to create users and groups
+
+```
+curl --location --request POST 'localhost:8080/api/v1/<org_id>/user' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'Authorization: <Token> \
+--data-raw '{
+  "first_name": "First Name",
+  "last_name": "Last Name",
+  "username": "Username"
+}'
+```
+
+```
+curl --location --request POST 'localhost:8080/api/v1/<org_id>/group' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'Authorization: <Token> \
+--data-raw '{
+  "display_name": "Display Name",
+  "identifier": "Identifier",
+  "users": [
+    "<user_id>"
+  ]
+}'
+```
+
+> Use role endpoint to assign roles to users/groups
+
+```
+curl --location --request POST 'localhost:8080/api/v1/<org_id>/role' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'Authorization: <Token> \
+--data-raw '{
+  "display_name": "Display Name",
+  "identifier": "Identifier",
+  "groups": [
+    "<group_id>"
+  ],
+  "users": [
+    "<user_id>"
+  ]
+}'
+```
+
 And this role/permission assignment: 
 
 | Role | Action (What are they doing) | Resource (What are they performing the action on) |
@@ -51,6 +98,42 @@ And this role/permission assignment:
 | Director | Write | Budget |
 | Coordinator | Read | Budget |
 | Accountant | Want | Budget |
+
+> Use resource `POST` request to create a resource with actions
+
+```
+curl --location --request POST 'localhost:8080/api/v1/<org_id>/resource' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'Authorization: <Token> \
+--data-raw '{
+  "actions": [
+    {
+      "display_name": "Display Name",
+      "identifier": "Identifier",
+    }
+  ],
+  "display_name": "Display Name",
+  "identifier": "Identifier",
+}'
+```
+
+> Use role permission `PATCH` request to assign permission to role
+
+```
+curl --location --request PATCH 'localhost:8080/api/v1/<org_id>/role/<role_id>/permission' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--header 'Authorization: <Token> \
+--data-raw '{
+  "added_permissions": [
+    {
+      "action": "Action Identifier",
+      "resource": "Resource Identifier"
+    }
+  ]
+}'
+```
 
 In this example, RBAC will make the following authorization decisions:
 
@@ -60,6 +143,19 @@ In this example, RBAC will make the following authorization decisions:
 | Bob | Read | Budget | `Allow` because Bob is in Coordinator |
 | Bob | Write | Budget | `Deny` because Bob is in Coordinator |
 | Finance Department | Write | Budget | `Deny` because Finance Department is in Accountant |
+
+> Use permission check endpoint or SDKs to get authorization decisions
+
+```
+curl --location --request POST 'localhost:8081/api/v1/<org_identifier>/permission/check' \
+--header 'Content-Type: application/json' \
+--header 'API_KEY: <API_KEY>' \
+--data-raw '{
+  "action": "Action Identifier",
+  "resource": "Resource Identifier",
+  "username": "shashimal20"
+}'
+```
 
 ## cronuseo SDKs for applications
 use these sdks to check permissions for the user.
