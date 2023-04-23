@@ -38,11 +38,28 @@ Once we provide RBAC with this information, we decide how to make an authorizati
 
 For example, let us look at the following role assignments:
 
-| User/Group | Role |
+| User/Group (Who is performing the action) | Role (What is the user’s/group's assigned role) |
 | :---:   | :---: |
 | John | Director   |
 | Bob | Coordinator |
-| Engineering Team | Engineer |
+| Finance Department | Accountant |
+
+And this role/permission assignment: 
+
+| Role | Action (What are they doing) | Resource (What are they performing the action on) |
+| :---:   | :---: | :---: |
+| Director | Write | Budget |
+| Coordinator | Read | Budget |
+| Accountant | Want | Budget |
+
+In this example, RBAC will make the following authorization decisions:
+
+| User/Group | Action | Resource | Decision (Should the action be allowed, and why?)|
+| :---:   | :---: | :---: |
+| John | Write | Budget | `Allow` because John is in Director |
+| Bob | Read | Budget | `Allow` because Bob is in Coordinator |
+| Bob | Write | Budget | `Deny` because Bob is in Coordinator |
+| Finance Department | Write | Budget | `Deny` because Finance Department is in Accountant |
 
 ## cronuseo SDKs for applications
 use these sdks to check permissions for the user.
