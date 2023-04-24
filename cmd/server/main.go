@@ -1,35 +1,25 @@
 package main
 
 import (
-	"context"
-	"crypto/rand"
-	"encoding/base64"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
-	"github.com/MicahParks/keyfunc"
-	"github.com/golang-jwt/jwt"
-	jwtv4 "github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	_ "github.com/shashimalcse/cronuseo/docs"
 	"github.com/shashimalcse/cronuseo/internal/config"
+	db "github.com/shashimalcse/cronuseo/internal/db/mongo"
 	"github.com/shashimalcse/cronuseo/internal/group"
-	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
+	"github.com/shashimalcse/cronuseo/internal/logger"
+	mw "github.com/shashimalcse/cronuseo/internal/middleware"
 	"github.com/shashimalcse/cronuseo/internal/organization"
 	"github.com/shashimalcse/cronuseo/internal/resource"
 	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/user"
-	"github.com/shashimalcse/cronuseo/internal/util"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 var Version = "1.0.0"
@@ -53,36 +43,22 @@ var flagConfig = flag.String("config", "./config/local.yml", "path to the config
 // @BasePath /api/v1
 func main() {
 
-	logger := InitializeLogger()
-
 	flag.Parse()
 
-	// Load configurations for db, keto and redis.
+	// Load configurations.
 	cfg, err := config.Load(*flagConfig)
 	if err != nil {
-		logger.Fatal("Error while loading config.", zap.String("config_file", flag.Lookup("config").Value.String()))
+		log.Fatal("Error while loading config.", zap.String("config_file", flag.Lookup("config").Value.String()))
 		os.Exit(-1)
 	}
 
+	// Set up logger.
+	logger := logger.Init(cfg)
+
 	// Mongo client.
-	credential := options.Credential{
-		Username: cfg.MongoUser,
-		Password: cfg.MongoPassword,
-	}
-	mongo_client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Mongo).SetAuth(credential))
-	if err != nil {
-		panic(err)
-	}
+	mongodb := db.Init(cfg, logger)
 
-	mongo_db_config := util.MongoDBConfig{
-		DBName:                     cfg.MongoDBName,
-		OrganizationCollectionName: cfg.MongoOrgCollName,
-	}
-
-	mongo_db := mongo_client.Database(cfg.MongoDBName)
-	InitializeOrganization(mongo_db, logger, cfg.DefaultOrg)
-
-	e := buildHandler(cfg, logger, mongo_client, mongo_db_config)
+	e := buildHandler(cfg, logger, mongodb)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.Mgt_API))
 	e.Logger.Fatal(e.Start(cfg.Mgt_API))
 
@@ -92,13 +68,12 @@ func main() {
 func buildHandler(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
-	mongoClient *mongo.Client, // Mongo client
-	mongoDBConfig util.MongoDBConfig, // Mongo collection name
+	mongodb *db.MongoDB, // MongoDB
 ) *echo.Echo {
 
 	router := echo.New()
 
-	//  Set up CORS.
+	// Set up CORS.
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"}, // API_KEY is used for permission checking SDKs
@@ -114,100 +89,14 @@ func buildHandler(
 
 	// API endpoints.
 	rg := router.Group("/api/v1")
-	rg.Use(authmw(cfg.JWKS))
+	rg.Use(mw.Auth(cfg, logger))
 
-	// Here we register all the handlers. Each handler handle jwt validation separately.
-	// check.RegisterHandlers(rg, check.NewService(check.NewRepository(clients, db), permissionCache, logger), mongodb.Collection("checks"))
-	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongoClient, mongoDBConfig), logger))
-	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongoClient, mongoDBConfig), logger))
-	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongoClient, mongoDBConfig), logger))
-	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongoClient, mongoDBConfig), logger))
-	group.RegisterHandlers(rg, group.NewService(group.NewRepository(mongoClient, mongoDBConfig), logger))
+	// Here we register all the handlers.
+	organization.RegisterHandlers(rg, organization.NewService(organization.NewRepository(mongodb), logger))
+	user.RegisterHandlers(rg, user.NewService(user.NewRepository(mongodb), logger))
+	resource.RegisterHandlers(rg, resource.NewService(resource.NewRepository(mongodb), logger))
+	role.RegisterHandlers(rg, role.NewService(role.NewRepository(mongodb), logger))
+	group.RegisterHandlers(rg, group.NewService(group.NewRepository(mongodb), logger))
 
 	return router
-}
-
-func authmw(jwksURL string) echo.MiddlewareFunc {
-
-	jwks, err := keyfunc.Get(jwksURL, keyfunc.Options{
-		RefreshErrorHandler: func(err error) {
-			panic(fmt.Sprintf("There was an error with the jwt.KeyFunc\nError:%s\n", err.Error()))
-		},
-	})
-
-	if err != nil {
-		panic(fmt.Sprintf("Failed to create JWKs from resource at the given URL.\nError:%s\n", err.Error()))
-	}
-
-	// initialize JWT middleware instance
-	return middleware.JWTWithConfig(middleware.JWTConfig{
-		// skip public endpoints
-		// Skipper: func(context echo.Context) bool {
-		// 	return context.Path() == "/"
-		// },
-		KeyFunc: func(token *jwt.Token) (interface{}, error) {
-			// a hack to convert jwt -> v4 tokens
-			t, _, err := new(jwtv4.Parser).ParseUnverified(token.Raw, jwtv4.MapClaims{})
-			if err != nil {
-				return nil, err
-			}
-			return jwks.Keyfunc(t)
-		},
-	})
-}
-
-func InitializeLogger() *zap.Logger {
-
-	zap_config := zap.NewProductionEncoderConfig()
-	zap_config.EncodeTime = zapcore.ISO8601TimeEncoder
-	fileEncoder := zapcore.NewJSONEncoder(zap_config)
-	consoleEncoder := zapcore.NewConsoleEncoder(zap_config)
-	logFile, _ := os.OpenFile("log.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	writer := zapcore.AddSync(logFile)
-	defaultLogLevel := zapcore.DebugLevel
-	core := zapcore.NewTee(
-		zapcore.NewCore(fileEncoder, writer, defaultLogLevel),
-		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), defaultLogLevel),
-	)
-	return zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
-}
-
-func InitializeOrganization(db *mongo.Database, logger *zap.Logger, orgName string) {
-
-	orgCollection := db.Collection("organizations")
-	filter := bson.M{"identifier": orgName}
-	var org mongo_entity.Organization
-	err := orgCollection.FindOne(context.Background(), filter).Decode(&org)
-	if err == mongo.ErrNoDocuments {
-		// Organization doesn't exist, so create it
-
-		key := make([]byte, 32)
-
-		if _, err := rand.Read(key); err != nil {
-			logger.Fatal("Error while initializing organization", zap.String("initializing_organization", orgName))
-			os.Exit(-1)
-
-		}
-		APIKey := base64.StdEncoding.EncodeToString(key)
-
-		defaultOrg := mongo_entity.Organization{
-			DisplayName:     orgName,
-			Identifier:      orgName,
-			API_KEY:         APIKey,
-			Resources:       []mongo_entity.Resource{},
-			Users:           []mongo_entity.User{},
-			Roles:           []mongo_entity.Role{},
-			Groups:          []mongo_entity.Group{},
-			RolePermissions: []mongo_entity.RolePermission{},
-		}
-		_, err = orgCollection.InsertOne(context.Background(), defaultOrg)
-		if err != nil {
-			log.Fatal(err)
-		}
-		logger.Info("Default organization created")
-	} else if err != nil {
-		logger.Fatal("Error while initializing organization", zap.String("initializing_organization", orgName))
-	} else {
-		logger.Info("Organization already exists")
-	}
 }

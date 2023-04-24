@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"log"
 	"os"
 
 	"github.com/labstack/echo/v4"
@@ -12,11 +13,9 @@ import (
 	_ "github.com/shashimalcse/cronuseo/docs"
 	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
-	"github.com/shashimalcse/cronuseo/internal/util"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	db "github.com/shashimalcse/cronuseo/internal/db/mongo"
+	"github.com/shashimalcse/cronuseo/internal/logger"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 var Version = "1.0.0"
@@ -40,41 +39,33 @@ var flagConfig = flag.String("config", "./config/local.yml", "path to the config
 // @BasePath /api/v1
 func main() {
 
-	logger := InitializeLogger()
-
 	flag.Parse()
 
-	// Load configurations for db, keto and redis.
+	// Load configurations.
 	cfg, err := config.Load(*flagConfig)
 	if err != nil {
-		logger.Fatal("Error while loading config.", zap.String("config_file", flag.Lookup("config").Value.String()))
+		log.Fatal("Error while loading config.", zap.String("config_file", flag.Lookup("config").Value.String()))
 		os.Exit(-1)
 	}
 
+	// Set up logger.
+	logger := logger.Init(cfg)
+
 	// Mongo client.
-	credential := options.Credential{
-		Username: cfg.MongoUser,
-		Password: cfg.MongoPassword,
-	}
-	mongo_client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Mongo).SetAuth(credential))
-	if err != nil {
-		panic(err)
-	}
+	mongodb := db.Init(cfg, logger)
 
-	mongo_db_config := util.MongoDBConfig{
-		DBName:                     cfg.MongoDBName,
-		OrganizationCollectionName: cfg.MongoOrgCollName,
-	}
-
+	// OPA policy.
 	r := rego.New(
 		rego.Query("x = data.example.allow"),
 		rego.Load([]string{cfg.RBACPolicy}, nil))
 	ctx := context.Background()
 	query, err := r.PrepareForEval(ctx)
+
 	if err != nil {
-		panic(err)
+		log.Fatal("Error while prepare rego policy.")
+		os.Exit(-1)
 	}
-	e := buildHandler(cfg, logger, mongo_client, mongo_db_config, query)
+	e := buildHandler(cfg, logger, mongodb, query)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.Check_API))
 	e.Logger.Fatal(e.Start(cfg.Check_API))
 
@@ -84,14 +75,13 @@ func main() {
 func buildHandler(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
-	mongoClient *mongo.Client, // Mongo client
-	mongoDBConfig util.MongoDBConfig, // Mongo collection name
+	mongodb *db.MongoDB, // MongoDB
 	query rego.PreparedEvalQuery,
 ) *echo.Echo {
 
 	router := echo.New()
 
-	//  Set up CORS.
+	// Set up CORS.
 	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"}, // API_KEY is used for permission checking SDKs
@@ -105,24 +95,8 @@ func buildHandler(
 	// API endpoints.
 	rg := router.Group("/api/v1")
 
-	// Here we register all the handlers. Each handler handle jwt validation separately.
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongoClient, mongoDBConfig), logger, query))
+	// Here we register all the handlers.
+	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongodb), logger, query))
 
 	return router
-}
-
-func InitializeLogger() *zap.Logger {
-
-	zap_config := zap.NewProductionEncoderConfig()
-	zap_config.EncodeTime = zapcore.ISO8601TimeEncoder
-	fileEncoder := zapcore.NewJSONEncoder(zap_config)
-	consoleEncoder := zapcore.NewConsoleEncoder(zap_config)
-	logFile, _ := os.OpenFile("log.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	writer := zapcore.AddSync(logFile)
-	defaultLogLevel := zapcore.DebugLevel
-	core := zapcore.NewTee(
-		zapcore.NewCore(fileEncoder, writer, defaultLogLevel),
-		zapcore.NewCore(consoleEncoder, zapcore.AddSync(os.Stdout), defaultLogLevel),
-	)
-	return zap.New(core, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
 }
