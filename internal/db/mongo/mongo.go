@@ -29,7 +29,8 @@ func Init(cfg *config.Config, logger *zap.Logger) *MongoDB {
 	}
 	mongoClient, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Mongo).SetAuth(credential))
 	if err != nil {
-		panic(err)
+		logger.Fatal("Error while connecting to MongoDB", zap.String("error", err.Error()))
+		os.Exit(-1)
 	}
 
 	mongoConfig := util.MongoDBConfig{
@@ -55,7 +56,7 @@ func initializeOrganization(mongodb *MongoDB, cfg *config.Config, logger *zap.Lo
 		key := make([]byte, 32)
 
 		if _, err := rand.Read(key); err != nil {
-			logger.Fatal("Error while initializing organization", zap.String("initializing_organization", cfg.DefaultOrg))
+			logger.Fatal("Error while initializing organization", zap.String("identifier", cfg.DefaultOrg), zap.String("error", err.Error()))
 			os.Exit(-1)
 
 		}
@@ -78,7 +79,7 @@ func initializeOrganization(mongodb *MongoDB, cfg *config.Config, logger *zap.Lo
 		}
 		logger.Info("Default organization created")
 	} else if err != nil {
-		logger.Fatal("Error while initializing organization", zap.String("initializing_organization", cfg.DefaultOrg))
+		logger.Fatal("Error while initializing organization", zap.String("identifier", cfg.DefaultOrg), zap.String("error", err.Error()))
 	} else {
 		logger.Info("Organization already exists!", zap.String("identifier", cfg.DefaultOrg))
 	}
