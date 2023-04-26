@@ -58,14 +58,14 @@ func main() {
 	// Mongo client.
 	mongodb := db.Init(cfg, logger)
 
-	e := buildHandler(cfg, logger, mongodb)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.Mgt_API))
-	e.Logger.Fatal(e.Start(cfg.Mgt_API))
-
+	if err := BuildHandler(cfg, logger, mongodb).Start(cfg.Mgt_API); err != nil {
+		logger.Fatal("Error while starting server", zap.Error(err))
+	}
 }
 
 // buildHandler builds the echo router.
-func buildHandler(
+func BuildHandler(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
 	mongodb *db.MongoDB, // MongoDB

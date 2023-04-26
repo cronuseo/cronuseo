@@ -7,3 +7,9 @@ mongo-data
 cronuseo-console
 .VSCodeCounter
 *.log
+*.test
+*.out
+coverage*.*
+testdata/postgres
+./server
+.pid

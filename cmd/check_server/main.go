@@ -65,14 +65,14 @@ func main() {
 		log.Fatal("Error while prepare rego policy.")
 		os.Exit(-1)
 	}
-	e := buildHandler(cfg, logger, mongodb, query)
+	e := BuildHandler(cfg, logger, mongodb, query)
 	logger.Info("Starting server", zap.String("server_endpoint", cfg.Check_API))
 	e.Logger.Fatal(e.Start(cfg.Check_API))
 
 }
 
 // buildHandler builds the echo router.
-func buildHandler(
+func BuildHandler(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
 	mongodb *db.MongoDB, // MongoDB
