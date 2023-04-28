@@ -2,7 +2,6 @@ package organization
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
@@ -18,16 +17,22 @@ func Test_service(t *testing.T) {
 
 	ctx := context.Background()
 
-	// Create new organization.
-
-	_, err := s.Create(ctx, CreateOrganizationRequest{
+	// successful creation
+	org, err := s.Create(ctx, CreateOrganizationRequest{
 		Identifier:  "test",
 		DisplayName: "test",
 	})
 	assert.Nil(t, err)
-	// assert.NotEmpty(t, id)
+	assert.NotEmpty(t, org.ID)
+	assert.Equal(t, "test", org.Identifier)
+	assert.Equal(t, "test", org.DisplayName)
 
-	// assert.NotEmpty(t, org.ID)
+	// validation error in creation
+	_, err = s.Create(ctx, CreateOrganizationRequest{
+		DisplayName: "test",
+	})
+	assert.NotNil(t, err)
+
 }
 
 type mockRepository struct {
@@ -35,16 +40,14 @@ type mockRepository struct {
 }
 
 func (m mockRepository) Get(ctx context.Context, id string) (*mongo_entity.Organization, error) {
-	fmt.Println(m.orgs)
 	for _, org := range m.orgs {
-		fmt.Println("checking")
 		if org.ID.Hex() == id {
 			return &org, nil
 		}
 	}
 	return nil, &util.NotFoundError{Path: "Organization"}
 }
-func (m mockRepository) Create(ctx context.Context, organization mongo_entity.Organization) (string, error) {
+func (m *mockRepository) Create(ctx context.Context, organization mongo_entity.Organization) (string, error) {
 	id := primitive.NewObjectID()
 	organization.ID = id
 	m.orgs = append(m.orgs, organization)
@@ -54,14 +57,36 @@ func (m mockRepository) Query(ctx context.Context) ([]mongo_entity.Organization,
 	return m.orgs, nil
 }
 func (m mockRepository) Delete(ctx context.Context, id string) error {
+	for i, org := range m.orgs {
+		if org.ID.Hex() == id {
+			m.orgs[i] = m.orgs[len(m.orgs)-1]
+			m.orgs = m.orgs[:len(m.orgs)-1]
+			break
+		}
+	}
 	return nil
 }
-func (m mockRepository) RefreshAPIKey(ctx context.Context, apiKey string, id string) error {
-	return nil
+func (m *mockRepository) RefreshAPIKey(ctx context.Context, apiKey string, id string) error {
+	for _, org := range m.orgs {
+		if org.ID.Hex() == id {
+			org.API_KEY = apiKey
+		}
+	}
+	return &util.NotFoundError{Path: "Organization"}
 }
 func (m mockRepository) CheckOrgExistById(ctx context.Context, id string) (bool, error) {
-	return true, nil
+	for _, org := range m.orgs {
+		if org.ID.Hex() == id {
+			return true, nil
+		}
+	}
+	return false, nil
 }
 func (m mockRepository) CheckOrgExistByIdentifier(ctx context.Context, identifier string) (bool, error) {
+	for _, org := range m.orgs {
+		if org.Identifier == identifier {
+			return true, nil
+		}
+	}
 	return false, nil
 }
