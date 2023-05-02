@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"net/http"
+
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt"
 	jwtv4 "github.com/golang-jwt/jwt/v4"
@@ -37,4 +39,10 @@ func Auth(cfg *config.Config, logger *zap.Logger) echo.MiddlewareFunc {
 			return jwks.Keyfunc(t)
 		},
 	})
+}
+
+func MockAuthHeader() http.Header {
+	header := http.Header{}
+	header.Add("Authorization", "TEST")
+	return header
 }
