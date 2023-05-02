@@ -3,6 +3,7 @@ package group
 import (
 	"context"
 
+	db "github.com/shashimalcse/cronuseo/internal/db/mongo"
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -27,16 +28,15 @@ type Repository interface {
 }
 
 type repository struct {
-	mongoClient   *mongo.Client
-	mongoDBConfig util.MongoDBConfig
-	mongoColl     *mongo.Collection
+	mongoClient *mongo.Client
+	mongoColl   *mongo.Collection
 }
 
-func NewRepository(mongoClient *mongo.Client, mongoDBConfig util.MongoDBConfig) Repository {
+func NewRepository(mongodb *db.MongoDB) Repository {
 
-	orgCollection := mongoClient.Database(mongoDBConfig.DBName).Collection(mongoDBConfig.OrganizationCollectionName)
+	orgCollection := mongodb.MongoClient.Database(mongodb.MongoConfig.DBName).Collection(mongodb.MongoConfig.OrganizationCollectionName)
 
-	return repository{mongoClient: mongoClient, mongoDBConfig: mongoDBConfig, mongoColl: orgCollection}
+	return repository{mongoClient: mongodb.MongoClient, mongoColl: orgCollection}
 }
 
 // Get group by id.

@@ -65,3 +65,14 @@ setup-db: ## strat the databases
 .PHONY: start
 start: ## start backend, frontend, keto and redis
 	docker compose up
+
+.PHONY: test
+test: ## run unit tests
+	@echo "mode: count" > coverage-all.out
+	@$(foreach pkg,$(PACKAGES), \
+		go test -p=1 -cover -covermode=count -coverprofile=coverage.out ${pkg}; \
+		tail -n +2 coverage.out >> coverage-all.out;)
+		
+.PHONY: test-cover
+test-cover: test ## run unit tests and show test coverage information
+	go tool cover -html=coverage-all.out

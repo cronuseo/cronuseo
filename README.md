@@ -164,4 +164,3 @@ use these sdks to check permissions for the user.
 * python - https://pypi.org/project/cronuseosdk
 * nodejs - https://www.npmjs.com/package/cronuseosdk
 * golang - https://github.com/shashimalcse/cronuseogosdk
-
