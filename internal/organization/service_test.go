@@ -12,7 +12,7 @@ import (
 )
 
 func Test_service(t *testing.T) {
-	logger := test.Init()
+	logger := test.InitLogger()
 	s := NewService(&mockRepository{}, logger)
 
 	ctx := context.Background()

@@ -11,7 +11,7 @@ import (
 )
 
 func TestAPI(t *testing.T) {
-	logger := test.Init()
+	logger := test.InitLogger()
 	router := test.MockRouter()
 	repo := &mockRepository{orgs: []mongo_entity.Organization{
 		{ID: primitive.NewObjectID(), Identifier: "test", DisplayName: "test"},
