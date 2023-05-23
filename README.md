@@ -19,7 +19,7 @@ By using Cronuseo, it is possible to create a separate authorization service, ef
 
 ## Get started
 
-> Note : cronuseo still in the experimental stage. Only tested in the local environemnt.
+> Note : cronuseo still in the experimental stage. Only tested in the local environment.
 
 You can use Docker to run cronuseo locally
 ### Set up the local environment
