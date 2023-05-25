@@ -1,8 +1,16 @@
 FROM golang:1.19-alpine as build
 
 # Create a non-root user
-RUN useradd -m -u 10001 myuser
-USER myuser
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid 10014 \
+    "cronuseo"
+# Use the above created unprivileged user
+USER 10014
 
 ENV GO111MODULE=on
 ENV GOFLAGS=-mod=vendor
