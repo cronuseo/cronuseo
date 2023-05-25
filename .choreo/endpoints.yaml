@@ -12,3 +12,5 @@ endpoints:
   type: REST
   
   context: /api
+
+  networkVisibility: Public
