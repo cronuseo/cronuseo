@@ -19,7 +19,7 @@ By using Cronuseo, it is possible to create a separate authorization service, ef
 
 ## Get started
 
-> Note : cronuseo still in the experimental stage. Only tested in the local environment.
+> Note : Cronuseo is still in the experimental stage. Recently, on May 25, 2023, it was tested on [Choreo](https://wso2.com/choreo/), the cloud native application development platform provided by WSO2. Let's goo!
 
 You can use Docker to run cronuseo locally
 ### Set up the local environment
