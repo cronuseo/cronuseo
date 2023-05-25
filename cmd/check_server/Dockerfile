@@ -1,17 +1,5 @@
 FROM golang:1.19-alpine as build
 
-# Create a non-root user
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid 10014 \
-    "cronuseo"
-# Use the above created unprivileged user
-USER 10014
-
 ENV GO111MODULE=on
 
 ARG APP_ENV
@@ -37,5 +25,17 @@ COPY --from=build /app/check_server .
 COPY --from=build /app/config/*.yml ./config/
 COPY --from=build /app/config/*.yml ./config/
 COPY --from=build /app/policy/*.rego ./policy/
+
+# Create a non-root user
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid 10014 \
+    "cronuseo"
+# Use the above created unprivileged user
+USER 10014
 
 ENTRYPOINT ./check_server -config "./config/${APP_ENV}.yml"
