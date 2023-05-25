@@ -13,7 +13,6 @@ RUN adduser \
 USER 10014
 
 ENV GO111MODULE=on
-ENV GOFLAGS=-mod=vendor
 
 ARG APP_ENV
 ENV APP_ENV=$APP_ENV
@@ -28,7 +27,6 @@ COPY config config
 COPY docs docs
 COPY policy policy
 COPY internal internal
-COPY vendor vendor
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o check_server ./cmd/check_server
 
