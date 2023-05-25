@@ -168,4 +168,4 @@ use these sdks to check permissions for the user.
 
 ## Contributing
 Bugfixes are the best and always welcome! Improving test coverage is great, with reliable non brittle tests. Features are welcome.
-We have a contributing [guideline](https://github.com/shashimalcse/cronuseo/blob/main/.github/CONTRIBUTING.md) available.
+We have a [contributing guideline](https://github.com/shashimalcse/cronuseo/blob/main/.github/CONTRIBUTING.md) available.
