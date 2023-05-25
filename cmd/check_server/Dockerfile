@@ -1,5 +1,9 @@
 FROM golang:1.19-alpine as build
 
+# Create a non-root user
+RUN useradd -m myuser
+USER myuser
+
 ENV GO111MODULE=on
 ENV GOFLAGS=-mod=vendor
 
