@@ -26,7 +26,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CheckClient interface {
-	Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error)
+	Check(ctx context.Context, in *GrpcCheckRequest, opts ...grpc.CallOption) (*GrpcCheckResponse, error)
 }
 
 type checkClient struct {
@@ -37,8 +37,8 @@ func NewCheckClient(cc grpc.ClientConnInterface) CheckClient {
 	return &checkClient{cc}
 }
 
-func (c *checkClient) Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error) {
-	out := new(CheckResponse)
+func (c *checkClient) Check(ctx context.Context, in *GrpcCheckRequest, opts ...grpc.CallOption) (*GrpcCheckResponse, error) {
+	out := new(GrpcCheckResponse)
 	err := c.cc.Invoke(ctx, Check_Check_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -50,15 +50,14 @@ func (c *checkClient) Check(ctx context.Context, in *CheckRequest, opts ...grpc.
 // All implementations must embed UnimplementedCheckServer
 // for forward compatibility
 type CheckServer interface {
-	Check(context.Context, *CheckRequest) (*CheckResponse, error)
-	mustEmbedUnimplementedCheckServer()
+	Check(context.Context, *GrpcCheckRequest) (*GrpcCheckResponse, error)
 }
 
 // UnimplementedCheckServer must be embedded to have forward compatible implementations.
 type UnimplementedCheckServer struct {
 }
 
-func (UnimplementedCheckServer) Check(context.Context, *CheckRequest) (*CheckResponse, error) {
+func (UnimplementedCheckServer) Check(context.Context, *GrpcCheckRequest) (*GrpcCheckResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
 }
 func (UnimplementedCheckServer) mustEmbedUnimplementedCheckServer() {}
@@ -75,7 +74,7 @@ func RegisterCheckServer(s grpc.ServiceRegistrar, srv CheckServer) {
 }
 
 func _Check_Check_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CheckRequest)
+	in := new(GrpcCheckRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -87,7 +86,7 @@ func _Check_Check_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		FullMethod: Check_Check_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CheckServer).Check(ctx, req.(*CheckRequest))
+		return srv.(CheckServer).Check(ctx, req.(*GrpcCheckRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

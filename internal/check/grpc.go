@@ -2,27 +2,39 @@ package check
 
 import (
 	"context"
-	"net/http"
+	"errors"
 
-	"github.com/labstack/echo/v4"
 	"github.com/shashimalcse/cronuseo/internal/util"
+	cronuseo "github.com/shashimalcse/cronuseo/proto"
+	"google.golang.org/grpc/metadata"
 )
 
-type grpc_service struct {
+func NewGrpcService(service Service) cronuseo.CheckServer {
+
+	return grpcService{service: service}
+}
+
+type grpcService struct {
 	service Service
 }
 
-func (r grpc_service) grpcCheck(c echo.Context) error {
-	var input CheckRequest
-	api_key := c.Request().Header.Get("API_KEY")
-	if err := c.Bind(&input); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+func (s grpcService) Check(ctx context.Context, req *cronuseo.GrpcCheckRequest) (*cronuseo.GrpcCheckResponse, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if !ok {
+		return nil, errors.New("missing metadata from request")
+	}
+	apiKey := md.Get("API_KEY")[0]
+
+	input := CheckRequest{
+		Username: req.Username,
+		Action:   req.Action,
+		Resource: req.Resource,
 	}
 
-	allow, err := r.service.Check(context.Background(), c.Param("org"), input, api_key)
+	allow, err := s.service.Check(context.Background(), req.Organization, input, apiKey)
 	if err != nil {
-		return util.HandleError(err)
+		return nil, util.HandleError(err)
 	}
 
-	return c.JSON(http.StatusOK, allow)
+	return &cronuseo.GrpcCheckResponse{Allow: allow}, nil
 }

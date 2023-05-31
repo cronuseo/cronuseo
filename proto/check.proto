@@ -4,14 +4,15 @@ package cronuseo.check;
 option go_package = "./cronuseo";
 
 service Check {
-    rpc check(CheckRequest) returns (CheckResponse) {}
+    rpc check(GrpcCheckRequest) returns (GrpcCheckResponse) {}
 }
-message CheckRequest {
+message GrpcCheckRequest {
     string username = 1;
     string action = 2;
     string resource = 3;
+    string organization = 4;
 }
 
-message CheckResponse {
+message GrpcCheckResponse {
     bool allow = 1;
 }
