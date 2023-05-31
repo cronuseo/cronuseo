@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package cronuseo.check;
+option go_package = "./cronuseo";
+
+service Check {
+    rpc check(CheckRequest) returns (CheckResponse) {}
+}
+message CheckRequest {
+    string username = 1;
+    string action = 2;
+    string resource = 3;
+}
+
+message CheckResponse {
+    bool allow = 1;
+}
