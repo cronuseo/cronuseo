@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package cronuseo.check;
-option go_package = "./cronuseo";
+option go_package = "./proto";
 
 service Check {
     rpc check(GrpcCheckRequest) returns (GrpcCheckResponse) {}

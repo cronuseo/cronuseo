@@ -5,12 +5,12 @@ import (
 	"errors"
 
 	"github.com/shashimalcse/cronuseo/internal/util"
-	cronuseo "github.com/shashimalcse/cronuseo/proto"
+	"github.com/shashimalcse/cronuseo/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 )
 
-func NewGrpcService(service Service, logger *zap.Logger) cronuseo.CheckServer {
+func NewGrpcService(service Service, logger *zap.Logger) proto.CheckServer {
 
 	return grpcService{service: service, logger: logger}
 }
@@ -20,7 +20,7 @@ type grpcService struct {
 	logger  *zap.Logger
 }
 
-func (s grpcService) Check(ctx context.Context, req *cronuseo.GrpcCheckRequest) (*cronuseo.GrpcCheckResponse, error) {
+func (s grpcService) Check(ctx context.Context, req *proto.GrpcCheckRequest) (*proto.GrpcCheckResponse, error) {
 
 	s.logger.Info("GRPC method : Check", zap.String("method", "Check"))
 	md, ok := metadata.FromIncomingContext(ctx)
@@ -40,5 +40,5 @@ func (s grpcService) Check(ctx context.Context, req *cronuseo.GrpcCheckRequest) 
 		return nil, util.HandleError(err)
 	}
 
-	return &cronuseo.GrpcCheckResponse{Allow: allow}, nil
+	return &proto.GrpcCheckResponse{Allow: allow}, nil
 }

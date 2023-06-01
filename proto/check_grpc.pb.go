@@ -4,7 +4,7 @@
 // - protoc             v3.21.12
 // source: proto/check.proto
 
-package cronuseo
+package proto
 
 import (
 	context "context"
