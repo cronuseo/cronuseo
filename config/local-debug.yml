@@ -1,6 +1,7 @@
 jwks: "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
 mgt_api: ":8080"
 check_api: ":8081"
+check_grpc: ":50051"
 mongo: "mongodb+srv://cronuseo:hMRqhU4pzdYtZM5J@cluster0.7jo2zkm.mongodb.net/"
 mongouser: "cronuseo"
 mongopassword: "hMRqhU4pzdYtZM5J"

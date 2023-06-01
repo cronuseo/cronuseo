@@ -74,22 +74,24 @@ func main() {
 	// Start the REST server
 	go func() {
 		e := BuildHandler(cfg, logger, mongodb, query)
-		logger.Info("Starting server", zap.String("server_endpoint", cfg.Check_API))
+		logger.Info("Starting REST server", zap.String("REST server_endpoint", cfg.Check_API))
 		e.Logger.Fatal(e.Start(cfg.Check_API))
 	}()
 
-	// Start the gRPC server
-	go func() {
-		lis, err := net.Listen("tcp", ":50051")
-		if err != nil {
-			log.Fatalf("failed to listen: %v", err)
-		}
-		s := grpc.NewServer()
-		service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger, query))
-		cronuseo.RegisterCheckServer(s, service)
-		log.Fatal(s.Serve(lis))
-	}()
-
+	if cfg.Check_GRPC != "" {
+		// Start the gRPC server
+		go func() {
+			lis, err := net.Listen("tcp", cfg.Check_GRPC)
+			if err != nil {
+				log.Fatalf("failed to listen: %v", err)
+			}
+			service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger, query), logger)
+			s := grpc.NewServer()
+			cronuseo.RegisterCheckServer(s, service)
+			logger.Info("Starting GRPC server", zap.String("GRPC server_endpoint", cfg.Check_GRPC))
+			log.Fatal(s.Serve(lis))
+		}()
+	}
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
