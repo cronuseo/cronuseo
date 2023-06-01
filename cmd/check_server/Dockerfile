@@ -15,6 +15,7 @@ COPY config config
 COPY docs docs
 COPY policy policy
 COPY internal internal
+COPY proto proto
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o check_server ./cmd/check_server
 

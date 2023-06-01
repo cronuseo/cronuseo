@@ -18,7 +18,7 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/config"
 	db "github.com/shashimalcse/cronuseo/internal/db/mongo"
 	"github.com/shashimalcse/cronuseo/internal/logger"
-	cronuseo "github.com/shashimalcse/cronuseo/proto"
+	"github.com/shashimalcse/cronuseo/proto"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
@@ -87,7 +87,7 @@ func main() {
 			}
 			service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger, query), logger)
 			s := grpc.NewServer()
-			cronuseo.RegisterCheckServer(s, service)
+			proto.RegisterCheckServer(s, service)
 			logger.Info("Starting GRPC server", zap.String("GRPC server_endpoint", cfg.Check_GRPC))
 			log.Fatal(s.Serve(lis))
 		}()
