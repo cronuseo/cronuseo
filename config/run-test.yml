@@ -1,6 +1,7 @@
 jwks: "test"
 mgt_api: "test"
 check_api: "test"
+check_grpc: "test"
 mongo: "mongodb://localhost:27017"
 mongouser: "root"
 mongopassword: "rootpassword"

@@ -4,7 +4,10 @@ import (
 	"context"
 	"flag"
 	"log"
+	"net"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -15,7 +18,9 @@ import (
 	"github.com/shashimalcse/cronuseo/internal/config"
 	db "github.com/shashimalcse/cronuseo/internal/db/mongo"
 	"github.com/shashimalcse/cronuseo/internal/logger"
+	cronuseo "github.com/shashimalcse/cronuseo/proto"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 var Version = "1.0.0"
@@ -65,9 +70,34 @@ func main() {
 		log.Fatal("Error while prepare rego policy.")
 		os.Exit(-1)
 	}
-	e := BuildHandler(cfg, logger, mongodb, query)
-	logger.Info("Starting server", zap.String("server_endpoint", cfg.Check_API))
-	e.Logger.Fatal(e.Start(cfg.Check_API))
+
+	// Start the REST server
+	go func() {
+		e := BuildHandler(cfg, logger, mongodb, query)
+		logger.Info("Starting REST server", zap.String("REST server_endpoint", cfg.Check_API))
+		e.Logger.Fatal(e.Start(cfg.Check_API))
+	}()
+
+	if cfg.Check_GRPC != "" {
+		// Start the gRPC server
+		go func() {
+			lis, err := net.Listen("tcp", cfg.Check_GRPC)
+			if err != nil {
+				log.Fatalf("failed to listen: %v", err)
+			}
+			service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger, query), logger)
+			s := grpc.NewServer()
+			cronuseo.RegisterCheckServer(s, service)
+			logger.Info("Starting GRPC server", zap.String("GRPC server_endpoint", cfg.Check_GRPC))
+			log.Fatal(s.Serve(lis))
+		}()
+	}
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	<-c
+
+	logger.Info("Shutting down servers...")
+	os.Exit(0)
 
 }
 
