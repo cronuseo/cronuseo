@@ -24,18 +24,18 @@ type MongoDB struct {
 func Init(cfg *config.Config, logger *zap.Logger) *MongoDB {
 
 	credential := options.Credential{
-		Username: cfg.MongoUser,
-		Password: cfg.MongoPassword,
+		Username: cfg.Database.User,
+		Password: cfg.Database.Password,
 	}
-	mongoClient, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Mongo).SetAuth(credential))
+	mongoClient, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Database.URL).SetAuth(credential))
 	if err != nil {
 		logger.Fatal("Error while connecting to MongoDB", zap.String("error", err.Error()))
 		os.Exit(-1)
 	}
 
 	mongoConfig := util.MongoDBConfig{
-		DBName:                     cfg.MongoDBName,
-		OrganizationCollectionName: cfg.MongoOrgCollName,
+		DBName:                     cfg.Database.Name,
+		OrganizationCollectionName: cfg.Database.Name,
 	}
 
 	mongodb := &MongoDB{MongoClient: mongoClient, MongoConfig: mongoConfig}
@@ -47,7 +47,7 @@ func Init(cfg *config.Config, logger *zap.Logger) *MongoDB {
 func initializeOrganization(mongodb *MongoDB, cfg *config.Config, logger *zap.Logger) {
 
 	orgCollection := mongodb.MongoClient.Database(mongodb.MongoConfig.DBName).Collection(mongodb.MongoConfig.OrganizationCollectionName)
-	filter := bson.M{"identifier": cfg.DefaultOrg}
+	filter := bson.M{"identifier": cfg.RootOrganization.Name}
 	var org mongo_entity.Organization
 	err := orgCollection.FindOne(context.Background(), filter).Decode(&org)
 	if err == mongo.ErrNoDocuments {
@@ -56,7 +56,7 @@ func initializeOrganization(mongodb *MongoDB, cfg *config.Config, logger *zap.Lo
 		key := make([]byte, 32)
 
 		if _, err := rand.Read(key); err != nil {
-			logger.Fatal("Error while initializing organization", zap.String("identifier", cfg.DefaultOrg), zap.String("error", err.Error()))
+			logger.Fatal("Error while initializing organization", zap.String("identifier", cfg.RootOrganization.Name), zap.String("error", err.Error()))
 			os.Exit(-1)
 
 		}
@@ -64,8 +64,8 @@ func initializeOrganization(mongodb *MongoDB, cfg *config.Config, logger *zap.Lo
 		APIKey := base64.StdEncoding.EncodeToString(key)
 
 		defaultOrg := mongo_entity.Organization{
-			DisplayName:     cfg.DefaultOrg,
-			Identifier:      cfg.DefaultOrg,
+			DisplayName:     cfg.RootOrganization.Name,
+			Identifier:      cfg.RootOrganization.Name,
 			API_KEY:         APIKey,
 			Resources:       []mongo_entity.Resource{},
 			Users:           []mongo_entity.User{},
@@ -79,8 +79,8 @@ func initializeOrganization(mongodb *MongoDB, cfg *config.Config, logger *zap.Lo
 		}
 		logger.Info("Default organization created")
 	} else if err != nil {
-		logger.Fatal("Error while initializing organization", zap.String("identifier", cfg.DefaultOrg), zap.String("error", err.Error()))
+		logger.Fatal("Error while initializing organization", zap.String("identifier", cfg.RootOrganization.Name), zap.String("error", err.Error()))
 	} else {
-		logger.Info("Organization already exists!", zap.String("identifier", cfg.DefaultOrg))
+		logger.Info("Organization already exists!", zap.String("identifier", cfg.RootOrganization.Name))
 	}
 }

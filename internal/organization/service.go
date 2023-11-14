@@ -15,8 +15,8 @@ import (
 type Service interface {
 	Get(ctx context.Context, id string) (Organization, error)
 	Query(ctx context.Context) ([]Organization, error)
-	Create(ctx context.Context, input CreateOrganizationRequest) (Organization, error)
-	RefreshAPIKey(ctx context.Context, id string) (Organization, error)
+	Create(ctx context.Context, req OrganizationCreationRequest) (Organization, error)
+	RegenerateAPIKey(ctx context.Context, id string) (Organization, error)
 	Delete(ctx context.Context, id string) (Organization, error)
 }
 
@@ -24,14 +24,15 @@ type Organization struct {
 	mongo_entity.Organization
 }
 
-type CreateOrganizationRequest struct {
+type OrganizationCreationRequest struct {
 	Identifier  string `json:"identifier" db:"identifier"`
 	DisplayName string `json:"display_name" db:"display_name"`
 }
 
-func (m CreateOrganizationRequest) Validate() error {
+func (m OrganizationCreationRequest) Validate() error {
 	return validation.ValidateStruct(&m,
 		validation.Field(&m.Identifier, validation.Required),
+		validation.Field(&m.DisplayName, validation.Required),
 	)
 }
 
@@ -55,7 +56,7 @@ func (s service) Get(ctx context.Context, id string) (Organization, error) {
 }
 
 // Create new organization.
-func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Organization, error) {
+func (s service) Create(ctx context.Context, req OrganizationCreationRequest) (Organization, error) {
 
 	// Validate organization
 	if err := req.Validate(); err != nil {
@@ -71,6 +72,7 @@ func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Org
 
 	}
 
+	// Generate API-Key for organization.
 	key := make([]byte, 32)
 
 	if _, err := rand.Read(key); err != nil {
@@ -106,8 +108,8 @@ func (s service) Delete(ctx context.Context, id string) (Organization, error) {
 	return organization, nil
 }
 
-// Refresh API key of the organization.
-func (s service) RefreshAPIKey(ctx context.Context, id string) (Organization, error) {
+// Regenerate API key of the organization.
+func (s service) RegenerateAPIKey(ctx context.Context, id string) (Organization, error) {
 
 	// Get organization
 	exists, _ := s.repo.CheckOrgExistById(ctx, id)

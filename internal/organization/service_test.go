@@ -18,7 +18,7 @@ func Test_service(t *testing.T) {
 	ctx := context.Background()
 
 	// successful creation
-	org, err := s.Create(ctx, CreateOrganizationRequest{
+	org, err := s.Create(ctx, OrganizationCreationRequest{
 		Identifier:  "test",
 		DisplayName: "test",
 	})
@@ -28,7 +28,7 @@ func Test_service(t *testing.T) {
 	assert.Equal(t, "test", org.DisplayName)
 
 	// validation error in creation
-	_, err = s.Create(ctx, CreateOrganizationRequest{
+	_, err = s.Create(ctx, OrganizationCreationRequest{
 		DisplayName: "test",
 	})
 	assert.NotNil(t, err)

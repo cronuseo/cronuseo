@@ -1,11 +1,16 @@
-jwks: "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
-mgt_api: ":8080"
-check_api: ":8081"
-check_grpc: ":50051"
-mongo: "mongodb+srv://cronuseo:hMRqhU4pzdYtZM5J@cluster0.7jo2zkm.mongodb.net/"
-mongouser: "cronuseo"
-mongopassword: "hMRqhU4pzdYtZM5J"
-default_org: "super"
-mongodbname: "cronuseo"
-rbac_policy: "/Users/thilinashashimal/Desktop/Cronuseo/policy/policy.rego"
-mongo_org_coll_name: "organizations"
+endpoint:
+  management : ":8080"
+  check_rest : ":8081"
+  check_grpc : ":50051"
+auth:
+  jwks: "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
+database:
+  url : "mongodb+srv://shashimalcse:tltPm2YhaUlAmNGz@cluster0.5klckrk.mongodb.net/"
+  name : "cronuseo"
+  user: "shashimalcse"
+  password: "tltPm2YhaUlAmNGz"
+root_organization:
+  name : "super"
+opa:
+  rbac: "/Users/thilinashashimal/Desktop/Cronuseo/policy/policy.rego"
+

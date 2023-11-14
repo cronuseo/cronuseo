@@ -58,8 +58,8 @@ func main() {
 	// Mongo client.
 	mongodb := db.Init(cfg, logger)
 
-	logger.Info("Starting server", zap.String("server_endpoint", cfg.Mgt_API))
-	if err := BuildHandler(cfg, logger, mongodb).Start(cfg.Mgt_API); err != nil {
+	logger.Info("Starting server", zap.String("server_endpoint", cfg.Endpoint.Management))
+	if err := BuildHandler(cfg, logger, mongodb).Start(cfg.Endpoint.Management); err != nil {
 		logger.Fatal("Error while starting server", zap.Error(err))
 	}
 }

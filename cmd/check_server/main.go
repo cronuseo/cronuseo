@@ -62,7 +62,7 @@ func main() {
 	// OPA policy.
 	r := rego.New(
 		rego.Query("x = data.example.allow"),
-		rego.Load([]string{cfg.RBACPolicy}, nil))
+		rego.Load([]string{cfg.OPA.RBAC}, nil))
 	ctx := context.Background()
 	query, err := r.PrepareForEval(ctx)
 
@@ -74,21 +74,21 @@ func main() {
 	// Start the REST server
 	go func() {
 		e := BuildHandler(cfg, logger, mongodb, query)
-		logger.Info("Starting REST server", zap.String("REST server_endpoint", cfg.Check_API))
-		e.Logger.Fatal(e.Start(cfg.Check_API))
+		logger.Info("Starting REST server", zap.String("REST server_endpoint", cfg.Endpoint.Check_REST))
+		e.Logger.Fatal(e.Start(cfg.Endpoint.Check_REST))
 	}()
 
-	if cfg.Check_GRPC != "" {
+	if cfg.Endpoint.Check_GRPC != "" {
 		// Start the gRPC server
 		go func() {
-			lis, err := net.Listen("tcp", cfg.Check_GRPC)
+			lis, err := net.Listen("tcp", cfg.Endpoint.Check_GRPC)
 			if err != nil {
 				log.Fatalf("failed to listen: %v", err)
 			}
 			service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger, query), logger)
 			s := grpc.NewServer()
 			proto.RegisterCheckServer(s, service)
-			logger.Info("Starting GRPC server", zap.String("GRPC server_endpoint", cfg.Check_GRPC))
+			logger.Info("Starting GRPC server", zap.String("GRPC server_endpoint", cfg.Endpoint.Check_GRPC))
 			log.Fatal(s.Serve(lis))
 		}()
 	}
