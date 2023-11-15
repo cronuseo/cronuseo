@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 	"net"
@@ -12,7 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	"github.com/open-policy-agent/opa/rego"
 	_ "github.com/shashimalcse/cronuseo/docs"
 	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
@@ -65,21 +63,9 @@ func main() {
 		logger.Fatal("Failed to initialize MongoDB client", zap.Error(err))
 	}
 
-	// OPA policy.
-	r := rego.New(
-		rego.Query("x = data.example.allow"),
-		rego.Load([]string{cfg.OPA.RBAC}, nil))
-	ctx := context.Background()
-	query, err := r.PrepareForEval(ctx)
-
-	if err != nil {
-		log.Fatal("Error while prepare rego policy.")
-		os.Exit(-1)
-	}
-
 	// Start the REST server
 	go func() {
-		e := BuildHandler(cfg, logger, mongodb, query)
+		e := BuildHandler(cfg, logger, mongodb)
 		logger.Info("Starting REST server", zap.String("REST server_endpoint", cfg.Endpoint.Check_REST))
 		e.Logger.Fatal(e.Start(cfg.Endpoint.Check_REST))
 	}()
@@ -91,7 +77,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("failed to listen: %v", err)
 			}
-			service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger, query), logger)
+			service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger), logger)
 			s := grpc.NewServer()
 			proto.RegisterCheckServer(s, service)
 			logger.Info("Starting GRPC server", zap.String("GRPC server_endpoint", cfg.Endpoint.Check_GRPC))
@@ -112,7 +98,6 @@ func BuildHandler(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
 	mongodb *db.MongoDB, // MongoDB
-	query rego.PreparedEvalQuery,
 ) *echo.Echo {
 
 	router := echo.New()
@@ -132,7 +117,7 @@ func BuildHandler(
 	rg := router.Group("/api/v1")
 
 	// Here we register all the handlers.
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongodb), logger, query))
+	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongodb), logger))
 
 	return router
 }

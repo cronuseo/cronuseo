@@ -30,9 +30,9 @@ func (s grpcService) Check(ctx context.Context, req *proto.GrpcCheckRequest) (*p
 	apiKey := md.Get("API_KEY")[0]
 
 	input := CheckRequest{
-		Username: req.Username,
-		Action:   req.Action,
-		Resource: req.Resource,
+		Identifier: req.Username,
+		Action:     req.Action,
+		Resource:   req.Resource,
 	}
 
 	allow, err := s.service.Check(context.Background(), req.Organization, input, apiKey)

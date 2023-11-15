@@ -135,6 +135,7 @@ func registerServiceHandlers(e *echo.Group, mongodb *db.MongoDB, cfg *config.Con
 	resource.RegisterHandlers(e, resourceService)
 	role.RegisterHandlers(e, roleService)
 	group.RegisterHandlers(e, groupService)
+
 }
 
 func initializeRootOrganization(orgService organization.Service, userService user.Service, groupService group.Service,

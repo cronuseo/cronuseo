@@ -10,7 +10,7 @@ import (
 
 func RegisterHandlers(r *echo.Group, service Service) {
 	res := permission_service{service: service}
-	router := r.Group("/:org/permission/check")
+	router := r.Group("/o/:org/check")
 	router.POST("", res.check)
 }
 
