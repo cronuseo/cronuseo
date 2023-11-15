@@ -15,7 +15,7 @@ import (
 type Repository interface {
 	ValidateAPIKey(ctx context.Context, org_identifier string, apiKey string) (bool, error)
 	GetUserRoles(ctx context.Context, org_identifier string, username string) (*[]primitive.ObjectID, error)
-	GetRolePermissions(ctx context.Context, org_identifier string) (*[]mongo_entity.RolePermission, error)
+	// GetRolePermissions(ctx context.Context, org_identifier string) (*[]mongo_entity.RolePermission, error)
 	GetGroupRoles(ctx context.Context, org_identifier string, username string) (*[]primitive.ObjectID, error)
 }
 
@@ -119,24 +119,24 @@ func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, us
 	return &roleIDs, nil
 }
 
-func (r repository) GetRolePermissions(ctx context.Context, org_identifier string) (*[]mongo_entity.RolePermission, error) {
+// func (r repository) GetRolePermissions(ctx context.Context, org_identifier string) (*[]mongo_entity.RolePermission, error) {
 
-	// Define filter to find the role permissions by its ID
-	filter := bson.M{"identifier": org_identifier}
-	// Find the user document in the "organizations" collection
-	result := r.mongoColl.FindOne(context.Background(), filter)
-	if err := result.Err(); err != nil {
-		return nil, err
-	}
+// 	// Define filter to find the role permissions by its ID
+// 	filter := bson.M{"identifier": org_identifier}
+// 	// Find the user document in the "organizations" collection
+// 	result := r.mongoColl.FindOne(context.Background(), filter)
+// 	if err := result.Err(); err != nil {
+// 		return nil, err
+// 	}
 
-	// Decode the organization document into a struct
-	var org mongo_entity.Organization
-	if err := result.Decode(&org); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, &util.NotFoundError{Path: "Role Permissions"}
-		}
-		return nil, err
-	}
+// 	// Decode the organization document into a struct
+// 	var org mongo_entity.Organization
+// 	if err := result.Decode(&org); err != nil {
+// 		if err == mongo.ErrNoDocuments {
+// 			return nil, &util.NotFoundError{Path: "Role Permissions"}
+// 		}
+// 		return nil, err
+// 	}
 
-	return &org.RolePermissions, nil
-}
+// 	return &org.RolePermissions, nil
+// }

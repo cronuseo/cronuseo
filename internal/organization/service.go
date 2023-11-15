@@ -19,6 +19,7 @@ type Service interface {
 	Create(ctx context.Context, req OrganizationCreationRequest) (Organization, error)
 	RegenerateAPIKey(ctx context.Context, id string) (Organization, error)
 	Delete(ctx context.Context, id string) (Organization, error)
+	CheckOrgExistByIdentifier(ctx context.Context, identifier string) (bool, error)
 }
 
 type Organization struct {
@@ -26,8 +27,13 @@ type Organization struct {
 }
 
 type OrganizationCreationRequest struct {
-	Identifier  string `json:"identifier" db:"identifier"`
-	DisplayName string `json:"display_name" db:"display_name"`
+	Identifier  string                  `json:"identifier" bson:"identifier"`
+	DisplayName string                  `json:"display_name" bson:"display_name"`
+	API_KEY     string                  `json:"api_key" bson:"api_key"`
+	Resources   []mongo_entity.Resource `json:"resources,omitempty" bson:"resources"`
+	Users       []mongo_entity.User     `json:"users,omitempty" bson:"users"`
+	Roles       []mongo_entity.Role     `json:"roles,omitempty" bson:"roles"`
+	Groups      []mongo_entity.Group    `json:"groups,omitempty" bson:"groups"`
 }
 
 func (m OrganizationCreationRequest) Validate() error {
@@ -96,6 +102,10 @@ func (s service) Create(ctx context.Context, req OrganizationCreationRequest) (O
 		Identifier:  req.Identifier,
 		DisplayName: req.DisplayName,
 		API_KEY:     APIKey,
+		Users:       req.Users,
+		Groups:      req.Groups,
+		Roles:       req.Roles,
+		Resources:   req.Resources,
 	})
 	if err != nil {
 		s.logger.Error("Error while creating organization.")
@@ -157,4 +167,9 @@ func (s service) Query(ctx context.Context) ([]Organization, error) {
 		result = append(result, Organization{item})
 	}
 	return result, nil
+}
+
+func (s service) CheckOrgExistByIdentifier(ctx context.Context, identifier string) (bool, error) {
+
+	return s.repo.CheckOrgExistByIdentifier(ctx, identifier)
 }

@@ -78,20 +78,20 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 		user_roles_map = append(user_roles_map, role.Hex())
 	}
 
-	role_permissions, err := s.repo.GetRolePermissions(ctx, org_identifier)
-	if err != nil {
-		s.logger.Error("Error while retrieving user roles.",
-			zap.String("org_identifier", org_identifier), zap.String("username", req.Username))
-		return false, err
-	}
+	// role_permissions, err := s.repo.GetRolePermissions(ctx, org_identifier)
+	// if err != nil {
+	// 	s.logger.Error("Error while retrieving user roles.",
+	// 		zap.String("org_identifier", org_identifier), zap.String("username", req.Username))
+	// 	return false, err
+	// }
 	permissions := map[string]interface{}{}
-	for _, role_permission := range *role_permissions {
-		var p []map[string]interface{}
-		for _, permission_obj := range role_permission.Permissions {
-			p = append(p, map[string]interface{}{"action": permission_obj.Action, "resource": permission_obj.Resource})
-		}
-		permissions[role_permission.RoleID.Hex()] = p
-	}
+	// for _, role_permission := range *role_permissions {
+	// 	var p []map[string]interface{}
+	// 	for _, permission_obj := range role_permission.Permissions {
+	// 		p = append(p, map[string]interface{}{"action": permission_obj.Action, "resource": permission_obj.Resource})
+	// 	}
+	// 	permissions[role_permission.RoleID.Hex()] = p
+	// }
 
 	opa := map[string]interface{}{
 		"user":     req.Username,

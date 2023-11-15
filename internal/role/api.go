@@ -16,8 +16,6 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
-	router.GET("/:id/permission", res.getPermissions)
-	router.PATCH("/:id/permission", res.patchPermissions)
 }
 
 type role struct {
@@ -129,49 +127,4 @@ func (r role) delete(c echo.Context) error {
 		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusNoContent, "")
-}
-
-// @Description Patch role permission.
-// @Tags        Role
-// @Accept      json
-// @Param org_id path string true "Organization ID"
-// @Param id path string true "Role ID"
-// @Param request body PatchRolePermissionRequest true "body"
-// @Produce     json
-// @Success     201 {object}  Role
-// @failure     400,403,404,500
-// @Router      /{org_id}/role/{id}/permission [patch]
-func (r role) patchPermissions(c echo.Context) error {
-
-	var input PatchRolePermissionRequest
-	if err := c.Bind(&input); err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
-	}
-
-	err := r.service.PatchPermissions(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
-	if err != nil {
-		return util.HandleError(err)
-	}
-	return c.JSON(http.StatusOK, "")
-}
-
-// @Description Get all permissions for role.
-// @Tags        Role
-// @Param org_id path string true "Organization ID"
-// @Param id path string true "Role ID"
-// @Produce     json
-// @Success     200 {array}  mongo_entity.Permission
-// @failure     500
-// @Router      /{org_id}/role/{id}/permission [get]
-func (r role) getPermissions(c echo.Context) error {
-
-	org_id := c.Param("org_id")
-	id := c.Param("id")
-
-	// Get all permissions.
-	permissions, err := r.service.GetPermissions(c.Request().Context(), org_id, id)
-	if err != nil {
-		return util.HandleError(err)
-	}
-	return c.JSON(http.StatusOK, permissions)
 }
