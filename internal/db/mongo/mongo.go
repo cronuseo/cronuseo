@@ -21,7 +21,7 @@ type MongoDB struct {
 	MongoConfig util.MongoDBConfig
 }
 
-func Init(cfg *config.Config, logger *zap.Logger) *MongoDB {
+func Init(cfg *config.Config, logger *zap.Logger) (*MongoDB, error) {
 
 	credential := options.Credential{
 		Username: cfg.Database.User,
@@ -30,7 +30,7 @@ func Init(cfg *config.Config, logger *zap.Logger) *MongoDB {
 	mongoClient, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(cfg.Database.URL).SetAuth(credential))
 	if err != nil {
 		logger.Fatal("Error while connecting to MongoDB", zap.String("error", err.Error()))
-		os.Exit(-1)
+		return nil, err
 	}
 
 	mongoConfig := util.MongoDBConfig{
@@ -41,7 +41,7 @@ func Init(cfg *config.Config, logger *zap.Logger) *MongoDB {
 	mongodb := &MongoDB{MongoClient: mongoClient, MongoConfig: mongoConfig}
 	// Initialize default organization
 	initializeOrganization(mongodb, cfg, logger)
-	return mongodb
+	return mongodb, nil
 }
 
 func initializeOrganization(mongodb *MongoDB, cfg *config.Config, logger *zap.Logger) {

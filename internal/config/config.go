@@ -24,11 +24,22 @@ type Config struct {
 		Password string `yaml:"password" env:"Password,secret"`
 	} `yaml:"database"`
 	RootOrganization struct {
-		Name string `yaml:"name" env:"Name"`
+		Name            string `yaml:"name" env:"Name"`
+		AdminIdentifier string `yaml:"admin_identfier" env:"AdminIdentifier"`
+		AdminName       string `yaml:"admin_name" env:"AdminName"`
+		AdminRoleName   string `yaml:"admin_role_name" env:"AdminRoleName"`
 	} `yaml:"root_organization"`
 	OPA struct {
 		RBAC string `yaml:"rbac" env:"RBAC"`
 	} `yaml:"opa"`
+	SyetemResources struct {
+		Organizations []string `yaml:"organizations"`
+		Users         []string `yaml:"users"`
+		Roles         []string `yaml:"roles"`
+		Groups        []string `yaml:"groups"`
+		Resources     []string `yaml:"resources"`
+		Polices       []string `yaml:"policies"`
+	} `yaml:"system_resources"`
 }
 
 func Nested(target interface{}, fieldRules ...*validation.FieldRules) *validation.FieldRules {

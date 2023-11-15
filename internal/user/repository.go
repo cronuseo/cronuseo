@@ -14,6 +14,7 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (*mongo_entity.User, error)
+	GetIdByIdentifier(ctx context.Context, org_id string, identifier string) (string, error)
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.User, error)
 	Create(ctx context.Context, org_id string, user mongo_entity.User) error
 	Update(ctx context.Context, org_id string, id string, update_user UpdateUser) error
@@ -73,6 +74,35 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 	return &org.Users[0], nil
 }
 
+// Get user id by identifier.
+func (r repository) GetIdByIdentifier(ctx context.Context, org_id string, identifier string) (string, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return "", err
+	}
+
+	// Define filter to find the user by its ID
+	filter := bson.M{"_id": orgId, "users.identifier": identifier}
+	projection := bson.M{"users.$": 1}
+	// Find the user document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	if err := result.Err(); err != nil {
+		return "", err
+	}
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return "", &util.NotFoundError{Path: "User"}
+		}
+		return "", err
+	}
+
+	return org.Users[0].ID.Hex(), nil
+}
+
 // Create new user.
 func (r repository) Create(ctx context.Context, org_id string, user mongo_entity.User) error {
 
@@ -106,12 +136,12 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 
 	filter := bson.M{"_id": orgId, "users._id": userId}
 	update := bson.M{"$set": bson.M{}}
-	if update_user.FirstName != nil && *update_user.FirstName != "" {
-		update["$set"].(bson.M)["users.$.first_name"] = *update_user.FirstName
-	}
-	if update_user.LastName != nil && *update_user.FirstName != "" {
-		update["$set"].(bson.M)["users.$.last_name"] = *update_user.LastName
-	}
+	// if update_user.FirstName != nil && *update_user.FirstName != "" {
+	// 	update["$set"].(bson.M)["users.$.first_name"] = *update_user.FirstName
+	// }
+	// if update_user.LastName != nil && *update_user.FirstName != "" {
+	// 	update["$set"].(bson.M)["users.$.last_name"] = *update_user.LastName
+	// }
 	_, err = r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err

@@ -14,6 +14,7 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, id string) (Organization, error)
+	GetIdByIdentifier(ctx context.Context, identifier string) (string, error)
 	Query(ctx context.Context) ([]Organization, error)
 	Create(ctx context.Context, req OrganizationCreationRequest) (Organization, error)
 	RegenerateAPIKey(ctx context.Context, id string) (Organization, error)
@@ -53,6 +54,16 @@ func (s service) Get(ctx context.Context, id string) (Organization, error) {
 		return Organization{}, &util.NotFoundError{Path: "Organization"}
 	}
 	return Organization{*org}, nil
+}
+
+// Get organization id by identifier.
+func (s service) GetIdByIdentifier(ctx context.Context, id string) (string, error) {
+
+	orgId, err := s.repo.GetIdByIdentifier(ctx, id)
+	if err != nil {
+		return "", &util.NotFoundError{Path: "Organization"}
+	}
+	return orgId, nil
 }
 
 // Create new organization.

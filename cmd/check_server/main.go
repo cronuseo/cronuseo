@@ -54,10 +54,16 @@ func main() {
 	}
 
 	// Set up logger.
-	logger := logger.Init(cfg)
+	logger, err := logger.Init(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v\n", err)
+	}
 
 	// Mongo client.
-	mongodb := db.Init(cfg, logger)
+	mongodb, err := db.Init(cfg, logger)
+	if err != nil {
+		logger.Fatal("Failed to initialize MongoDB client", zap.Error(err))
+	}
 
 	// OPA policy.
 	r := rego.New(

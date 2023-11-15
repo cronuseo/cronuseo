@@ -47,6 +47,14 @@ func (m mockRepository) Get(ctx context.Context, id string) (*mongo_entity.Organ
 	}
 	return nil, &util.NotFoundError{Path: "Organization"}
 }
+func (m mockRepository) GetIdByIdentifier(ctx context.Context, identifier string) (string, error) {
+	for _, org := range m.orgs {
+		if org.Identifier == identifier {
+			return org.ID.Hex(), nil
+		}
+	}
+	return "", &util.NotFoundError{Path: "Organization"}
+}
 func (m *mockRepository) Create(ctx context.Context, organization mongo_entity.Organization) (string, error) {
 	id := primitive.NewObjectID()
 	organization.ID = id

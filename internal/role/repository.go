@@ -77,7 +77,7 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 }
 
 // Create new role.
-func (r repository) Create(ctx context.Context, org_id string, user mongo_entity.Role) error {
+func (r repository) Create(ctx context.Context, org_id string, role mongo_entity.Role) error {
 
 	orgId, err := primitive.ObjectIDFromHex(org_id)
 	if err != nil {
@@ -85,15 +85,24 @@ func (r repository) Create(ctx context.Context, org_id string, user mongo_entity
 	}
 	// Update the APIResources array for the given organization
 	filter := bson.M{"_id": orgId}
-	update := bson.M{"$push": bson.M{"roles": user}}
+	update := bson.M{"$push": bson.M{"roles": role}}
 	_, err = r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
 	}
 
+	for _, userId := range role.Users {
+		filter := bson.M{"_id": orgId, "users._id": userId}
+		update := bson.M{"$addToSet": bson.M{"users.$.roles": role.ID}}
+		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Set role permissions
 	rolePermission := mongo_entity.RolePermission{
-		RoleID:      user.ID,
+		RoleID:      role.ID,
 		Permissions: []mongo_entity.Permission{},
 	}
 	filter = bson.M{"_id": orgId}

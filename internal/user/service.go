@@ -13,6 +13,7 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (User, error)
+	GetIdByIdentifier(ctx context.Context, org_id string, identifier string) (string, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
@@ -25,11 +26,11 @@ type User struct {
 }
 
 type CreateUserRequest struct {
-	Username  string               `json:"username"`
-	FirstName string               `json:"first_name"`
-	LastName  string               `json:"last_name"`
-	Roles     []primitive.ObjectID `json:"roles"`
-	Groups    []primitive.ObjectID `json:"groups"`
+	Username       string                 `json:"username" bson:"username"`
+	Identifier     string                 `json:"email" bson:"email"`
+	UserProperties map[string]interface{} `json:"user_properties"`
+	Roles          []primitive.ObjectID   `json:"roles,omitempty" bson:"roles"`
+	Groups         []primitive.ObjectID   `json:"groups,omitempty" bson:"groups"`
 }
 
 func (m CreateUserRequest) Validate() error {
@@ -40,21 +41,19 @@ func (m CreateUserRequest) Validate() error {
 }
 
 type UpdateUserRequest struct {
-	FirstName     *string              `json:"first_name"`
-	LastName      *string              `json:"last_name"`
-	AddedRoles    []primitive.ObjectID `json:"added_roles"`
-	RemovedRoles  []primitive.ObjectID `json:"removed_roles"`
-	AddedGroups   []primitive.ObjectID `json:"added_groups"`
-	RemovedGroups []primitive.ObjectID `json:"removed_groups"`
+	UserProperties map[string]interface{} `json:"user_properties"`
+	AddedRoles     []primitive.ObjectID   `json:"added_roles"`
+	RemovedRoles   []primitive.ObjectID   `json:"removed_roles"`
+	AddedGroups    []primitive.ObjectID   `json:"added_groups"`
+	RemovedGroups  []primitive.ObjectID   `json:"removed_groups"`
 }
 
 type UpdateUser struct {
-	FirstName     *string              `json:"first_name"`
-	LastName      *string              `json:"last_name"`
-	AddedRoles    []primitive.ObjectID `json:"added_roles"`
-	RemovedRoles  []primitive.ObjectID `json:"removed_roles"`
-	AddedGroups   []primitive.ObjectID `json:"added_groups"`
-	RemovedGroups []primitive.ObjectID `json:"removed_groups"`
+	UserProperties map[string]interface{} `json:"user_properties"`
+	AddedRoles     []primitive.ObjectID   `json:"added_roles"`
+	RemovedRoles   []primitive.ObjectID   `json:"removed_roles"`
+	AddedGroups    []primitive.ObjectID   `json:"added_groups"`
+	RemovedGroups  []primitive.ObjectID   `json:"removed_groups"`
 }
 
 func (m UpdateUserRequest) Validate() error {
@@ -82,6 +81,19 @@ func (s service) Get(ctx context.Context, org_id string, id string) (User, error
 		return User{}, &util.NotFoundError{Path: "User"}
 	}
 	return User{*user}, err
+}
+
+// Get user id by identifier.
+func (s service) GetIdByIdentifier(ctx context.Context, org_id string, identifier string) (string, error) {
+
+	userId, err := s.repo.GetIdByIdentifier(ctx, org_id, identifier)
+	if err != nil {
+		s.logger.Error("Error while getting the user id.",
+			zap.String("organization_id", org_id),
+			zap.String("identifier", identifier))
+		return "", &util.NotFoundError{Path: "User"}
+	}
+	return userId, err
 }
 
 // Create new user.
@@ -119,12 +131,12 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 	}
 
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
-		ID:        userId,
-		Username:  req.Username,
-		FirstName: req.FirstName,
-		LastName:  req.LastName,
-		Roles:     req.Roles,
-		Groups:    req.Groups,
+		ID:             userId,
+		Username:       req.Username,
+		Identifier:     req.Identifier,
+		UserProperties: req.UserProperties,
+		Roles:          req.Roles,
+		Groups:         req.Groups,
 	})
 
 	if err != nil {
@@ -203,12 +215,11 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 	}
 
 	if err := s.repo.Update(ctx, org_id, id, UpdateUser{
-		FirstName:     req.FirstName,
-		LastName:      req.LastName,
-		AddedRoles:    added_roles,
-		RemovedRoles:  removed_roles,
-		AddedGroups:   added_groups,
-		RemovedGroups: removed_groups,
+		UserProperties: req.UserProperties,
+		AddedRoles:     added_roles,
+		RemovedRoles:   removed_roles,
+		AddedGroups:    added_groups,
+		RemovedGroups:  removed_groups,
 	}); err != nil {
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),
