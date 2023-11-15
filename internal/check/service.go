@@ -8,7 +8,7 @@ import (
 )
 
 type Service interface {
-	Check(ctx context.Context, org_identifier string, req CheckRequest, apiKey string) (bool, error)
+	Check(ctx context.Context, org_identifier string, req CheckRequest, apiKey string, skipValidation bool) (bool, error)
 }
 
 type CheckRequest struct {
@@ -27,13 +27,15 @@ func NewService(repo Repository, logger *zap.Logger) Service {
 	return service{repo: repo, logger: logger}
 }
 
-func (s service) Check(ctx context.Context, org_identifier string, req CheckRequest, apiKey string) (bool, error) {
+func (s service) Check(ctx context.Context, org_identifier string, req CheckRequest, apiKey string, skipValidation bool) (bool, error) {
 
 	// Check resource already exists.
-	validated, _ := s.repo.ValidateAPIKey(ctx, org_identifier, apiKey)
-	if !validated {
-		s.logger.Debug("API_KEY is not valid.")
-		return false, &util.UnauthorizedError{}
+	if !skipValidation {
+		validated, _ := s.repo.ValidateAPIKey(ctx, org_identifier, apiKey)
+		if !validated {
+			s.logger.Debug("API_KEY is not valid.")
+			return false, &util.UnauthorizedError{}
+		}
 	}
 
 	user_roles, err := s.repo.GetUserRoles(ctx, org_identifier, req.Identifier)

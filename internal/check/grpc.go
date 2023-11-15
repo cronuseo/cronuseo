@@ -35,7 +35,7 @@ func (s grpcService) Check(ctx context.Context, req *proto.GrpcCheckRequest) (*p
 		Resource:   req.Resource,
 	}
 
-	allow, err := s.service.Check(context.Background(), req.Organization, input, apiKey)
+	allow, err := s.service.Check(context.Background(), req.Organization, input, apiKey, false)
 	if err != nil {
 		return nil, util.HandleError(err)
 	}

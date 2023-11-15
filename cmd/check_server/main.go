@@ -65,7 +65,7 @@ func main() {
 
 	// Start the REST server
 	go func() {
-		e := BuildHandler(cfg, logger, mongodb)
+		e := BuildServer(cfg, logger, mongodb)
 		logger.Info("Starting REST server", zap.String("REST server_endpoint", cfg.Endpoint.Check_REST))
 		e.Logger.Fatal(e.Start(cfg.Endpoint.Check_REST))
 	}()
@@ -90,34 +90,38 @@ func main() {
 
 	logger.Info("Shutting down servers...")
 	os.Exit(0)
-
 }
 
-// buildHandler builds the echo router.
-func BuildHandler(
+// BuildServer builds the echo server.
+func BuildServer(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
 	mongodb *db.MongoDB, // MongoDB
 ) *echo.Echo {
 
-	router := echo.New()
+	e := echo.New()
 
-	// Set up CORS.
-	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	// Middleware setup.
+	setupMiddleware(e, cfg)
+	// API endpoints.
+	apiV1 := e.Group("/api/v1")
+
+	checkRepo := check.NewRepository(mongodb)
+	checkService := check.NewService(checkRepo, logger)
+	check.RegisterHandlers(apiV1, checkService)
+	return e
+}
+
+func setupMiddleware(e *echo.Echo, cfg *config.Config) {
+	// CORS middleware configuration.
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"}, // API_KEY is used for permission checking SDKs
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"},
 		AllowOrigins:     []string{"http://localhost:3000"},
 	}))
-	// Echo logger middleware.
-	router.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+
+	// Logger middleware.
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${time_rfc3339}; method=${method}; uri=${uri}; status=${status};\n",
 	}))
-
-	// API endpoints.
-	rg := router.Group("/api/v1")
-
-	// Here we register all the handlers.
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongodb), logger))
-
-	return router
 }

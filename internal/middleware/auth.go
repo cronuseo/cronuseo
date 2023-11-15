@@ -3,17 +3,27 @@ package middleware
 import (
 	"fmt"
 	"net/http"
+	"regexp"
+	"strings"
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt"
 	jwtv4 "github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
+	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"go.uber.org/zap"
 )
 
-func Auth(cfg *config.Config, logger *zap.Logger) echo.MiddlewareFunc {
+type MethodPath struct {
+	Method   string
+	Path     string
+	Resource string
+}
+
+func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[MethodPath][]string, checkService check.Service) echo.MiddlewareFunc {
 
 	jwks, err := keyfunc.Get(cfg.Auth.JWKS, keyfunc.Options{
 		RefreshErrorHandler: func(err error) {
@@ -25,31 +35,90 @@ func Auth(cfg *config.Config, logger *zap.Logger) echo.MiddlewareFunc {
 		logger.Error("Failed to create JWKs from resource at the given URL.", zap.Error(err))
 	}
 
-	// initialize JWT middleware instance
-	return middleware.JWTWithConfig(middleware.JWTConfig{
-		// skip public endpoints
-		// Skipper: func(context echo.Context) bool {
-		// 	return context.Path() == "/"
-		// },
-		KeyFunc: func(token *jwt.Token) (interface{}, error) {
-			// a hack to convert jwt -> v4 tokens
-			t, _, err := new(jwtv4.Parser).ParseUnverified(token.Raw, jwtv4.MapClaims{})
-			if err != nil {
-				return nil, err
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			keyFunc := func(token *jwt.Token) (interface{}, error) {
+				t, _, err := new(jwtv4.Parser).ParseUnverified(token.Raw, jwtv4.MapClaims{})
+				if err != nil {
+					return nil, err
+				}
+
+				claims, ok := t.Claims.(jwtv4.MapClaims)
+				if !ok {
+					return nil, fmt.Errorf("unexpected claims type")
+				}
+
+				//Extract and validate scopes
+				sub, ok := claims["sub"].(string)
+				if !ok {
+					return nil, fmt.Errorf("invalid or missing sub claim")
+				}
+
+				methodPath := MethodPath{
+					Method: c.Request().Method,
+					Path:   c.Path(),
+				}
+
+				endpointPermissions, err := getPermissionsForMethodPath(methodPath, requiredPermissions)
+				if err != nil {
+					return nil, err
+				}
+
+				if !checkPermissions(sub, endpointPermissions, cfg, checkService) {
+					return nil, echo.NewHTTPError(http.StatusForbidden, "insufficient scope for this resource")
+				}
+
+				return jwks.Keyfunc(t)
 			}
-			claims, ok := t.Claims.(jwtv4.MapClaims)
-			if !ok {
-				return nil, fmt.Errorf("unexpected claims type")
+
+			config := middleware.JWTConfig{
+				KeyFunc: keyFunc,
 			}
-			// Check the "sub" claim
-			sub, ok := claims["sub"].(string)
-			if !ok || sub == "" {
-				// Handle the missing or invalid sub claim
-				return nil, fmt.Errorf("invalid or missing 'sub' claim")
+
+			if err := middleware.JWTWithConfig(config)(next)(c); err != nil {
+				return err
 			}
-			return jwks.Keyfunc(t)
-		},
-	})
+
+			return next(c)
+		}
+	}
+}
+
+// getScopesForMethodPath returns the scopes for a given method and path based on wildcard patterns.
+func getPermissionsForMethodPath(methodPath MethodPath, requiredPermissions map[MethodPath][]string) ([]mongo_entity.Permission, error) {
+	for pattern, permissions := range requiredPermissions {
+		pathMatched, err := regexp.MatchString(pattern.Path, methodPath.Path)
+		if err != nil {
+			return nil, err
+		}
+		methodMatched := strings.EqualFold(pattern.Method, methodPath.Method) || pattern.Method == "*"
+
+		if pathMatched && methodMatched {
+			requiredPermissions := []mongo_entity.Permission{}
+			for _, permission := range permissions {
+				requiredPermissions = append(requiredPermissions, mongo_entity.Permission{Action: permission, Resource: pattern.Resource})
+			}
+			return requiredPermissions, nil
+		}
+	}
+	return nil, fmt.Errorf("no matching scopes found for method and path: %s %s", methodPath.Method, methodPath.Path)
+}
+
+// checkScopes validates the required scopes are present for a given endpoint.
+func checkPermissions(sub string, requiredPermissions []mongo_entity.Permission, cfg *config.Config, checkService check.Service) bool {
+
+	for _, permission := range requiredPermissions {
+		checkReq := check.CheckRequest{
+			Identifier: sub,
+			Action:     permission.Action,
+			Resource:   permission.Resource,
+		}
+		allow, _ := checkService.Check(nil, cfg.RootOrganization.Name, checkReq, "nil", true)
+		if !allow {
+			return false
+		}
+	}
+	return true
 }
 
 func MockAuthHeader() http.Header {

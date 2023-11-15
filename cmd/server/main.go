@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
 	_ "github.com/shashimalcse/cronuseo/docs"
+	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
 	db "github.com/shashimalcse/cronuseo/internal/db/mongo"
 	"github.com/shashimalcse/cronuseo/internal/group"
@@ -86,8 +87,14 @@ func BuildServer(
 	// API route groups.
 	apiV1 := e.Group("/api/v1")
 
+	requiredPermissions := map[mw.MethodPath][]string{
+		{Method: "GET", Path: "/api/v1/organizations", Resource: "organizations"}: {"orgs:read_all"},
+	}
+
+	checkRepo := check.NewRepository(mongodb)
+	checkService := check.NewService(checkRepo, logger)
 	// Apply middleware specific to API routes if needed.
-	apiV1.Use(mw.Auth(cfg, logger))
+	apiV1.Use(mw.Auth(cfg, logger, requiredPermissions, checkService))
 
 	// Register service handlers.
 	registerServiceHandlers(apiV1, mongodb, cfg, logger)

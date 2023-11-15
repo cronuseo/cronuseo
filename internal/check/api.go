@@ -34,7 +34,7 @@ func (r permission_service) check(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}
 
-	allow, err := r.service.Check(context.Background(), c.Param("org"), input, api_key)
+	allow, err := r.service.Check(context.Background(), c.Param("org"), input, api_key, false)
 	if err != nil {
 		return util.HandleError(err)
 	}

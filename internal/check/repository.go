@@ -54,9 +54,6 @@ func (r repository) GetUserRoles(ctx context.Context, org_identifier string, ide
 	projection := bson.M{"users.$": 1}
 	// Find the user document in the "organizations" collection
 	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
-	if err := result.Err(); err != nil {
-		return nil, err
-	}
 
 	// Decode the organization document into a struct
 	var org mongo_entity.Organization
@@ -77,9 +74,6 @@ func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, id
 	projection := bson.M{"users.$": 1}
 	// Find the user document in the "organizations" collection
 	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
-	if err := result.Err(); err != nil {
-		return nil, err
-	}
 
 	// Decode the organization document into a struct
 	var org mongo_entity.Organization
