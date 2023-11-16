@@ -14,8 +14,6 @@ root_organization:
   admin_identfier : "279a5c59-37f5-43e6-a5fb-b250752301a3"
   admin_name : "admin"
   admin_role_name : "admin"
-opa:
-  rbac: "/Users/thilinashashimal/Desktop/Cronuseo/policy/policy.rego"
 system_resources:
   organizations:
     - orgs:create

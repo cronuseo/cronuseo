@@ -26,7 +26,7 @@ You can use Docker to run cronuseo locally
 
 * ``` curl -LJO https://raw.githubusercontent.com/shashimalcse/cronuseo/HEAD/docker-compose-db.yml | curl -LJO https://raw.githubusercontent.com/shashimalcse/cronuseo/HEAD/docker-compose.yml ```
 * Prepare a [mongodb](https://hub.docker.com/_/mongo) instance ``` docker compose -f docker-compose-database.yml up```
-* Make sure to update the necessary configuration in the `config/local.yml` file, and don't forget to replace the jwks endpoint with the ones provided by your own identity provider. (only tested with [asgardeo](https://wso2.com/asgardeo/))
+* Make sure to update the necessary configuration in the `config/local.yml` file, and don't forget to replace the jwks endpoint with the ones provided by your own identity provider and admin user identifier which is sub claim value of the jwt token (user ID). (only tested with [asgardeo](https://wso2.com/asgardeo/))
 * Start management server and check server (Policy Decision Point) ``` docker compose up --build```
 
 ## How to implement RBAC using cronuseo
@@ -48,25 +48,24 @@ For example, let us look at the following role assignments:
 > Use user and group endpoints to create users and groups
 
 ```
-curl --location --request POST 'localhost:8080/api/v1/<org_id>/user' \
+curl --location --request POST 'localhost:8080/api/v1/o/<org_id>/users' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
 --header 'Authorization: <Token> \
 --data-raw '{
-  "first_name": "First Name",
-  "last_name": "Last Name",
-  "username": "Username"
+  "username": "<Username>"
+  "identidier": "<Identifier>"
 }'
 ```
 
 ```
-curl --location --request POST 'localhost:8080/api/v1/<org_id>/group' \
+curl --location --request POST 'localhost:8080/api/v1/o/<org_id>/groups' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
 --header 'Authorization: <Token> \
 --data-raw '{
-  "display_name": "Display Name",
-  "identifier": "Identifier",
+  "display_name": "<Display Name>",
+  "identifier": "<Identifier>",
   "users": [
     "<user_id>"
   ]
@@ -76,13 +75,13 @@ curl --location --request POST 'localhost:8080/api/v1/<org_id>/group' \
 > Use role endpoint to assign roles to users/groups
 
 ```
-curl --location --request POST 'localhost:8080/api/v1/<org_id>/role' \
+curl --location --request POST 'localhost:8080/api/v1/o/<org_id>/roles' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
 --header 'Authorization: <Token> \
 --data-raw '{
-  "display_name": "Display Name",
-  "identifier": "Identifier",
+  "display_name": "<Display Name>",
+  "identifier": "<Identifier>",
   "groups": [
     "<group_id>"
   ],
@@ -103,34 +102,34 @@ And this role/permission assignment:
 > Use resource `POST` request to create a resource with actions
 
 ```
-curl --location --request POST 'localhost:8080/api/v1/<org_id>/resource' \
+curl --location --request POST 'localhost:8080/api/v1/o/<org_id>/resources' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
 --header 'Authorization: <Token> \
 --data-raw '{
   "actions": [
     {
-      "display_name": "Display Name",
-      "identifier": "Identifier",
+      "display_name": "<Display Name>",
+      "identifier": "<Identifier>",
     }
   ],
-  "display_name": "Display Name",
-  "identifier": "Identifier",
+  "display_name": "<Display Name>",
+  "identifier": "<Identifier>",
 }'
 ```
 
 > Use role permission `PATCH` request to assign permission to role
 
 ```
-curl --location --request PATCH 'localhost:8080/api/v1/<org_id>/role/<role_id>/permission' \
+curl --location --request PATCH 'localhost:8080/api/v1/o/<org_id>/roles/<role_id>' \
 --header 'Content-Type: application/json' \
 --header 'Accept: application/json' \
 --header 'Authorization: <Token> \
 --data-raw '{
   "added_permissions": [
     {
-      "action": "Action Identifier",
-      "resource": "Resource Identifier"
+      "action": "<Action Identifier>",
+      "resource": "<Resource Identifier>"
     }
   ]
 }'
@@ -148,15 +147,17 @@ In this example, RBAC will make the following authorization decisions:
 > Use permission check endpoint or SDKs to get authorization decisions
 
 ```
-curl --location --request POST 'localhost:8081/api/v1/<org_identifier>/permission/check' \
+curl --location --request POST 'localhost:8081/api/v1/o/<org_identifier>/check' \
 --header 'Content-Type: application/json' \
 --header 'API_KEY: <API_KEY>' \
 --data-raw '{
-  "action": "Action Identifier",
-  "resource": "Resource Identifier",
-  "username": "shashimal20"
+  "action": "<Action Identifier>",
+  "resource": "<Resource Identifier>",
+  "identifier": "<User Identifier>"
 }'
 ```
+
+> You can check permissions  by GRPC endpoint as well.
 
 > Response will be `true` or `false`
 
