@@ -176,6 +176,9 @@ endpoints:
       - method: "PATCH"
         required_permissions:
           - "resources:update"
+      - method: "PUT"
+        required_permissions:
+          - "resources:update"
     resource: "resources"       
 
   - path: "/api/v1/o/[^/]+/policies$"
