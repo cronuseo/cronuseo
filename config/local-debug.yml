@@ -124,6 +124,9 @@ endpoints:
       - method: "PATCH"
         required_permissions:
           - "roles:update"
+      - method: "PUT"
+        required_permissions:
+          - "roles:update"          
     resource: "roles"
 
   - path: "/api/v1/o/[^/]+/groups$"

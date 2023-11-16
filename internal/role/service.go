@@ -16,6 +16,7 @@ type Service interface {
 	Query(ctx context.Context, org_id string, filter Filter) ([]Role, error)
 	Create(ctx context.Context, org_id string, input CreateRoleRequest) (Role, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateRoleRequest) (Role, error)
+	Patch(ctx context.Context, org_id string, id string, input PatchRoleRequest) (Role, error)
 	Delete(ctx context.Context, org_id string, id string) error
 	GetPermissions(ctx context.Context, org_id string, role_id string) ([]mongo_entity.Permission, error)
 }
@@ -27,8 +28,8 @@ type Role struct {
 type CreateRoleRequest struct {
 	Identifier  string                    `json:"identifier"`
 	DisplayName string                    `json:"display_name"`
-	Users       []primitive.ObjectID      `json:"users"`
-	Groups      []primitive.ObjectID      `json:"groups"`
+	Users       []primitive.ObjectID      `json:"users,omitempty" bson:"users"`
+	Groups      []primitive.ObjectID      `json:"groups,omitempty" bson:"groups"`
 	Permissions []mongo_entity.Permission `json:"permissions,omitempty" bson:"permissions"`
 }
 
@@ -39,23 +40,29 @@ func (m CreateRoleRequest) Validate() error {
 }
 
 type UpdateRoleRequest struct {
-	DisplayName        *string                   `json:"display_name"`
-	AddedUsers         []primitive.ObjectID      `json:"added_users"`
-	RemovedUser        []primitive.ObjectID      `json:"removed_users"`
-	AddedGroups        []primitive.ObjectID      `json:"added_groups"`
-	RemovedGroups      []primitive.ObjectID      `json:"removed_groups"`
-	AddedPermissions   []mongo_entity.Permission `json:"added_permissions"`
-	RemovedPermissions []mongo_entity.Permission `json:"removed_permissions"`
+	DisplayName *string `json:"display_name"`
+}
+
+type PatchRoleRequest struct {
+	AddedUsers         []primitive.ObjectID      `json:"added_users,omitempty" bson:"added_users"`
+	RemovedUser        []primitive.ObjectID      `json:"removed_users,omitempty" bson:"removed_users"`
+	AddedGroups        []primitive.ObjectID      `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups      []primitive.ObjectID      `json:"removed_groups,omitempty" bson:"removed_groups"`
+	AddedPermissions   []mongo_entity.Permission `json:"added_permissions,omitempty" bson:"added_permissions"`
+	RemovedPermissions []mongo_entity.Permission `json:"removed_permissions,omitempty" bson:"removed_permissions"`
 }
 
 type UpdateRole struct {
-	DisplayName        *string                   `json:"display_name"`
-	AddedUsers         []primitive.ObjectID      `json:"added_users"`
-	RemovedUser        []primitive.ObjectID      `json:"removed_users"`
-	AddedGroups        []primitive.ObjectID      `json:"added_groups"`
-	RemovedGroups      []primitive.ObjectID      `json:"removed_groups"`
-	AddedPermissions   []mongo_entity.Permission `json:"added_permissions"`
-	RemovedPermissions []mongo_entity.Permission `json:"removed_permissions"`
+	DisplayName *string `json:"display_name" bson:"display_name"`
+}
+
+type PatchRole struct {
+	AddedUsers         []primitive.ObjectID      `json:"added_users,omitempty" bson:"added_users"`
+	RemovedUser        []primitive.ObjectID      `json:"removed_users,omitempty" bson:"removed_users"`
+	AddedGroups        []primitive.ObjectID      `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups      []primitive.ObjectID      `json:"removed_groups,omitempty" bson:"removed_groups"`
+	AddedPermissions   []mongo_entity.Permission `json:"added_permissions,omitempty" bson:"added_permissions"`
+	RemovedPermissions []mongo_entity.Permission `json:"removed_permissions,omitempty" bson:"removed_permissions"`
 }
 
 func (m UpdateRoleRequest) Validate() error {
@@ -127,13 +134,34 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 		}
 	}
 
+	var users []primitive.ObjectID
+	if req.Users == nil {
+		users = []primitive.ObjectID{}
+	} else {
+		users = req.Users
+	}
+
+	var groups []primitive.ObjectID
+	if req.Groups == nil {
+		groups = []primitive.ObjectID{}
+	} else {
+		groups = req.Groups
+	}
+
+	var permisions []mongo_entity.Permission
+	if req.Permissions == nil {
+		permisions = []mongo_entity.Permission{}
+	} else {
+		permisions = req.Permissions
+	}
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.Role{
 		ID:          roleId,
 		Identifier:  req.Identifier,
 		DisplayName: req.DisplayName,
-		Users:       req.Users,
-		Groups:      req.Groups,
-		Permissions: req.Permissions,
+		Users:       users,
+		Groups:      groups,
+		Permissions: permisions,
 	})
 
 	if err != nil {
@@ -147,6 +175,28 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 
 // Update role.
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateRoleRequest) (Role, error) {
+
+	_, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Role not exists.", zap.String("role_id", id))
+		return Role{}, &util.NotFoundError{Path: "Role " + id + " not exists."}
+	}
+
+	if err := s.repo.Update(ctx, org_id, id, UpdateRole{
+		DisplayName: req.DisplayName,
+	}); err != nil {
+		s.logger.Error("Error while updating role.", zap.String("organization_id", org_id), zap.String("role_id", id))
+		return Role{}, err
+	}
+	updatedRole, err := s.repo.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Role not exists.", zap.String("role_id", id))
+		return Role{}, &util.NotFoundError{Path: "Role " + id + " not exists."}
+	}
+	return Role{*updatedRole}, nil
+}
+
+func (s service) Patch(ctx context.Context, org_id string, id string, req PatchRoleRequest) (Role, error) {
 
 	_, err := s.Get(ctx, org_id, id)
 	if err != nil {
@@ -239,8 +289,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 
 	}
 
-	if err := s.repo.Update(ctx, org_id, id, UpdateRole{
-		DisplayName:        req.DisplayName,
+	if err := s.repo.Patch(ctx, org_id, id, PatchRole{
 		AddedUsers:         req.AddedUsers,
 		RemovedUser:        req.RemovedUser,
 		AddedGroups:        req.AddedGroups,

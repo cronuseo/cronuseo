@@ -18,6 +18,7 @@ type Repository interface {
 	// QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]entity.Role, error)
 	Create(ctx context.Context, org_id string, user mongo_entity.Role) error
 	Update(ctx context.Context, org_id string, id string, update_role UpdateRole) error
+	Patch(ctx context.Context, org_id string, id string, update_role PatchRole) error
 	Delete(ctx context.Context, org_id string, id string) error
 	CheckRoleExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckRoleExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
@@ -133,20 +134,34 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (r repository) Patch(ctx context.Context, org_id string, id string, patch_role PatchRole) error {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return err
+	}
+
+	roleId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
 
 	// add users
-	if len(update_role.AddedUsers) > 0 {
+	if len(patch_role.AddedUsers) > 0 {
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
 		update := bson.M{"$push": bson.M{"roles.$.users": bson.M{
-			"$each": update_role.AddedUsers,
+			"$each": patch_role.AddedUsers,
 		}}}
 		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 		if err != nil {
 			return err
 		}
 
-		for _, userId := range update_role.AddedUsers {
+		for _, userId := range patch_role.AddedUsers {
 			filter := bson.M{"_id": orgId, "users._id": userId}
 			update := bson.M{"$addToSet": bson.M{"users.$.roles": roleId}}
 			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
@@ -157,16 +172,16 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 	}
 
 	// remove users
-	if len(update_role.RemovedUser) > 0 {
+	if len(patch_role.RemovedUser) > 0 {
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
-		update := bson.M{"$pull": bson.M{"roles.$.users": bson.M{"$in": update_role.RemovedUser}}}
+		update := bson.M{"$pull": bson.M{"roles.$.users": bson.M{"$in": patch_role.RemovedUser}}}
 		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err
 		}
 
-		for _, userId := range update_role.RemovedUser {
+		for _, userId := range patch_role.RemovedUser {
 			filter := bson.M{"_id": orgId, "users._id": userId}
 			update := bson.M{"$pull": bson.M{"users.$.roles": roleId}}
 			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
@@ -177,18 +192,18 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 	}
 
 	// add groups
-	if len(update_role.AddedGroups) > 0 {
+	if len(patch_role.AddedGroups) > 0 {
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
 		update := bson.M{"$push": bson.M{"roles.$.groups": bson.M{
-			"$each": update_role.AddedGroups,
+			"$each": patch_role.AddedGroups,
 		}}}
 		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 		if err != nil {
 			return err
 		}
 
-		for _, groupId := range update_role.AddedGroups {
+		for _, groupId := range patch_role.AddedGroups {
 			filter := bson.M{"_id": orgId, "groups._id": groupId}
 			update := bson.M{"$addToSet": bson.M{"groups.$.roles": roleId}}
 			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
@@ -200,16 +215,16 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 	}
 
 	// remove groups
-	if len(update_role.RemovedGroups) > 0 {
+	if len(patch_role.RemovedGroups) > 0 {
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
-		update := bson.M{"$pull": bson.M{"roles.$.groups": bson.M{"$in": update_role.RemovedGroups}}}
+		update := bson.M{"$pull": bson.M{"roles.$.groups": bson.M{"$in": patch_role.RemovedGroups}}}
 		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err
 		}
 
-		for _, groupId := range update_role.RemovedGroups {
+		for _, groupId := range patch_role.RemovedGroups {
 			filter := bson.M{"_id": orgId, "groups._id": groupId}
 			update := bson.M{"$pull": bson.M{"groups.$.roles": roleId}}
 			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
@@ -220,11 +235,11 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 	}
 
 	// add permissions
-	if len(update_role.AddedPermissions) > 0 {
+	if len(patch_role.AddedPermissions) > 0 {
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
 		update := bson.M{"$push": bson.M{"roles.$.permissions": bson.M{
-			"$each": update_role.AddedPermissions,
+			"$each": patch_role.AddedPermissions,
 		}}}
 		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
 		if err != nil {
@@ -233,10 +248,10 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 	}
 
 	// remove permissions
-	if len(update_role.RemovedPermissions) > 0 {
+	if len(patch_role.RemovedPermissions) > 0 {
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
-		update := bson.M{"$pull": bson.M{"roles.$.permissions": bson.M{"$in": update_role.RemovedPermissions}}}
+		update := bson.M{"$pull": bson.M{"roles.$.permissions": bson.M{"$in": patch_role.RemovedPermissions}}}
 		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err

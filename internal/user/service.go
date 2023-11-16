@@ -139,13 +139,27 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		}
 	}
 
+	var roles []primitive.ObjectID
+	if req.Roles == nil {
+		roles = []primitive.ObjectID{}
+	} else {
+		roles = req.Roles
+	}
+
+	var groups []primitive.ObjectID
+	if req.Groups == nil {
+		groups = []primitive.ObjectID{}
+	} else {
+		groups = req.Groups
+	}
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
 		ID:             userId,
 		Username:       req.Username,
 		Identifier:     req.Identifier,
 		UserProperties: req.UserProperties,
-		Roles:          req.Roles,
-		Groups:         req.Groups,
+		Roles:          roles,
+		Groups:         groups,
 	})
 
 	if err != nil {
@@ -249,10 +263,10 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchU
 
 	if err := s.repo.Patch(ctx, org_id, id, PatchUser{
 		UserProperties: req.UserProperties,
-		AddedRoles:    added_roles,
-		RemovedRoles:  removed_roles,
-		AddedGroups:   added_groups,
-		RemovedGroups: removed_groups,
+		AddedRoles:     added_roles,
+		RemovedRoles:   removed_roles,
+		AddedGroups:    added_groups,
+		RemovedGroups:  removed_groups,
 	}); err != nil {
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),
