@@ -40,12 +40,18 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 
 	user_roles, err := s.repo.GetUserRoles(ctx, org_identifier, req.Identifier)
 	if err != nil {
+		if notFoundErr, ok := err.(*util.NotFoundError); ok {
+			return false, notFoundErr
+		}
 		s.logger.Error("Error while retrieving user roles.",
 			zap.String("org_identifier", org_identifier), zap.String("identifier", req.Identifier))
 		return false, err
 	}
 	group_roles, err := s.repo.GetGroupRoles(ctx, org_identifier, req.Identifier)
 	if err != nil {
+		if notFoundErr, ok := err.(*util.NotFoundError); ok {
+			return false, notFoundErr
+		}
 		s.logger.Error("Error while retrieving group roles.",
 			zap.String("org_identifier", org_identifier), zap.String("identifier", req.Identifier))
 		return false, err

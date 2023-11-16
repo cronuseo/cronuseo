@@ -65,10 +65,16 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 				}
 
 				if !checkPermissions(sub, endpointPermissions, cfg, checkService) {
-					return nil, echo.NewHTTPError(http.StatusForbidden, "insufficient scope for this resource")
+					logger.Debug("error while validating permissions")
+					return nil, echo.NewHTTPError(http.StatusUnauthorized, "insufficient permissions to invoke this endpoint")
 				}
 
-				return jwks.Keyfunc(t)
+				key, keyErr := jwks.Keyfunc(t)
+				if keyErr != nil {
+					return nil, fmt.Errorf("JWT key function error: %w", keyErr)
+				}
+
+				return key, nil
 			}
 
 			config := middleware.JWTConfig{
@@ -76,6 +82,14 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 			}
 
 			if err := middleware.JWTWithConfig(config)(next)(c); err != nil {
+				logger.Debug("error while validating token", zap.Error(err))
+				if httpErr, ok := err.(*echo.HTTPError); ok {
+					if internalErr, ok := httpErr.Internal.(*jwt.ValidationError); ok {
+						return internalErr.Inner
+					} else {
+						return httpErr
+					}
+				}
 				return err
 			}
 
