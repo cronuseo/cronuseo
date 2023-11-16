@@ -25,9 +25,10 @@ type Resource struct {
 }
 
 type CreateResourceRequest struct {
-	Identifier  string                `json:"identifier"`
-	DisplayName string                `json:"display_name"`
-	Actions     []mongo_entity.Action `json:"actions"`
+	Identifier  string                    `json:"identifier"`
+	DisplayName string                    `json:"display_name"`
+	Actions     []mongo_entity.Action     `json:"actions"`
+	Type        mongo_entity.ResourceType `json:"type" bson:"type"`
 }
 
 func (m CreateResourceRequest) Validate() error {

@@ -232,6 +232,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 		Identifier:  "organizations",
 		DisplayName: "organizations",
 		Actions:     orgActions,
+		Type:        mongo_entity.SystemResource,
 	}
 	resourceService.Create(nil, rootOrgId, orgResource)
 
@@ -244,6 +245,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 		Identifier:  "users",
 		DisplayName: "users",
 		Actions:     userActions,
+		Type:        mongo_entity.SystemResource,
 	}
 	resourceService.Create(nil, rootOrgId, userResource)
 
@@ -256,6 +258,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 		Identifier:  "groups",
 		DisplayName: "groups",
 		Actions:     groupActions,
+		Type:        mongo_entity.SystemResource,
 	}
 	resourceService.Create(nil, rootOrgId, groupResource)
 
@@ -268,6 +271,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 		Identifier:  "roles",
 		DisplayName: "roles",
 		Actions:     roleActions,
+		Type:        mongo_entity.SystemResource,
 	}
 	resourceService.Create(nil, rootOrgId, roleResource)
 
@@ -280,6 +284,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 		Identifier:  "resources",
 		DisplayName: "resources",
 		Actions:     resourceActions,
+		Type:        mongo_entity.SystemResource,
 	}
 	resourceService.Create(nil, rootOrgId, resourceResource)
 
@@ -292,6 +297,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 		Identifier:  "policies",
 		DisplayName: "policies",
 		Actions:     policyActions,
+		Type:        mongo_entity.SystemResource,
 	}
 	resourceService.Create(nil, rootOrgId, policyResource)
 }
