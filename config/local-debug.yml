@@ -53,3 +53,148 @@ system_resources:
     - policies:read
     - policies:delete
     - policies:update 
+endpoints:
+  - path: "/api/v1/organizations"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "orgs:create"
+      - method: "GET"
+        required_permissions:
+          - "orgs:read_all"
+    resource: "organizations"      
+
+  - path: "/api/v1/organizations/.+"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "orgs:read"
+      - method: "DELETE"
+        required_permissions:
+          - "orgs:delete"
+      - method: "POST"
+        required_permissions:
+          - "orgs:update"
+    resource: "organizations"       
+
+  - path: "/api/v1/o/.+/users"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "users:create"
+      - method: "GET"
+        required_permissions:
+          - "users:read_all"
+    resource: "users"       
+
+  - path: "/api/v1/o/.+/users/.+"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "users:read"
+      - method: "DELETE"
+        required_permissions:
+          - "users:delete"
+      - method: "PUT"
+        required_permissions:
+          - "users:update"
+      - method: "PATCH"
+        required_permissions:
+          - "users:update"
+    resource: "users"      
+
+  - path: "/api/v1/o/.+/roles"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "roles:create"
+      - method: "GET"
+        required_permissions:
+          - "roles:read_all"
+    resource: "roles"            
+
+  - path: "/api/v1/o/.+/roles/.+"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "roles:read"
+      - method: "DELETE"
+        required_permissions:
+          - "roles:delete"
+      - method: "PATCH"
+        required_permissions:
+          - "roles:update"
+    resource: "roles"
+
+  - path: "/api/v1/o/.+/groups"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "groups:create"
+      - method: "GET"
+        required_permissions:
+          - "groups:read_all"
+    resource: "groups"      
+
+  - path: "/api/v1/o/.+/groups/.+"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "groups:read"
+      - method: "DELETE"
+        required_permissions:
+          - "groups:delete"
+      - method: "PUT"
+        required_permissions:
+          - "groups:update"
+      - method: "PATCH"
+        required_permissions:
+          - "groups:update"
+    resource: "groups"      
+
+  - path: "/api/v1/o/.+/resources"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "resources:create"
+      - method: "GET"
+        required_permissions:
+          - "resources:read_all"
+    resource: "resources"      
+
+  - path: "/api/v1/o/.+/resources/.+"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "resources:read"
+      - method: "DELETE"
+        required_permissions:
+          - "resources:delete"
+      - method: "PATCH"
+        required_permissions:
+          - "resources:update"
+    resource: "resources"       
+
+  - path: "/api/v1/o/.+/policies"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "policies:create"
+      - method: "GET"
+        required_permissions:
+          - "policies:read_all"
+    resource: "policies"       
+
+  - path: "/api/v1/o/.+/policies/.+"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "policies:read"
+      - method: "DELETE"
+        required_permissions:
+          - "policies:delete"
+      - method: "PUT"
+        required_permissions:
+          - "policies:update"
+    resource: "policies"         
+    
