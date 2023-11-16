@@ -45,13 +45,13 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 
 				claims, ok := t.Claims.(jwtv4.MapClaims)
 				if !ok {
-					return nil, fmt.Errorf("unexpected claims type")
+					return nil, echo.NewHTTPError(http.StatusUnauthorized,"unexpected claims type")
 				}
 
 				//Extract and validate scopes
 				sub, ok := claims["sub"].(string)
 				if !ok {
-					return nil, fmt.Errorf("invalid or missing sub claim")
+					return nil, echo.NewHTTPError(http.StatusUnauthorized,"invalid or missing sub claim")
 				}
 
 				methodPath := MethodPath{
@@ -71,7 +71,7 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 
 				key, keyErr := jwks.Keyfunc(t)
 				if keyErr != nil {
-					return nil, fmt.Errorf("JWT key function error: %w", keyErr)
+					return nil, echo.NewHTTPError(http.StatusUnauthorized, "JWT key function error: %w", keyErr)
 				}
 
 				return key, nil
@@ -88,7 +88,11 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 							return httpErr
 						}
 					}
-					return err
+					if validationErr, ok := err.(*jwt.ValidationError); ok {
+						return echo.NewHTTPError(http.StatusUnauthorized, validationErr.Inner.Error())
+					} else {
+						return validationErr
+					}
 				},
 			})
 			return jwtMiddleware(next)(c)
