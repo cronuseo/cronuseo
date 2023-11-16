@@ -1,11 +1,204 @@
-jwks: "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
-mgt_api: ":8080"
-check_api: ":8081"
-check_grpc: ":50051"
-mongo: "mongodb://mongodb:27017"
-mongouser: "root"
-mongopassword: "rootpassword"
-default_org: "super"
-mongodbname: "cronuseo"
-rbac_policy: "./policy/policy.rego"
-mongo_org_coll_name: "organizations"
+endpoint:
+  management : ":8080"
+  check_rest : ":8081"
+  check_grpc : ":50051"
+auth:
+  jwks: "<your_jwks>"
+database:
+  url : "<mongo_url>"
+  name : "<mongo_db_name>"
+  user: "<mongo_username>"
+  password: "<mongo_password>"
+root_organization:
+  name : "super"
+  admin_identfier : "<admin_identifier>"
+  admin_name : "admin"
+  admin_role_name : "admin"
+system_resources:
+  organizations:
+    - orgs:create
+    - orgs:read_all
+    - orgs:read
+    - orgs:delete
+    - orgs:update
+  users:
+    - users:create
+    - users:read_all
+    - users:read
+    - users:delete
+    - users:update
+  roles:
+    - roles:create
+    - roles:read_all
+    - roles:read
+    - roles:delete
+    - roles:update
+  groups:
+    - groups:create
+    - groups:read_all
+    - groups:read
+    - groups:delete
+    - groups:update
+  resources:
+    - resources:create
+    - resources:read_all
+    - resources:read
+    - resources:delete
+    - resources:update    
+  policies:
+    - policies:create
+    - policies:read_all
+    - policies:read
+    - policies:delete
+    - policies:update 
+endpoints:
+  - path: "/api/v1/organizations$"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "orgs:create"
+      - method: "GET"
+        required_permissions:
+          - "orgs:read_all"
+    resource: "organizations"      
+
+  - path: "/api/v1/organizations/[^/]+$"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "orgs:read"
+      - method: "DELETE"
+        required_permissions:
+          - "orgs:delete"
+      - method: "POST"
+        required_permissions:
+          - "orgs:update"
+    resource: "organizations"       
+
+  - path: "/api/v1/o/[^/]+/users$"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "users:create"
+      - method: "GET"
+        required_permissions:
+          - "users:read_all"
+    resource: "users"       
+
+  - path: "/api/v1/o/[^/]+/users/[^/]+$"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "users:read"
+      - method: "DELETE"
+        required_permissions:
+          - "users:delete"
+      - method: "PUT"
+        required_permissions:
+          - "users:update"
+      - method: "PATCH"
+        required_permissions:
+          - "users:update"
+    resource: "users"      
+
+  - path: "/api/v1/o/[^/]+/roles$"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "roles:create"
+      - method: "GET"
+        required_permissions:
+          - "roles:read_all"
+    resource: "roles"            
+
+  - path: "/api/v1/o/[^/]+/roles/[^/]+$"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "roles:read"
+      - method: "DELETE"
+        required_permissions:
+          - "roles:delete"
+      - method: "PATCH"
+        required_permissions:
+          - "roles:update"
+      - method: "PUT"
+        required_permissions:
+          - "roles:update"          
+    resource: "roles"
+
+  - path: "/api/v1/o/[^/]+/groups$"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "groups:create"
+      - method: "GET"
+        required_permissions:
+          - "groups:read_all"
+    resource: "groups"      
+
+  - path: "/api/v1/o/[^/]+/groups/[^/]+$"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "groups:read"
+      - method: "DELETE"
+        required_permissions:
+          - "groups:delete"
+      - method: "PUT"
+        required_permissions:
+          - "groups:update"
+      - method: "PATCH"
+        required_permissions:
+          - "groups:update"
+    resource: "groups"      
+
+  - path: "/api/v1/o/[^/]+/resources$"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "resources:create"
+      - method: "GET"
+        required_permissions:
+          - "resources:read_all"
+    resource: "resources"      
+
+  - path: "/api/v1/o/[^/]+/resources/[^/]+$"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "resources:read"
+      - method: "DELETE"
+        required_permissions:
+          - "resources:delete"
+      - method: "PATCH"
+        required_permissions:
+          - "resources:update"
+      - method: "PUT"
+        required_permissions:
+          - "resources:update"
+    resource: "resources"       
+
+  - path: "/api/v1/o/[^/]+/policies$"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "policies:create"
+      - method: "GET"
+        required_permissions:
+          - "policies:read_all"
+    resource: "policies"       
+
+  - path: "/api/v1/o/[^/]+/policies/[^/]+$"
+    methods:
+      - method: "GET"
+        required_permissions:
+          - "policies:read"
+      - method: "DELETE"
+        required_permissions:
+          - "policies:delete"
+      - method: "PUT"
+        required_permissions:
+          - "policies:update"
+    resource: "policies"         
+    

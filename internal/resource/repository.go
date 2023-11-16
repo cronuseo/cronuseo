@@ -22,7 +22,7 @@ type Repository interface {
 	CheckResourceExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckResourceExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
 	CheckActionAlreadyAddedToResourceByIdentifier(ctx context.Context, org_id string, resource_id string, action_identifier string) (bool, error)
-	CheckActionExistsById(ctx context.Context, org_id string, resource_id string, action_id string) (bool, error)
+	CheckActionExistsByIdentifier(ctx context.Context, org_id string, resource_identifier string, action_identifier string) (bool, error)
 }
 
 type repository struct {
@@ -111,32 +111,6 @@ func (r repository) Update(ctx context.Context, org_id string, id string, update
 			return err
 		}
 	}
-
-	// add actions
-	if len(update_resource.AddedActions) > 0 {
-
-		filter := bson.M{"_id": orgId, "resources._id": resId}
-		update := bson.M{"$push": bson.M{"resources.$.actions": bson.M{
-			"$each": update_resource.AddedActions,
-		}}}
-		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(update_resource.RemovedActions) > 0 {
-
-		filter := bson.M{"_id": orgId, "resources._id": resId}
-		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
-			"_id": bson.M{"$in": update_resource.RemovedActions},
-		}}}
-		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -169,7 +143,7 @@ func (r repository) Patch(ctx context.Context, org_id string, id string, patch_r
 
 		filter := bson.M{"_id": orgId, "resources._id": resId}
 		update := bson.M{"$pull": bson.M{"resources.$.actions": bson.M{
-			"_id": bson.M{"$in": patch_resource.RemovedActions},
+			"identifier": bson.M{"$in": patch_resource.RemovedActions},
 		}}}
 		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
@@ -321,7 +295,7 @@ func (r repository) CheckActionAlreadyAddedToResourceByIdentifier(ctx context.Co
 	return false, nil
 }
 
-func (r repository) CheckActionExistsById(ctx context.Context, org_id string, resource_id string, action_id string) (bool, error) {
+func (r repository) CheckActionExistsByIdentifier(ctx context.Context, org_id string, resource_id string, action_identifier string) (bool, error) {
 
 	orgId, err := primitive.ObjectIDFromHex(org_id)
 	if err != nil {
@@ -333,12 +307,7 @@ func (r repository) CheckActionExistsById(ctx context.Context, org_id string, re
 		return false, err
 	}
 
-	actionId, err := primitive.ObjectIDFromHex(action_id)
-	if err != nil {
-		return false, err
-	}
-
-	filter := bson.M{"_id": orgId, "resources._id": resourceId, "resources.actions._id": actionId}
+	filter := bson.M{"_id": orgId, "resources._id": resourceId, "resources.actions.identifier": action_identifier}
 
 	result := r.mongoColl.FindOne(context.Background(), filter)
 

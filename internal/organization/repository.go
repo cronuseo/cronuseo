@@ -13,7 +13,8 @@ import (
 )
 
 type Repository interface {
-	Get(ctx context.Context, id string) (*mongo_entity.Organization, error)
+Get(ctx context.Context, id string) (*mongo_entity.Organization, error)
+	GetIdByIdentifier(ctx context.Context, identifier string) (string, error)
 	Query(ctx context.Context) ([]mongo_entity.Organization, error)
 	Create(ctx context.Context, organization mongo_entity.Organization) (string, error)
 	Delete(ctx context.Context, id string) error
@@ -57,6 +58,26 @@ func (r repository) Get(ctx context.Context, id string) (*mongo_entity.Organizat
 	}
 
 	return &org, nil
+}
+
+// Get organization by id.
+func (r repository) GetIdByIdentifier(ctx context.Context, identifier string) (string, error) {
+
+	// Define filter to find the organization by its ID
+	filter := bson.M{"identifier": identifier}
+	projection := bson.M{"resources": 0, "users": 0, "roles": 0, "groups": 0, "role_permissions": 0}
+	// Find the organization document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	if err := result.Err(); err != nil {
+		return "", err
+	}
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		return "", err
+	}
+	return org.ID.Hex(), nil
 }
 
 // Create new organization.

@@ -18,7 +18,7 @@ func Test_service(t *testing.T) {
 	ctx := context.Background()
 
 	// successful creation
-	org, err := s.Create(ctx, CreateOrganizationRequest{
+	org, err := s.Create(ctx, OrganizationCreationRequest{
 		Identifier:  "test",
 		DisplayName: "test",
 	})
@@ -28,7 +28,7 @@ func Test_service(t *testing.T) {
 	assert.Equal(t, "test", org.DisplayName)
 
 	// validation error in creation
-	_, err = s.Create(ctx, CreateOrganizationRequest{
+	_, err = s.Create(ctx, OrganizationCreationRequest{
 		DisplayName: "test",
 	})
 	assert.NotNil(t, err)
@@ -46,6 +46,14 @@ func (m mockRepository) Get(ctx context.Context, id string) (*mongo_entity.Organ
 		}
 	}
 	return nil, &util.NotFoundError{Path: "Organization"}
+}
+func (m mockRepository) GetIdByIdentifier(ctx context.Context, identifier string) (string, error) {
+	for _, org := range m.orgs {
+		if org.Identifier == identifier {
+			return org.ID.Hex(), nil
+		}
+	}
+	return "", &util.NotFoundError{Path: "Organization"}
 }
 func (m *mockRepository) Create(ctx context.Context, organization mongo_entity.Organization) (string, error) {
 	id := primitive.NewObjectID()

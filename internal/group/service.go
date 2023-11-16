@@ -17,7 +17,7 @@ type Service interface {
 	Create(ctx context.Context, org_id string, input CreateGroupRequest) (Group, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateGroupRequest) (Group, error)
 	Delete(ctx context.Context, org_id string, id string) error
-	// Patch(ctx context.Context, org_id string, id string, req GroupPatchRequest) (Group, error)
+	Patch(ctx context.Context, org_id string, id string, input PatchGroupRequest) (Group, error)
 }
 
 type Group struct {
@@ -25,10 +25,10 @@ type Group struct {
 }
 
 type CreateGroupRequest struct {
-	Identifier  string               `json:"identifier"`
-	DisplayName string               `json:"display_name"`
-	Roles       []primitive.ObjectID `json:"roles"`
-	Users       []primitive.ObjectID `json:"users"`
+	Identifier  string               `json:"identifier" bson:"identifier"`
+	DisplayName string               `json:"display_name" bson:"display_name"`
+	Roles       []primitive.ObjectID `json:"roles,omitempty" bson:"roles"`
+	Users       []primitive.ObjectID `json:"users,omitempty" bson:"users"`
 }
 
 func (m CreateGroupRequest) Validate() error {
@@ -39,19 +39,25 @@ func (m CreateGroupRequest) Validate() error {
 }
 
 type UpdateGroupRequest struct {
-	DisplayName  *string              `json:"display_name"`
-	AddedRoles   []primitive.ObjectID `json:"added_roles"`
-	RemovedRoles []primitive.ObjectID `json:"removed_roles"`
-	AddedUsers   []primitive.ObjectID `json:"added_users"`
-	RemovedUsers []primitive.ObjectID `json:"removed_users"`
+	DisplayName *string `json:"display_name,omitempty" bson:"display_name"`
+}
+
+type PatchGroupRequest struct {
+	AddedRoles   []primitive.ObjectID `json:"added_roles,omitempty" bson:"added_roles"`
+	RemovedRoles []primitive.ObjectID `json:"removed_roles,omitempty" bson:"removed_roles"`
+	AddedUsers   []primitive.ObjectID `json:"added_users,omitempty" bson:"added_users"`
+	RemovedUsers []primitive.ObjectID `json:"removed_users,omitempty" bson:"removed_users"`
 }
 
 type UpdateGroup struct {
-	DisplayName  *string              `json:"display_name"`
-	AddedRoles   []primitive.ObjectID `json:"added_roles"`
-	RemovedRoles []primitive.ObjectID `json:"removed_roles"`
-	AddedUsers   []primitive.ObjectID `json:"added_users"`
-	RemovedUsers []primitive.ObjectID `json:"removed_users"`
+	DisplayName *string `json:"display_name,omitempty" bson:"display_name"`
+}
+
+type PatchGroup struct {
+	AddedRoles   []primitive.ObjectID `json:"added_roles,omitempty" bson:"added_roles"`
+	RemovedRoles []primitive.ObjectID `json:"removed_roles,omitempty" bson:"removed_roles"`
+	AddedUsers   []primitive.ObjectID `json:"added_users,omitempty" bson:"added_users"`
+	RemovedUsers []primitive.ObjectID `json:"removed_users,omitempty" bson:"removed_users"`
 }
 
 func (m UpdateGroupRequest) Validate() error {
@@ -115,12 +121,26 @@ func (s service) Create(ctx context.Context, org_id string, req CreateGroupReque
 		}
 	}
 
+	var roles []primitive.ObjectID
+	if req.Roles == nil {
+		roles = []primitive.ObjectID{}
+	} else {
+		roles = req.Roles
+	}
+
+	var users []primitive.ObjectID
+	if req.Users == nil {
+		users = []primitive.ObjectID{}
+	} else {
+		users = req.Users
+	}
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.Group{
 		ID:          groupId,
 		DisplayName: req.DisplayName,
 		Identifier:  req.Identifier,
-		Roles:       req.Roles,
-		Users:       req.Users,
+		Roles:       roles,
+		Users:       users,
 	})
 
 	if err != nil {
@@ -133,6 +153,30 @@ func (s service) Create(ctx context.Context, org_id string, req CreateGroupReque
 
 // // Update group.
 func (s service) Update(ctx context.Context, org_id string, id string, req UpdateGroupRequest) (Group, error) {
+
+	_, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Group not exists.", zap.String("group_id", id))
+		return Group{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
+	}
+
+	if err := s.repo.Update(ctx, org_id, id, UpdateGroup{
+		DisplayName:  req.DisplayName,
+	}); err != nil {
+		s.logger.Error("Error while updating group.",
+			zap.String("organization_id", org_id),
+			zap.String("group_id", id))
+		return Group{}, err
+	}
+	updatedGroup, err := s.repo.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Group not exists.", zap.String("group_id", id))
+		return Group{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
+	}
+	return Group{*updatedGroup}, nil
+}
+
+func (s service) Patch(ctx context.Context, org_id string, id string, req PatchGroupRequest) (Group, error) {
 
 	_, err := s.Get(ctx, org_id, id)
 	if err != nil {
@@ -198,8 +242,7 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		}
 	}
 
-	if err := s.repo.Update(ctx, org_id, id, UpdateGroup{
-		DisplayName:  req.DisplayName,
+	if err := s.repo.Patch(ctx, org_id, id, PatchGroup{
 		AddedRoles:   added_roles,
 		RemovedRoles: removed_roles,
 		AddedUsers:   added_users,
@@ -259,37 +302,3 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Gro
 	}
 	return result, err
 }
-
-// type GroupPatchRequest struct {
-// 	Operations []GroupPatchOperation `json:"operations"`
-// }
-
-// type GroupPatchOperation struct {
-// 	Operation string  `json:"op"`
-// 	Path      string  `json:"path"`
-// 	Values    []Value `json:"values"`
-// }
-
-// type Value struct {
-// 	Value string `json:"value"`
-// }
-
-// // Patch group. mainly patch group roles.
-// func (s service) Patch(ctx context.Context, org_id string, id string, req GroupPatchRequest) (Group, error) {
-
-// 	group, err := s.Get(ctx, org_id, id)
-// 	if err != nil {
-// 		s.logger.Error("Group not exists.", zap.String("group_id", id))
-// 		return Group{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
-
-// 	}
-// 	if err := s.repo.Patch(ctx, org_id, id, req); err != nil {
-// 		s.logger.Error("Error while patching group.",
-// 			zap.String("organization_id", org_id),
-// 			zap.String("group_id", id),
-// 		)
-// 		return Group{}, err
-// 	}
-// 	s.permissionCache.FlushAll(ctx)
-// 	return group, nil
-// }

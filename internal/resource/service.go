@@ -25,9 +25,10 @@ type Resource struct {
 }
 
 type CreateResourceRequest struct {
-	Identifier  string                `json:"identifier"`
-	DisplayName string                `json:"display_name"`
-	Actions     []mongo_entity.Action `json:"actions"`
+	Identifier  string                    `json:"identifier" bson:"identifier"`
+	DisplayName string                    `json:"display_name" bson:"display_name"`
+	Actions     []mongo_entity.Action     `json:"actions,omitempty" bson:"actions"`
+	Type        mongo_entity.ResourceType `json:"type,omitempty" bson:"type"`
 }
 
 func (m CreateResourceRequest) Validate() error {
@@ -38,25 +39,21 @@ func (m CreateResourceRequest) Validate() error {
 }
 
 type UpdateResourceRequest struct {
-	DisplayName    *string               `json:"display_name"`
-	AddedActions   []mongo_entity.Action `json:"added_actions"`
-	RemovedActions []string              `json:"removed_actions"`
+	DisplayName *string `json:"display_name" bson:"display_name"`
 }
 
 type PatchResourceRequest struct {
-	AddedActions   []mongo_entity.Action `json:"added_actions"`
-	RemovedActions []string              `json:"removed_actions"`
+	AddedActions   []mongo_entity.Action `json:"added_actions,omitempty" bson:"added_actions"`
+	RemovedActions []string              `json:"removed_actions,omitempty" bson:"removed_actions"`
 }
 
 type UpdateResource struct {
-	DisplayName    *string               `json:"display_name"`
-	AddedActions   []mongo_entity.Action `json:"added_actions"`
-	RemovedActions []primitive.ObjectID  `json:"removed_actions"`
+	DisplayName *string `json:"display_name" bson:"display_name"`
 }
 
 type PatchResource struct {
-	AddedActions   []mongo_entity.Action `json:"added_actions"`
-	RemovedActions []primitive.ObjectID  `json:"removed_actions"`
+	AddedActions   []mongo_entity.Action `json:"added_actions,omitempty" bson:"added_actions"`
+	RemovedActions []string              `json:"removed_actions,omitempty" bson:"removed_actions"`
 }
 
 type service struct {
@@ -96,7 +93,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 		return Resource{}, &util.AlreadyExistsError{Path: "Resource : " + req.Identifier}
 	}
 	resId := primitive.NewObjectID()
-	var actions []mongo_entity.Action
+	actions := []mongo_entity.Action{}
 	for _, action := range req.Actions {
 		actionId := primitive.NewObjectID()
 		actions = append(actions, mongo_entity.Action{
@@ -110,6 +107,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateResourceRe
 		Identifier:  req.Identifier,
 		DisplayName: req.DisplayName,
 		Actions:     actions,
+		Type:        req.Type,
 	})
 	if err != nil {
 		s.logger.Info(err.Error())
@@ -129,41 +127,8 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return Resource{}, &util.NotFoundError{Path: "Resource " + id + " not exists."}
 	}
 
-	// Set added actions.
-	var addedActions []mongo_entity.Action
-	for _, action := range req.AddedActions {
-		already_added, _ := s.repo.CheckActionAlreadyAddedToResourceByIdentifier(ctx, org_id, id, action.Identifier)
-		if !already_added {
-			actionId := primitive.NewObjectID()
-			addedActions = append(addedActions, mongo_entity.Action{
-				ID:          actionId,
-				Identifier:  action.Identifier,
-				DisplayName: action.DisplayName,
-			})
-		} else {
-			return Resource{}, &util.AlreadyExistsError{Path: "Action : " + action.Identifier + " already added to resource."}
-		}
-	}
-	// Set removed actions ids.
-	var removedActions []primitive.ObjectID
-	for _, actionId := range req.RemovedActions {
-		already_added, _ := s.repo.CheckActionExistsById(ctx, org_id, id, actionId)
-		if already_added {
-			id, err := primitive.ObjectIDFromHex(actionId)
-			if err != nil {
-				return Resource{}, err
-			}
-			removedActions = append(removedActions, id)
-		} else {
-			return Resource{}, &util.NotFoundError{Path: "Action " + actionId + " not exists."}
-		}
-
-	}
-
 	if err := s.repo.Update(ctx, org_id, id, UpdateResource{
-		DisplayName:    req.DisplayName,
-		AddedActions:   addedActions,
-		RemovedActions: removedActions,
+		DisplayName: req.DisplayName,
 	}); err != nil {
 		s.logger.Error("Error while updating resource.",
 			zap.String("organization_id", org_id),
@@ -203,19 +168,14 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchR
 		}
 	}
 	// Set removed actions ids.
-	var removedActions []primitive.ObjectID
-	for _, actionId := range req.RemovedActions {
-		already_added, _ := s.repo.CheckActionExistsById(ctx, org_id, id, actionId)
+	var removedActions []string
+	for _, action := range req.RemovedActions {
+		already_added, _ := s.repo.CheckActionExistsByIdentifier(ctx, org_id, id, action)
 		if already_added {
-			id, err := primitive.ObjectIDFromHex(actionId)
-			if err != nil {
-				return Resource{}, err
-			}
-			removedActions = append(removedActions, id)
+			removedActions = append(removedActions, action)
 		} else {
-			return Resource{}, &util.NotFoundError{Path: "Action " + actionId + " not exists."}
+			return Resource{}, &util.NotFoundError{Path: "Action " + action + " not exists."}
 		}
-
 	}
 
 	if err := s.repo.Patch(ctx, org_id, id, PatchResource{

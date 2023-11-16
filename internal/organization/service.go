@@ -14,24 +14,32 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, id string) (Organization, error)
+	GetIdByIdentifier(ctx context.Context, identifier string) (string, error)
 	Query(ctx context.Context) ([]Organization, error)
-	Create(ctx context.Context, input CreateOrganizationRequest) (Organization, error)
-	RefreshAPIKey(ctx context.Context, id string) (Organization, error)
+	Create(ctx context.Context, req OrganizationCreationRequest) (Organization, error)
+	RegenerateAPIKey(ctx context.Context, id string) (Organization, error)
 	Delete(ctx context.Context, id string) (Organization, error)
+	CheckOrgExistByIdentifier(ctx context.Context, identifier string) (bool, error)
 }
 
 type Organization struct {
 	mongo_entity.Organization
 }
 
-type CreateOrganizationRequest struct {
-	Identifier  string `json:"identifier" db:"identifier"`
-	DisplayName string `json:"display_name" db:"display_name"`
+type OrganizationCreationRequest struct {
+	Identifier  string                  `json:"identifier" bson:"identifier"`
+	DisplayName string                  `json:"display_name" bson:"display_name"`
+	API_KEY     string                  `json:"api_key" bson:"api_key"`
+	Resources   []mongo_entity.Resource `json:"resources,omitempty" bson:"resources"`
+	Users       []mongo_entity.User     `json:"users,omitempty" bson:"users"`
+	Roles       []mongo_entity.Role     `json:"roles,omitempty" bson:"roles"`
+	Groups      []mongo_entity.Group    `json:"groups,omitempty" bson:"groups"`
 }
 
-func (m CreateOrganizationRequest) Validate() error {
+func (m OrganizationCreationRequest) Validate() error {
 	return validation.ValidateStruct(&m,
 		validation.Field(&m.Identifier, validation.Required),
+		validation.Field(&m.DisplayName, validation.Required),
 	)
 }
 
@@ -54,8 +62,18 @@ func (s service) Get(ctx context.Context, id string) (Organization, error) {
 	return Organization{*org}, nil
 }
 
+// Get organization id by identifier.
+func (s service) GetIdByIdentifier(ctx context.Context, id string) (string, error) {
+
+	orgId, err := s.repo.GetIdByIdentifier(ctx, id)
+	if err != nil {
+		return "", &util.NotFoundError{Path: "Organization"}
+	}
+	return orgId, nil
+}
+
 // Create new organization.
-func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Organization, error) {
+func (s service) Create(ctx context.Context, req OrganizationCreationRequest) (Organization, error) {
 
 	// Validate organization
 	if err := req.Validate(); err != nil {
@@ -71,6 +89,7 @@ func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Org
 
 	}
 
+	// Generate API-Key for organization.
 	key := make([]byte, 32)
 
 	if _, err := rand.Read(key); err != nil {
@@ -83,6 +102,10 @@ func (s service) Create(ctx context.Context, req CreateOrganizationRequest) (Org
 		Identifier:  req.Identifier,
 		DisplayName: req.DisplayName,
 		API_KEY:     APIKey,
+		Users:       req.Users,
+		Groups:      req.Groups,
+		Roles:       req.Roles,
+		Resources:   req.Resources,
 	})
 	if err != nil {
 		s.logger.Error("Error while creating organization.")
@@ -106,8 +129,8 @@ func (s service) Delete(ctx context.Context, id string) (Organization, error) {
 	return organization, nil
 }
 
-// Refresh API key of the organization.
-func (s service) RefreshAPIKey(ctx context.Context, id string) (Organization, error) {
+// Regenerate API key of the organization.
+func (s service) RegenerateAPIKey(ctx context.Context, id string) (Organization, error) {
 
 	// Get organization
 	exists, _ := s.repo.CheckOrgExistById(ctx, id)
@@ -144,4 +167,9 @@ func (s service) Query(ctx context.Context) ([]Organization, error) {
 		result = append(result, Organization{item})
 	}
 	return result, nil
+}
+
+func (s service) CheckOrgExistByIdentifier(ctx context.Context, identifier string) (bool, error) {
+
+	return s.repo.CheckOrgExistByIdentifier(ctx, identifier)
 }

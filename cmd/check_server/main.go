@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"log"
 	"net"
@@ -12,7 +11,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	_ "github.com/lib/pq"
-	"github.com/open-policy-agent/opa/rego"
 	_ "github.com/shashimalcse/cronuseo/docs"
 	"github.com/shashimalcse/cronuseo/internal/check"
 	"github.com/shashimalcse/cronuseo/internal/config"
@@ -54,41 +52,35 @@ func main() {
 	}
 
 	// Set up logger.
-	logger := logger.Init(cfg)
+	logger, err := logger.Init(cfg)
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v\n", err)
+	}
 
 	// Mongo client.
-	mongodb := db.Init(cfg, logger)
-
-	// OPA policy.
-	r := rego.New(
-		rego.Query("x = data.example.allow"),
-		rego.Load([]string{cfg.RBACPolicy}, nil))
-	ctx := context.Background()
-	query, err := r.PrepareForEval(ctx)
-
+	mongodb, err := db.Init(cfg, logger)
 	if err != nil {
-		log.Fatal("Error while prepare rego policy.")
-		os.Exit(-1)
+		logger.Fatal("Failed to initialize MongoDB client", zap.Error(err))
 	}
 
 	// Start the REST server
 	go func() {
-		e := BuildHandler(cfg, logger, mongodb, query)
-		logger.Info("Starting REST server", zap.String("REST server_endpoint", cfg.Check_API))
-		e.Logger.Fatal(e.Start(cfg.Check_API))
+		e := BuildServer(cfg, logger, mongodb)
+		logger.Info("Starting REST server", zap.String("REST server_endpoint", cfg.Endpoint.Check_REST))
+		e.Logger.Fatal(e.Start(cfg.Endpoint.Check_REST))
 	}()
 
-	if cfg.Check_GRPC != "" {
+	if cfg.Endpoint.Check_GRPC != "" {
 		// Start the gRPC server
 		go func() {
-			lis, err := net.Listen("tcp", cfg.Check_GRPC)
+			lis, err := net.Listen("tcp", cfg.Endpoint.Check_GRPC)
 			if err != nil {
 				log.Fatalf("failed to listen: %v", err)
 			}
-			service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger, query), logger)
+			service := check.NewGrpcService(check.NewService(check.NewRepository(mongodb), logger), logger)
 			s := grpc.NewServer()
 			proto.RegisterCheckServer(s, service)
-			logger.Info("Starting GRPC server", zap.String("GRPC server_endpoint", cfg.Check_GRPC))
+			logger.Info("Starting GRPC server", zap.String("GRPC server_endpoint", cfg.Endpoint.Check_GRPC))
 			log.Fatal(s.Serve(lis))
 		}()
 	}
@@ -98,35 +90,38 @@ func main() {
 
 	logger.Info("Shutting down servers...")
 	os.Exit(0)
-
 }
 
-// buildHandler builds the echo router.
-func BuildHandler(
+// BuildServer builds the echo server.
+func BuildServer(
 	cfg *config.Config, // Config
 	logger *zap.Logger, // Logger
 	mongodb *db.MongoDB, // MongoDB
-	query rego.PreparedEvalQuery,
 ) *echo.Echo {
 
-	router := echo.New()
+	e := echo.New()
 
-	// Set up CORS.
-	router.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+	// Middleware setup.
+	setupMiddleware(e, cfg)
+	// API endpoints.
+	apiV1 := e.Group("/api/v1")
+
+	checkRepo := check.NewRepository(mongodb)
+	checkService := check.NewService(checkRepo, logger)
+	check.RegisterHandlers(apiV1, checkService)
+	return e
+}
+
+func setupMiddleware(e *echo.Echo, cfg *config.Config) {
+	// CORS middleware configuration.
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowCredentials: true,
-		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"}, // API_KEY is used for permission checking SDKs
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization", "API_KEY"},
 		AllowOrigins:     []string{"http://localhost:3000"},
 	}))
-	// Echo logger middleware.
-	router.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
+
+	// Logger middleware.
+	e.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: "${time_rfc3339}; method=${method}; uri=${uri}; status=${status};\n",
 	}))
-
-	// API endpoints.
-	rg := router.Group("/api/v1")
-
-	// Here we register all the handlers.
-	check.RegisterHandlers(rg, check.NewService(check.NewRepository(mongodb), logger, query))
-
-	return router
 }

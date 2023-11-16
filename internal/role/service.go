@@ -16,8 +16,8 @@ type Service interface {
 	Query(ctx context.Context, org_id string, filter Filter) ([]Role, error)
 	Create(ctx context.Context, org_id string, input CreateRoleRequest) (Role, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateRoleRequest) (Role, error)
+	Patch(ctx context.Context, org_id string, id string, input PatchRoleRequest) (Role, error)
 	Delete(ctx context.Context, org_id string, id string) error
-	PatchPermissions(ctx context.Context, org_id string, role_id string, req PatchRolePermissionRequest) error
 	GetPermissions(ctx context.Context, org_id string, role_id string) ([]mongo_entity.Permission, error)
 }
 
@@ -26,10 +26,11 @@ type Role struct {
 }
 
 type CreateRoleRequest struct {
-	Identifier  string               `json:"identifier"`
-	DisplayName string               `json:"display_name"`
-	Users       []primitive.ObjectID `json:"users"`
-	Groups      []primitive.ObjectID `json:"groups"`
+	Identifier  string                    `json:"identifier" bson:"identifier"`
+	DisplayName string                    `json:"display_name" bson:"display_name"`
+	Users       []primitive.ObjectID      `json:"users,omitempty" bson:"users"`
+	Groups      []primitive.ObjectID      `json:"groups,omitempty" bson:"groups"`
+	Permissions []mongo_entity.Permission `json:"permissions,omitempty" bson:"permissions"`
 }
 
 func (m CreateRoleRequest) Validate() error {
@@ -39,29 +40,29 @@ func (m CreateRoleRequest) Validate() error {
 }
 
 type UpdateRoleRequest struct {
-	DisplayName   *string              `json:"display_name"`
-	AddedUsers    []primitive.ObjectID `json:"added_users"`
-	RemovedUser   []primitive.ObjectID `json:"removed_users"`
-	AddedGroups   []primitive.ObjectID `json:"added_groups"`
-	RemovedGroups []primitive.ObjectID `json:"removed_groups"`
+	DisplayName *string `json:"display_name" bson:"display_name"`
+}
+
+type PatchRoleRequest struct {
+	AddedUsers         []primitive.ObjectID      `json:"added_users,omitempty" bson:"added_users"`
+	RemovedUsers       []primitive.ObjectID      `json:"removed_users,omitempty" bson:"removed_users"`
+	AddedGroups        []primitive.ObjectID      `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups      []primitive.ObjectID      `json:"removed_groups,omitempty" bson:"removed_groups"`
+	AddedPermissions   []mongo_entity.Permission `json:"added_permissions,omitempty" bson:"added_permissions"`
+	RemovedPermissions []mongo_entity.Permission `json:"removed_permissions,omitempty" bson:"removed_permissions"`
 }
 
 type UpdateRole struct {
-	DisplayName   *string              `json:"display_name"`
-	AddedUsers    []primitive.ObjectID `json:"added_users"`
-	RemovedUser   []primitive.ObjectID `json:"removed_users"`
-	AddedGroups   []primitive.ObjectID `json:"added_groups"`
-	RemovedGroups []primitive.ObjectID `json:"removed_groups"`
+	DisplayName *string `json:"display_name" bson:"display_name"`
 }
 
-type PatchRolePermissionRequest struct {
-	AddedPermission   []mongo_entity.Permission `json:"added_permissions"`
-	RemovedPermission []mongo_entity.Permission `json:"removed_permissions"`
-}
-
-type PatchRolePermission struct {
-	AddedPermission   []mongo_entity.Permission `json:"added_permissions"`
-	RemovedPermission []mongo_entity.Permission `json:"removed_permissions"`
+type PatchRole struct {
+	AddedUsers         []primitive.ObjectID      `json:"added_users,omitempty" bson:"added_users"`
+	RemovedUsers       []primitive.ObjectID      `json:"removed_users,omitempty" bson:"removed_users"`
+	AddedGroups        []primitive.ObjectID      `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups      []primitive.ObjectID      `json:"removed_groups,omitempty" bson:"removed_groups"`
+	AddedPermissions   []mongo_entity.Permission `json:"added_permissions,omitempty" bson:"added_permissions"`
+	RemovedPermissions []mongo_entity.Permission `json:"removed_permissions,omitempty" bson:"removed_permissions"`
 }
 
 func (m UpdateRoleRequest) Validate() error {
@@ -125,12 +126,42 @@ func (s service) Create(ctx context.Context, org_id string, req CreateRoleReques
 		}
 	}
 
+	for _, permission := range req.Permissions {
+
+		exists, _ := s.repo.CheckResourceActionExists(ctx, org_id, permission.Resource, permission.Action)
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid permission, Resource : " + permission.Resource + " Action : " + permission.Action}
+		}
+	}
+
+	var users []primitive.ObjectID
+	if req.Users == nil {
+		users = []primitive.ObjectID{}
+	} else {
+		users = req.Users
+	}
+
+	var groups []primitive.ObjectID
+	if req.Groups == nil {
+		groups = []primitive.ObjectID{}
+	} else {
+		groups = req.Groups
+	}
+
+	var permisions []mongo_entity.Permission
+	if req.Permissions == nil {
+		permisions = []mongo_entity.Permission{}
+	} else {
+		permisions = req.Permissions
+	}
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.Role{
 		ID:          roleId,
 		Identifier:  req.Identifier,
 		DisplayName: req.DisplayName,
-		Users:       req.Users,
-		Groups:      req.Groups,
+		Users:       users,
+		Groups:      groups,
+		Permissions: permisions,
 	})
 
 	if err != nil {
@@ -151,31 +182,53 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return Role{}, &util.NotFoundError{Path: "Role " + id + " not exists."}
 	}
 
+	if err := s.repo.Update(ctx, org_id, id, UpdateRole{
+		DisplayName: req.DisplayName,
+	}); err != nil {
+		s.logger.Error("Error while updating role.", zap.String("organization_id", org_id), zap.String("role_id", id))
+		return Role{}, err
+	}
+	updatedRole, err := s.repo.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Role not exists.", zap.String("role_id", id))
+		return Role{}, &util.NotFoundError{Path: "Role " + id + " not exists."}
+	}
+	return Role{*updatedRole}, nil
+}
+
+func (s service) Patch(ctx context.Context, org_id string, id string, req PatchRoleRequest) (Role, error) {
+
+	_, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("Role not exists.", zap.String("role_id", id))
+		return Role{}, &util.NotFoundError{Path: "Role " + id + " not exists."}
+	}
+
 	for _, userId := range req.AddedUsers {
 		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
 		if !exists {
 			return Role{}, &util.InvalidInputError{Path: "Invalid role id " + userId.String()}
-		}
-	}
-	for _, userId := range req.RemovedUser {
-		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
-		if !exists {
-			return Role{}, &util.InvalidInputError{Path: "Invalid role id " + userId.String()}
-		}
-	}
-	added_users := []primitive.ObjectID{}
-	for _, userId := range req.AddedUsers {
-		already_added, _ := s.repo.CheckUserAlreadyAssignToRoleById(ctx, org_id, id, userId.Hex())
-		if !already_added {
-			added_users = append(added_users, userId)
 		}
 	}
 
-	removed_roles := []primitive.ObjectID{}
-	for _, userId := range req.RemovedUser {
+	for _, userId := range req.RemovedUsers {
+		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid role id " + userId.String()}
+		}
+	}
+
+	for _, userId := range req.AddedUsers {
 		already_added, _ := s.repo.CheckUserAlreadyAssignToRoleById(ctx, org_id, id, userId.Hex())
 		if already_added {
-			removed_roles = append(removed_roles, userId)
+			return Role{}, &util.InvalidInputError{Path: "Group : " + userId.Hex() + " already assigned to role :" + id}
+		}
+	}
+
+	for _, userId := range req.RemovedUsers {
+		already_added, _ := s.repo.CheckUserAlreadyAssignToRoleById(ctx, org_id, id, userId.Hex())
+		if !already_added {
+			return Role{}, &util.InvalidInputError{Path: "Group : " + userId.Hex() + " not assigned to role :" + id}
 		}
 	}
 
@@ -192,28 +245,57 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 			return Role{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
 		}
 	}
-	added_groups := []primitive.ObjectID{}
+
 	for _, groupId := range req.AddedGroups {
 		already_added, _ := s.repo.CheckGroupAlreadyAssignToRoleById(ctx, org_id, id, groupId.Hex())
-		if !already_added {
-			added_groups = append(added_groups, groupId)
+		if already_added {
+			return Role{}, &util.InvalidInputError{Path: "Group : " + groupId.Hex() + " already assigned to role :" + id}
 		}
 	}
 
-	removed_groups := []primitive.ObjectID{}
 	for _, groupId := range req.RemovedGroups {
 		already_added, _ := s.repo.CheckGroupAlreadyAssignToRoleById(ctx, org_id, id, groupId.Hex())
-		if already_added {
-			removed_groups = append(removed_groups, groupId)
+		if !already_added {
+			return Role{}, &util.InvalidInputError{Path: "Group : " + groupId.Hex() + " not assigned to role :" + id}
 		}
 	}
 
-	if err := s.repo.Update(ctx, org_id, id, UpdateRole{
-		DisplayName:   req.DisplayName,
-		AddedUsers:    added_users,
-		RemovedUser:   removed_roles,
-		AddedGroups:   added_groups,
-		RemovedGroups: removed_groups,
+	// permissions
+	for _, permission := range req.AddedPermissions {
+
+		exists, _ := s.repo.CheckResourceActionExists(ctx, org_id, permission.Resource, permission.Action)
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid permission resource : " + permission.Resource + " action :" + permission.Action}
+		}
+
+		exists, _ = s.repo.CheckPermissionExists(ctx, org_id, id, permission.Resource, permission.Action)
+		if exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid permission resource : " + permission.Resource + " action :" + permission.Action}
+		}
+
+	}
+
+	for _, permission := range req.RemovedPermissions {
+
+		exists, _ := s.repo.CheckResourceActionExists(ctx, org_id, permission.Resource, permission.Action)
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid permission resource : " + permission.Resource + " action :" + permission.Action}
+		}
+
+		exists, _ = s.repo.CheckPermissionExists(ctx, org_id, id, permission.Resource, permission.Action)
+		if !exists {
+			return Role{}, &util.InvalidInputError{Path: "Invalid permission resource : " + permission.Resource + " action :" + permission.Action}
+		}
+
+	}
+
+	if err := s.repo.Patch(ctx, org_id, id, PatchRole{
+		AddedUsers:         req.AddedUsers,
+		RemovedUsers:        req.RemovedUsers,
+		AddedGroups:        req.AddedGroups,
+		RemovedGroups:      req.RemovedGroups,
+		AddedPermissions:   req.AddedPermissions,
+		RemovedPermissions: req.RemovedPermissions,
 	}); err != nil {
 		s.logger.Error("Error while updating role.", zap.String("organization_id", org_id), zap.String("role_id", id))
 		return Role{}, err
@@ -264,48 +346,6 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Rol
 		result = append(result, Role{item})
 	}
 	return result, err
-}
-
-// Patch permissions to role.
-func (s service) PatchPermissions(ctx context.Context, org_id string, role_id string, req PatchRolePermissionRequest) error {
-
-	for _, permission := range req.AddedPermission {
-
-		exists, _ := s.repo.CheckResourceActionExists(ctx, org_id, permission.Resource, permission.Action)
-		if !exists {
-			return &util.InvalidInputError{Path: "Invalid permission, Resource : " + permission.Resource + " Action : " + permission.Action}
-		}
-
-		exists, _ = s.repo.CheckPermissionExists(ctx, org_id, role_id, permission.Resource, permission.Action)
-		if exists {
-			return &util.AlreadyExistsError{Path: "Resource : " + permission.Resource + " Action : " + permission.Action}
-		}
-
-	}
-
-	for _, permission := range req.RemovedPermission {
-
-		exists, _ := s.repo.CheckResourceActionExists(ctx, org_id, permission.Resource, permission.Action)
-		if !exists {
-			return &util.InvalidInputError{Path: "Invalid permission, Resource : " + permission.Resource + " Action : " + permission.Action}
-		}
-
-		exists, _ = s.repo.CheckPermissionExists(ctx, org_id, role_id, permission.Resource, permission.Action)
-		if !exists {
-			return &util.NotFoundError{Path: "Resource : " + permission.Resource + " Action : " + permission.Action}
-		}
-
-	}
-
-	if err := s.repo.PatchPermission(ctx, org_id, role_id, PatchRolePermission{
-		AddedPermission:   req.AddedPermission,
-		RemovedPermission: req.RemovedPermission,
-	}); err != nil {
-		s.logger.Error("Error while patching role permissions.", zap.String("organization_id", org_id), zap.String("role_id", role_id))
-		return err
-	}
-
-	return nil
 }
 
 // Get permissions.

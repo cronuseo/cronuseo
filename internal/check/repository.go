@@ -14,9 +14,9 @@ import (
 
 type Repository interface {
 	ValidateAPIKey(ctx context.Context, org_identifier string, apiKey string) (bool, error)
-	GetUserRoles(ctx context.Context, org_identifier string, username string) (*[]primitive.ObjectID, error)
-	GetRolePermissions(ctx context.Context, org_identifier string) (*[]mongo_entity.RolePermission, error)
-	GetGroupRoles(ctx context.Context, org_identifier string, username string) (*[]primitive.ObjectID, error)
+	GetUserRoles(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
+	GetRolePermissions(ctx context.Context, org_identifier string, role_ids []primitive.ObjectID) (*[]mongo_entity.Permission, error)
+	GetGroupRoles(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
 }
 
 type repository struct {
@@ -47,16 +47,13 @@ func (r repository) ValidateAPIKey(ctx context.Context, org_identifier string, a
 	return false, nil
 }
 
-func (r repository) GetUserRoles(ctx context.Context, org_identifier string, username string) (*[]primitive.ObjectID, error) {
+func (r repository) GetUserRoles(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error) {
 
 	// Define filter to find the user by its ID
-	filter := bson.M{"identifier": org_identifier, "users.username": username}
+	filter := bson.M{"identifier": org_identifier, "users.identifier": identifier}
 	projection := bson.M{"users.$": 1}
 	// Find the user document in the "organizations" collection
 	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
-	if err := result.Err(); err != nil {
-		return nil, err
-	}
 
 	// Decode the organization document into a struct
 	var org mongo_entity.Organization
@@ -70,16 +67,13 @@ func (r repository) GetUserRoles(ctx context.Context, org_identifier string, use
 	return &org.Users[0].Roles, nil
 }
 
-func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, username string) (*[]primitive.ObjectID, error) {
+func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error) {
 
 	// Define filter to find the user by its ID
-	filter := bson.M{"identifier": org_identifier, "users.username": username}
+	filter := bson.M{"identifier": org_identifier, "users.identifier": identifier}
 	projection := bson.M{"users.$": 1}
 	// Find the user document in the "organizations" collection
 	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
-	if err := result.Err(); err != nil {
-		return nil, err
-	}
 
 	// Decode the organization document into a struct
 	var org mongo_entity.Organization
@@ -119,24 +113,47 @@ func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, us
 	return &roleIDs, nil
 }
 
-func (r repository) GetRolePermissions(ctx context.Context, org_identifier string) (*[]mongo_entity.RolePermission, error) {
+func (r repository) GetRolePermissions(ctx context.Context, org_identifier string, role_ids []primitive.ObjectID) (*[]mongo_entity.Permission, error) {
 
-	// Define filter to find the role permissions by its ID
-	filter := bson.M{"identifier": org_identifier}
-	// Find the user document in the "organizations" collection
-	result := r.mongoColl.FindOne(context.Background(), filter)
-	if err := result.Err(); err != nil {
-		return nil, err
+	// Define the aggregation pipeline
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{"identifier": org_identifier}}},
+		{{Key: "$project", Value: bson.M{
+			"roles": bson.M{
+				"$filter": bson.M{
+					"input": "$roles",
+					"as":    "role",
+					"cond":  bson.M{"$in": []interface{}{"$$role._id", role_ids}},
+				},
+			},
+		}}},
 	}
 
-	// Decode the organization document into a struct
-	var org mongo_entity.Organization
-	if err := result.Decode(&org); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, &util.NotFoundError{Path: "Role Permissions"}
+	// Aggregate the query results
+	cursor, err := r.mongoColl.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	// Assuming only one organization will match, decode the first result
+	var org struct {
+		Roles []mongo_entity.Role `bson:"roles"`
+	}
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&org); err != nil {
+			return nil, err
 		}
-		return nil, err
+	} else {
+		return nil, &util.NotFoundError{Path: "Organization not found"}
 	}
 
-	return &org.RolePermissions, nil
+	// Initialize a slice to store permissions
+	var permissions []mongo_entity.Permission
+	for _, role := range org.Roles {
+		permissions = append(permissions, role.Permissions...)
+	}
+
+	// Return the collected permissions
+	return &permissions, nil
 }
