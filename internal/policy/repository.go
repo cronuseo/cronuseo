@@ -191,14 +191,14 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 		return err
 	}
 
-	userId, err := primitive.ObjectIDFromHex(id)
+	policyId, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return err
 	}
 
 	// Define filter to find the policy by its ID
 	filter := bson.M{"_id": orgId}
-	update := bson.M{"$pull": bson.M{"policies": bson.M{"_id": userId}}}
+	update := bson.M{"$pull": bson.M{"policies": bson.M{"_id": policyId}}}
 	// Find the policy document in the "organizations" collection
 	result, err := r.mongoColl.UpdateOne(context.Background(), filter, update, options.Update().SetUpsert(false))
 	if err != nil {
@@ -210,20 +210,12 @@ func (r repository) Delete(ctx context.Context, org_id string, id string) error 
 		return err
 	}
 
-	// filter = bson.M{"_id": orgId}
-	// update = bson.M{"$pull": bson.M{"groups.$[].users": userId}}
-	// _, err = r.mongoColl.UpdateOne(ctx, filter, update)
-	// if err != nil {
-	// 	return err
-	// }
-
-	// filter = bson.M{"_id": orgId}
-	// update = bson.M{"$pull": bson.M{"roles.$[].users": userId}}
-	// _, err = r.mongoColl.UpdateOne(ctx, filter, update)
-	// if err != nil {
-	// 	return err
-	// }
-
+	filter = bson.M{"_id": orgId}
+	update = bson.M{"$pull": bson.M{"users.$[].policies": policyId}}
+	_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

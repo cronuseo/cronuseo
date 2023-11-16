@@ -31,6 +31,7 @@ type CreateUserRequest struct {
 	UserProperties map[string]interface{} `json:"user_properties" bson:"user_properties"`
 	Roles          []primitive.ObjectID   `json:"roles,omitempty" bson:"roles"`
 	Groups         []primitive.ObjectID   `json:"groups,omitempty" bson:"groups"`
+	Policies       []primitive.ObjectID   `json:"policies,omitempty" bson:"policies"`
 }
 
 func (m CreateUserRequest) Validate() error {
@@ -45,11 +46,13 @@ type UpdateUserRequest struct {
 }
 
 type PatchUserRequest struct {
-	UserProperties map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
-	AddedRoles     []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
-	RemovedRoles   []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
-	AddedGroups    []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
-	RemovedGroups  []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
+	UserProperties  map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
+	AddedRoles      []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
+	RemovedRoles    []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
+	AddedGroups     []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups   []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
+	AddedPolicies   []primitive.ObjectID   `json:"added_policies,omitempty" bson:"added_policies"`
+	RemovedPolicies []primitive.ObjectID   `json:"removed_policies,omitempty" bson:"removed_policies"`
 }
 
 type UpdateUser struct {
@@ -57,11 +60,13 @@ type UpdateUser struct {
 }
 
 type PatchUser struct {
-	UserProperties map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
-	AddedRoles     []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
-	RemovedRoles   []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
-	AddedGroups    []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
-	RemovedGroups  []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
+	UserProperties  map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
+	AddedRoles      []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
+	RemovedRoles    []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
+	AddedGroups     []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups   []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
+	AddedPolicies   []primitive.ObjectID   `json:"added_policies,omitempty" bson:"added_policies"`
+	RemovedPolicies []primitive.ObjectID   `json:"removed_policies,omitempty" bson:"removed_policies"`
 }
 
 func (m UpdateUserRequest) Validate() error {
@@ -135,6 +140,13 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
 		if !exists {
 			return User{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+		}
+	}
+
+	for _, policyId := range req.Groups {
+		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
 		}
 	}
 
@@ -260,12 +272,43 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchU
 		}
 	}
 
+	// policies
+	for _, policyId := range req.AddedPolicies {
+		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+		}
+	}
+	for _, policyId := range req.RemovedPolicies {
+		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+		}
+	}
+	added_policies := []primitive.ObjectID{}
+	for _, policyId := range req.AddedPolicies {
+		already_added, _ := s.repo.CheckPolicyAlreadyAssignToUserById(ctx, org_id, id, policyId.Hex())
+		if !already_added {
+			added_policies = append(added_policies, policyId)
+		}
+	}
+
+	removed_policies := []primitive.ObjectID{}
+	for _, policyId := range req.RemovedPolicies {
+		already_added, _ := s.repo.CheckPolicyAlreadyAssignToUserById(ctx, org_id, id, policyId.Hex())
+		if already_added {
+			removed_policies = append(removed_policies, policyId)
+		}
+	}
+
 	if err := s.repo.Patch(ctx, org_id, id, PatchUser{
-		UserProperties: req.UserProperties,
-		AddedRoles:     added_roles,
-		RemovedRoles:   removed_roles,
-		AddedGroups:    added_groups,
-		RemovedGroups:  removed_groups,
+		UserProperties:  req.UserProperties,
+		AddedRoles:      added_roles,
+		RemovedRoles:    removed_roles,
+		AddedGroups:     added_groups,
+		RemovedGroups:   removed_groups,
+		AddedPolicies:   added_policies,
+		RemovedPolicies: removed_policies,
 	}); err != nil {
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),

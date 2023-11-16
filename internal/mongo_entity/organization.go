@@ -42,6 +42,7 @@ type User struct {
 	UserProperties map[string]interface{} `json:"user_properties" bson:"user_properties"`
 	Roles          []primitive.ObjectID   `json:"roles,omitempty" bson:"roles"`
 	Groups         []primitive.ObjectID   `json:"groups,omitempty" bson:"groups"`
+	Policies       []primitive.ObjectID   `json:"policies,omitempty" bson:"policies"`
 }
 
 type Role struct {
