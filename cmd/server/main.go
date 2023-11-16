@@ -16,6 +16,7 @@ import (
 	mw "github.com/shashimalcse/cronuseo/internal/middleware"
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
 	"github.com/shashimalcse/cronuseo/internal/organization"
+	"github.com/shashimalcse/cronuseo/internal/policy"
 	"github.com/shashimalcse/cronuseo/internal/resource"
 	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/user"
@@ -123,6 +124,7 @@ func registerServiceHandlers(e *echo.Group, mongodb *db.MongoDB, cfg *config.Con
 	resourceRepo := resource.NewRepository(mongodb)
 	roleRepo := role.NewRepository(mongodb)
 	groupRepo := group.NewRepository(mongodb)
+	policyRepo := policy.NewRepository(mongodb)
 
 	// Initialize services with repositories.
 	orgService := organization.NewService(orgRepo, logger)
@@ -130,6 +132,7 @@ func registerServiceHandlers(e *echo.Group, mongodb *db.MongoDB, cfg *config.Con
 	resourceService := resource.NewService(resourceRepo, logger)
 	roleService := role.NewService(roleRepo, logger)
 	groupService := group.NewService(groupRepo, logger)
+	policyService := policy.NewService(policyRepo, logger)
 
 	initializeRootOrganization(orgService, userService, groupService, roleService, resourceService, cfg, logger)
 
@@ -139,6 +142,7 @@ func registerServiceHandlers(e *echo.Group, mongodb *db.MongoDB, cfg *config.Con
 	resource.RegisterHandlers(e, resourceService)
 	role.RegisterHandlers(e, roleService)
 	group.RegisterHandlers(e, groupService)
+	policy.RegisterHandlers(e, policyService)
 
 }
 
@@ -158,6 +162,7 @@ func initializeRootOrganization(orgService organization.Service, userService use
 			Users:       []mongo_entity.User{},
 			Roles:       []mongo_entity.Role{},
 			Groups:      []mongo_entity.Group{},
+			Polices:     []mongo_entity.Policy{},
 		}
 		orgService.Create(nil, rootOrg)
 

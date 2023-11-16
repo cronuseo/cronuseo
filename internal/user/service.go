@@ -19,7 +19,6 @@ type Service interface {
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
 	Patch(ctx context.Context, org_id string, id string, input PatchUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) error
-	// Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error)
 }
 
 type User struct {
@@ -322,37 +321,3 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Use
 	}
 	return result, err
 }
-
-// type UserPatchRequest struct {
-// 	Operations []UserPatchOperation `json:"operations"`
-// }
-
-// type UserPatchOperation struct {
-// 	Operation string  `json:"op"`
-// 	Path      string  `json:"path"`
-// 	Values    []Value `json:"values"`
-// }
-
-// type Value struct {
-// 	Value string `json:"value"`
-// }
-
-// // Patch user. mainly patch user roles.
-// func (s service) Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error) {
-
-// 	user, err := s.Get(ctx, org_id, id)
-// 	if err != nil {
-// 		s.logger.Error("User not exists.", zap.String("user_id", id))
-// 		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
-
-// 	}
-// 	if err := s.repo.Patch(ctx, org_id, id, req); err != nil {
-// 		s.logger.Error("Error while patching user.",
-// 			zap.String("organization_id", org_id),
-// 			zap.String("user_id", id),
-// 		)
-// 		return User{}, err
-// 	}
-// 	s.permissionCache.FlushAll(ctx)
-// 	return user, nil
-// }
