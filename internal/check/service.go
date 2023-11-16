@@ -2,8 +2,10 @@ package check
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/shashimalcse/cronuseo/internal/util"
+	"github.com/shashimalcse/tunnel_go"
 	"go.uber.org/zap"
 )
 
@@ -64,6 +66,27 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 	for _, permission := range *role_permissions {
 		if permission.Resource == req.Resource && permission.Action == req.Action {
 			allow = true
+		}
+	}
+	if !skipValidation {
+		user_properties, err := s.repo.GetUserProperties(ctx, org_identifier, req.Identifier)
+		if err != nil {
+			return false, err
+		}
+		properties, err := json.Marshal(*user_properties)
+		if err != nil {
+			return false, err
+		}
+		user_policies, err := s.repo.GetUserPolicies(ctx, org_identifier, req.Identifier)
+		if err != nil {
+			return false, err
+		}
+		active_policies, err := s.repo.GetActivePolicyVersionContents(ctx, org_identifier, *user_policies)
+		for _, policy := range active_policies {
+			result := tunnel_go.ValidateTunnelPolicy(policy, string(properties))
+			if !result {
+				return false, nil
+			}
 		}
 	}
 	return allow, nil

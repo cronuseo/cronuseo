@@ -8,7 +8,6 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/labstack/echo/v4 v4.9.1
 	github.com/lib/pq v1.10.7
-	github.com/open-policy-agent/opa v0.51.0
 	github.com/stretchr/testify v1.8.2
 	github.com/swaggo/echo-swagger v1.3.5
 	github.com/swaggo/swag v1.16.1
@@ -20,25 +19,17 @@ require (
 )
 
 require (
-	github.com/OneOfOne/xxhash v1.2.8 // indirect
-	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
-	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rcrowley/go-metrics v0.0.0-20200313005456-10cdbea86bc0 // indirect
-	github.com/tchap/go-patricia/v2 v2.3.1 // indirect
+	github.com/shashimalcse/tunnel_go v0.1.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect
 	github.com/xdg-go/stringprep v1.0.3 // indirect
-	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
-	github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 // indirect
-	github.com/yashtewari/glob-intersection v0.1.0 // indirect
 	github.com/youmark/pkcs8 v0.0.0-20181117223130-1be2e3e5546d // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.9.0 // indirect

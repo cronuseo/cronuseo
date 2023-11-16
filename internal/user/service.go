@@ -164,6 +164,12 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		groups = req.Groups
 	}
 
+	var policies []primitive.ObjectID
+	if req.Policies == nil {
+		policies = []primitive.ObjectID{}
+	} else {
+		policies = req.Policies
+	}
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
 		ID:             userId,
 		Username:       req.Username,
@@ -171,6 +177,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		UserProperties: req.UserProperties,
 		Roles:          roles,
 		Groups:         groups,
+		Policies:       policies,
 	})
 
 	if err != nil {
