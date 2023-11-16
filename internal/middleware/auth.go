@@ -56,7 +56,7 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 
 				methodPath := MethodPath{
 					Method: c.Request().Method,
-					Path:   c.Path(),
+					Path:   c.Request().URL.Path,
 				}
 
 				endpointPermissions, err := getPermissionsForMethodPath(methodPath, requiredPermissions)

@@ -87,10 +87,7 @@ func BuildServer(
 	// API route groups.
 	apiV1 := e.Group("/api/v1")
 
-	requiredPermissions := map[mw.MethodPath][]string{
-		{Method: "GET", Path: "/api/v1/organizations", Resource: "organizations"}: {"orgs:read_all"},
-	}
-
+	requiredPermissions := getRequiredPermissions(cfg.APIEndpoints)
 	checkRepo := check.NewRepository(mongodb)
 	checkService := check.NewService(checkRepo, logger)
 	// Apply middleware specific to API routes if needed.
@@ -297,4 +294,22 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 		Actions:     policyActions,
 	}
 	resourceService.Create(nil, rootOrgId, policyResource)
+}
+
+func getRequiredPermissions(endpoints []config.APIEndpoint) map[mw.MethodPath][]string {
+
+	requiredPermissions := make(map[mw.MethodPath][]string)
+
+	for _, endpoint := range endpoints {
+		for _, method := range endpoint.Methods {
+			key := mw.MethodPath{
+				Method:   method.Method,
+				Path:     endpoint.Path,
+				Resource: endpoint.Resource,
+			}
+			requiredPermissions[key] = method.RequiredPermissions
+		}
+	}
+
+	return requiredPermissions
 }

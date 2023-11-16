@@ -29,9 +29,6 @@ type Config struct {
 		AdminName       string `yaml:"admin_name" env:"AdminName"`
 		AdminRoleName   string `yaml:"admin_role_name" env:"AdminRoleName"`
 	} `yaml:"root_organization"`
-	OPA struct {
-		RBAC string `yaml:"rbac" env:"RBAC"`
-	} `yaml:"opa"`
 	SyetemResources struct {
 		Organizations []string `yaml:"organizations"`
 		Users         []string `yaml:"users"`
@@ -40,6 +37,18 @@ type Config struct {
 		Resources     []string `yaml:"resources"`
 		Polices       []string `yaml:"policies"`
 	} `yaml:"system_resources"`
+	APIEndpoints []APIEndpoint `yaml:"endpoints"`
+}
+
+type APIEndpoint struct {
+	Path     string         `yaml:"path"`
+	Methods  []MethodDetail `yaml:"methods"`
+	Resource string         `yaml:"resource"`
+}
+
+type MethodDetail struct {
+	Method              string   `yaml:"method"`
+	RequiredPermissions []string `yaml:"required_permissions"`
 }
 
 func Nested(target interface{}, fieldRules ...*validation.FieldRules) *validation.FieldRules {
@@ -69,9 +78,6 @@ func (c Config) Validate() error {
 		),
 		Nested(&c.RootOrganization,
 			validation.Field(&c.RootOrganization.Name, validation.Required),
-		),
-		Nested(&c.OPA,
-			validation.Field(&c.OPA.RBAC, validation.Required),
 		),
 	)
 }
