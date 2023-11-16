@@ -172,16 +172,16 @@ func (r repository) Patch(ctx context.Context, org_id string, id string, patch_r
 	}
 
 	// remove users
-	if len(patch_role.RemovedUser) > 0 {
+	if len(patch_role.RemovedUsers) > 0 {
 
 		filter := bson.M{"_id": orgId, "roles._id": roleId}
-		update := bson.M{"$pull": bson.M{"roles.$.users": bson.M{"$in": patch_role.RemovedUser}}}
+		update := bson.M{"$pull": bson.M{"roles.$.users": bson.M{"$in": patch_role.RemovedUsers}}}
 		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
 		if err != nil {
 			return err
 		}
 
-		for _, userId := range patch_role.RemovedUser {
+		for _, userId := range patch_role.RemovedUsers {
 			filter := bson.M{"_id": orgId, "users._id": userId}
 			update := bson.M{"$pull": bson.M{"users.$.roles": roleId}}
 			_, err = r.mongoColl.UpdateOne(ctx, filter, update)

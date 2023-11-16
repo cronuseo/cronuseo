@@ -42,27 +42,27 @@ func (m CreateUserRequest) Validate() error {
 }
 
 type UpdateUserRequest struct {
-	UserProperties map[string]interface{} `json:"user_properties"`
+	UserProperties map[string]interface{} `json:"user_properties" bson:"user_properties"`
 }
 
 type PatchUserRequest struct {
-	UserProperties map[string]interface{} `json:"user_properties"`
-	AddedRoles     []primitive.ObjectID   `json:"added_roles"`
-	RemovedRoles   []primitive.ObjectID   `json:"removed_roles"`
-	AddedGroups    []primitive.ObjectID   `json:"added_groups"`
-	RemovedGroups  []primitive.ObjectID   `json:"removed_groups"`
+	UserProperties map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
+	AddedRoles     []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
+	RemovedRoles   []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
+	AddedGroups    []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups  []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
 }
 
 type UpdateUser struct {
-	UserProperties map[string]interface{} `json:"user_properties"`
+	UserProperties map[string]interface{} `json:"user_properties" bson:"user_properties"`
 }
 
 type PatchUser struct {
-	UserProperties map[string]interface{} `json:"user_properties"`
-	AddedRoles     []primitive.ObjectID   `json:"added_roles"`
-	RemovedRoles   []primitive.ObjectID   `json:"removed_roles"`
-	AddedGroups    []primitive.ObjectID   `json:"added_groups"`
-	RemovedGroups  []primitive.ObjectID   `json:"removed_groups"`
+	UserProperties map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
+	AddedRoles     []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
+	RemovedRoles   []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
+	AddedGroups    []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups  []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
 }
 
 func (m UpdateUserRequest) Validate() error {

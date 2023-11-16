@@ -26,8 +26,8 @@ type Role struct {
 }
 
 type CreateRoleRequest struct {
-	Identifier  string                    `json:"identifier"`
-	DisplayName string                    `json:"display_name"`
+	Identifier  string                    `json:"identifier" bson:"identifier"`
+	DisplayName string                    `json:"display_name" bson:"display_name"`
 	Users       []primitive.ObjectID      `json:"users,omitempty" bson:"users"`
 	Groups      []primitive.ObjectID      `json:"groups,omitempty" bson:"groups"`
 	Permissions []mongo_entity.Permission `json:"permissions,omitempty" bson:"permissions"`
@@ -40,12 +40,12 @@ func (m CreateRoleRequest) Validate() error {
 }
 
 type UpdateRoleRequest struct {
-	DisplayName *string `json:"display_name"`
+	DisplayName *string `json:"display_name" bson:"display_name"`
 }
 
 type PatchRoleRequest struct {
 	AddedUsers         []primitive.ObjectID      `json:"added_users,omitempty" bson:"added_users"`
-	RemovedUser        []primitive.ObjectID      `json:"removed_users,omitempty" bson:"removed_users"`
+	RemovedUsers       []primitive.ObjectID      `json:"removed_users,omitempty" bson:"removed_users"`
 	AddedGroups        []primitive.ObjectID      `json:"added_groups,omitempty" bson:"added_groups"`
 	RemovedGroups      []primitive.ObjectID      `json:"removed_groups,omitempty" bson:"removed_groups"`
 	AddedPermissions   []mongo_entity.Permission `json:"added_permissions,omitempty" bson:"added_permissions"`
@@ -58,7 +58,7 @@ type UpdateRole struct {
 
 type PatchRole struct {
 	AddedUsers         []primitive.ObjectID      `json:"added_users,omitempty" bson:"added_users"`
-	RemovedUser        []primitive.ObjectID      `json:"removed_users,omitempty" bson:"removed_users"`
+	RemovedUsers       []primitive.ObjectID      `json:"removed_users,omitempty" bson:"removed_users"`
 	AddedGroups        []primitive.ObjectID      `json:"added_groups,omitempty" bson:"added_groups"`
 	RemovedGroups      []primitive.ObjectID      `json:"removed_groups,omitempty" bson:"removed_groups"`
 	AddedPermissions   []mongo_entity.Permission `json:"added_permissions,omitempty" bson:"added_permissions"`
@@ -211,7 +211,7 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchR
 		}
 	}
 
-	for _, userId := range req.RemovedUser {
+	for _, userId := range req.RemovedUsers {
 		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
 		if !exists {
 			return Role{}, &util.InvalidInputError{Path: "Invalid role id " + userId.String()}
@@ -225,7 +225,7 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchR
 		}
 	}
 
-	for _, userId := range req.RemovedUser {
+	for _, userId := range req.RemovedUsers {
 		already_added, _ := s.repo.CheckUserAlreadyAssignToRoleById(ctx, org_id, id, userId.Hex())
 		if !already_added {
 			return Role{}, &util.InvalidInputError{Path: "Group : " + userId.Hex() + " not assigned to role :" + id}
@@ -291,7 +291,7 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchR
 
 	if err := s.repo.Patch(ctx, org_id, id, PatchRole{
 		AddedUsers:         req.AddedUsers,
-		RemovedUser:        req.RemovedUser,
+		RemovedUsers:        req.RemovedUsers,
 		AddedGroups:        req.AddedGroups,
 		RemovedGroups:      req.RemovedGroups,
 		AddedPermissions:   req.AddedPermissions,

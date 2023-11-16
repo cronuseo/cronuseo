@@ -9,13 +9,13 @@ import (
 
 func RegisterHandlers(r *echo.Group, service Service) {
 	res := resource{service}
-	router := r.Group("/:org_id/group")
+	router := r.Group("/o/:org_id/group")
 	router.GET("", res.query)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
-	// router.PATCH("/:id", res.patch)
+	router.PATCH("/:id", res.patch)
 }
 
 type resource struct {
@@ -105,6 +105,30 @@ func (r resource) update(c echo.Context) error {
 	}
 
 	group, err := r.service.Update(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+	return c.JSON(http.StatusCreated, group)
+}
+
+// @Description Patch group.
+// @Tags        Group
+// @Accept      json
+// @Param org_id path string true "Organization ID"
+// @Param id path string true "Group ID"
+// @Param request body PatchGroupRequest true "body"
+// @Produce     json
+// @Success     201 {object}  mongo_entity.Group
+// @failure     400,403,404,500
+// @Router      /{org_id}/group/{id} [patch]
+func (r resource) patch(c echo.Context) error {
+
+	var input PatchGroupRequest
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+
+	group, err := r.service.Patch(c.Request().Context(), c.Param("org_id"), c.Param("id"), input)
 	if err != nil {
 		return util.HandleError(err)
 	}
