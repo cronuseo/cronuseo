@@ -17,6 +17,7 @@ type Service interface {
 	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
+	Patch(ctx context.Context, org_id string, id string, input PatchUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) error
 	// Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error)
 }
@@ -27,8 +28,8 @@ type User struct {
 
 type CreateUserRequest struct {
 	Username       string                 `json:"username" bson:"username"`
-	Identifier     string                 `json:"email" bson:"email"`
-	UserProperties map[string]interface{} `json:"user_properties"`
+	Identifier     string                 `json:"identifier" bson:"identifier"`
+	UserProperties map[string]interface{} `json:"user_properties" bson:"user_properties"`
 	Roles          []primitive.ObjectID   `json:"roles,omitempty" bson:"roles"`
 	Groups         []primitive.ObjectID   `json:"groups,omitempty" bson:"groups"`
 }
@@ -42,6 +43,10 @@ func (m CreateUserRequest) Validate() error {
 
 type UpdateUserRequest struct {
 	UserProperties map[string]interface{} `json:"user_properties"`
+}
+
+type PatchUserRequest struct {
+	UserProperties map[string]interface{} `json:"user_properties"`
 	AddedRoles     []primitive.ObjectID   `json:"added_roles"`
 	RemovedRoles   []primitive.ObjectID   `json:"removed_roles"`
 	AddedGroups    []primitive.ObjectID   `json:"added_groups"`
@@ -49,6 +54,10 @@ type UpdateUserRequest struct {
 }
 
 type UpdateUser struct {
+	UserProperties map[string]interface{} `json:"user_properties"`
+}
+
+type PatchUser struct {
 	UserProperties map[string]interface{} `json:"user_properties"`
 	AddedRoles     []primitive.ObjectID   `json:"added_roles"`
 	RemovedRoles   []primitive.ObjectID   `json:"removed_roles"`
@@ -156,6 +165,30 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
 	}
 
+	if err := s.repo.Update(ctx, org_id, id, UpdateUser{
+		UserProperties: req.UserProperties,
+	}); err != nil {
+		s.logger.Error("Error while updating user.",
+			zap.String("organization_id", org_id),
+			zap.String("user_id", id))
+		return User{}, err
+	}
+	updatedUser, err := s.repo.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("User not exists.", zap.String("user_id", id))
+		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
+	}
+	return User{*updatedUser}, nil
+}
+
+func (s service) Patch(ctx context.Context, org_id string, id string, req PatchUserRequest) (User, error) {
+
+	_, err := s.Get(ctx, org_id, id)
+	if err != nil {
+		s.logger.Debug("User not exists.", zap.String("user_id", id))
+		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
+	}
+
 	// roles
 	for _, roleId := range req.AddedRoles {
 		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
@@ -214,12 +247,12 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		}
 	}
 
-	if err := s.repo.Update(ctx, org_id, id, UpdateUser{
+	if err := s.repo.Patch(ctx, org_id, id, PatchUser{
 		UserProperties: req.UserProperties,
-		AddedRoles:     added_roles,
-		RemovedRoles:   removed_roles,
-		AddedGroups:    added_groups,
-		RemovedGroups:  removed_groups,
+		AddedRoles:    added_roles,
+		RemovedRoles:  removed_roles,
+		AddedGroups:   added_groups,
+		RemovedGroups: removed_groups,
 	}); err != nil {
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),

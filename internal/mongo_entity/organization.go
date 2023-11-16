@@ -38,7 +38,7 @@ type User struct {
 	ID             primitive.ObjectID     `json:"id" bson:"_id,omitempty"`
 	Username       string                 `json:"username" bson:"username"`
 	Identifier     string                 `json:"identifier" bson:"identifier"`
-	UserProperties map[string]interface{} `json:"user_properties"`
+	UserProperties map[string]interface{} `json:"user_properties" bson:"user_properties"`
 	Roles          []primitive.ObjectID   `json:"roles,omitempty" bson:"roles"`
 	Groups         []primitive.ObjectID   `json:"groups,omitempty" bson:"groups"`
 }
