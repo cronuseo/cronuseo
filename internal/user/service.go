@@ -19,7 +19,6 @@ type Service interface {
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
 	Patch(ctx context.Context, org_id string, id string, input PatchUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) error
-	// Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error)
 }
 
 type User struct {
@@ -32,6 +31,7 @@ type CreateUserRequest struct {
 	UserProperties map[string]interface{} `json:"user_properties" bson:"user_properties"`
 	Roles          []primitive.ObjectID   `json:"roles,omitempty" bson:"roles"`
 	Groups         []primitive.ObjectID   `json:"groups,omitempty" bson:"groups"`
+	Policies       []primitive.ObjectID   `json:"policies,omitempty" bson:"policies"`
 }
 
 func (m CreateUserRequest) Validate() error {
@@ -46,11 +46,13 @@ type UpdateUserRequest struct {
 }
 
 type PatchUserRequest struct {
-	UserProperties map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
-	AddedRoles     []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
-	RemovedRoles   []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
-	AddedGroups    []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
-	RemovedGroups  []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
+	UserProperties  map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
+	AddedRoles      []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
+	RemovedRoles    []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
+	AddedGroups     []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups   []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
+	AddedPolicies   []primitive.ObjectID   `json:"added_policies,omitempty" bson:"added_policies"`
+	RemovedPolicies []primitive.ObjectID   `json:"removed_policies,omitempty" bson:"removed_policies"`
 }
 
 type UpdateUser struct {
@@ -58,11 +60,13 @@ type UpdateUser struct {
 }
 
 type PatchUser struct {
-	UserProperties map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
-	AddedRoles     []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
-	RemovedRoles   []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
-	AddedGroups    []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
-	RemovedGroups  []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
+	UserProperties  map[string]interface{} `json:"user_properties,omitempty" bson:"user_properties"`
+	AddedRoles      []primitive.ObjectID   `json:"added_roles,omitempty" bson:"added_roles"`
+	RemovedRoles    []primitive.ObjectID   `json:"removed_roles,omitempty" bson:"removed_roles"`
+	AddedGroups     []primitive.ObjectID   `json:"added_groups,omitempty" bson:"added_groups"`
+	RemovedGroups   []primitive.ObjectID   `json:"removed_groups,omitempty" bson:"removed_groups"`
+	AddedPolicies   []primitive.ObjectID   `json:"added_policies,omitempty" bson:"added_policies"`
+	RemovedPolicies []primitive.ObjectID   `json:"removed_policies,omitempty" bson:"removed_policies"`
 }
 
 func (m UpdateUserRequest) Validate() error {
@@ -139,6 +143,13 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		}
 	}
 
+	for _, policyId := range req.Groups {
+		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+		}
+	}
+
 	var roles []primitive.ObjectID
 	if req.Roles == nil {
 		roles = []primitive.ObjectID{}
@@ -153,6 +164,12 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		groups = req.Groups
 	}
 
+	var policies []primitive.ObjectID
+	if req.Policies == nil {
+		policies = []primitive.ObjectID{}
+	} else {
+		policies = req.Policies
+	}
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
 		ID:             userId,
 		Username:       req.Username,
@@ -160,6 +177,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		UserProperties: req.UserProperties,
 		Roles:          roles,
 		Groups:         groups,
+		Policies:       policies,
 	})
 
 	if err != nil {
@@ -261,12 +279,43 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchU
 		}
 	}
 
+	// policies
+	for _, policyId := range req.AddedPolicies {
+		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+		}
+	}
+	for _, policyId := range req.RemovedPolicies {
+		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
+		if !exists {
+			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+		}
+	}
+	added_policies := []primitive.ObjectID{}
+	for _, policyId := range req.AddedPolicies {
+		already_added, _ := s.repo.CheckPolicyAlreadyAssignToUserById(ctx, org_id, id, policyId.Hex())
+		if !already_added {
+			added_policies = append(added_policies, policyId)
+		}
+	}
+
+	removed_policies := []primitive.ObjectID{}
+	for _, policyId := range req.RemovedPolicies {
+		already_added, _ := s.repo.CheckPolicyAlreadyAssignToUserById(ctx, org_id, id, policyId.Hex())
+		if already_added {
+			removed_policies = append(removed_policies, policyId)
+		}
+	}
+
 	if err := s.repo.Patch(ctx, org_id, id, PatchUser{
-		UserProperties: req.UserProperties,
-		AddedRoles:     added_roles,
-		RemovedRoles:   removed_roles,
-		AddedGroups:    added_groups,
-		RemovedGroups:  removed_groups,
+		UserProperties:  req.UserProperties,
+		AddedRoles:      added_roles,
+		RemovedRoles:    removed_roles,
+		AddedGroups:     added_groups,
+		RemovedGroups:   removed_groups,
+		AddedPolicies:   added_policies,
+		RemovedPolicies: removed_policies,
 	}); err != nil {
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),
@@ -322,37 +371,3 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Use
 	}
 	return result, err
 }
-
-// type UserPatchRequest struct {
-// 	Operations []UserPatchOperation `json:"operations"`
-// }
-
-// type UserPatchOperation struct {
-// 	Operation string  `json:"op"`
-// 	Path      string  `json:"path"`
-// 	Values    []Value `json:"values"`
-// }
-
-// type Value struct {
-// 	Value string `json:"value"`
-// }
-
-// // Patch user. mainly patch user roles.
-// func (s service) Patch(ctx context.Context, org_id string, id string, req UserPatchRequest) (User, error) {
-
-// 	user, err := s.Get(ctx, org_id, id)
-// 	if err != nil {
-// 		s.logger.Error("User not exists.", zap.String("user_id", id))
-// 		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
-
-// 	}
-// 	if err := s.repo.Patch(ctx, org_id, id, req); err != nil {
-// 		s.logger.Error("Error while patching user.",
-// 			zap.String("organization_id", org_id),
-// 			zap.String("user_id", id),
-// 		)
-// 		return User{}, err
-// 	}
-// 	s.permissionCache.FlushAll(ctx)
-// 	return user, nil
-// }

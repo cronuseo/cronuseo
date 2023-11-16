@@ -200,5 +200,8 @@ endpoints:
       - method: "PUT"
         required_permissions:
           - "policies:update"
+      - method: "PATCH"
+        required_permissions:
+          - "policies:update"          
     resource: "policies"         
     

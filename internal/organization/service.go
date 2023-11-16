@@ -34,6 +34,7 @@ type OrganizationCreationRequest struct {
 	Users       []mongo_entity.User     `json:"users,omitempty" bson:"users"`
 	Roles       []mongo_entity.Role     `json:"roles,omitempty" bson:"roles"`
 	Groups      []mongo_entity.Group    `json:"groups,omitempty" bson:"groups"`
+	Polices     []mongo_entity.Policy   `json:"policies,omitempty" bson:"policies"`
 }
 
 func (m OrganizationCreationRequest) Validate() error {
@@ -106,6 +107,7 @@ func (s service) Create(ctx context.Context, req OrganizationCreationRequest) (O
 		Groups:      req.Groups,
 		Roles:       req.Roles,
 		Resources:   req.Resources,
+		Polices:     req.Polices,
 	})
 	if err != nil {
 		s.logger.Error("Error while creating organization.")

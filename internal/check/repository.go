@@ -17,6 +17,9 @@ type Repository interface {
 	GetUserRoles(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
 	GetRolePermissions(ctx context.Context, org_identifier string, role_ids []primitive.ObjectID) (*[]mongo_entity.Permission, error)
 	GetGroupRoles(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
+	GetUserPolicies(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
+	GetUserProperties(ctx context.Context, org_identifier string, identifier string) (*map[string]interface{}, error)
+	GetActivePolicyVersionContents(ctx context.Context, org_identifier string, policy_ids []primitive.ObjectID) (map[string]string, error)
 }
 
 type repository struct {
@@ -113,6 +116,26 @@ func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, id
 	return &roleIDs, nil
 }
 
+func (r repository) GetUserPolicies(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error) {
+
+	// Define filter to find the user by its ID
+	filter := bson.M{"identifier": org_identifier, "users.identifier": identifier}
+	projection := bson.M{"users.$": 1}
+	// Find the user document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "User"}
+		}
+		return nil, err
+	}
+
+	return &org.Users[0].Policies, nil
+}
+
 func (r repository) GetRolePermissions(ctx context.Context, org_identifier string, role_ids []primitive.ObjectID) (*[]mongo_entity.Permission, error) {
 
 	// Define the aggregation pipeline
@@ -156,4 +179,88 @@ func (r repository) GetRolePermissions(ctx context.Context, org_identifier strin
 
 	// Return the collected permissions
 	return &permissions, nil
+}
+
+func (r repository) GetActivePolicyVersionContents(ctx context.Context, org_identifier string, policy_ids []primitive.ObjectID) (map[string]string, error) {
+
+	// Filter to find documents with the specified policy IDs
+	filter := bson.M{
+		"identifier": org_identifier,
+		"policies": bson.M{
+			"$elemMatch": bson.M{
+				"_id": bson.M{"$in": policy_ids},
+			},
+		},
+	}
+
+	// Projection to extract only the relevant policies
+	projection := bson.M{"policies": 1}
+
+	cursor, err := r.mongoColl.Find(ctx, filter, options.Find().SetProjection(projection))
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	activePolicies := make(map[string]string)
+	for cursor.Next(ctx) {
+		var doc struct {
+			Policies []struct {
+				ID             primitive.ObjectID `bson:"_id"`
+				ActiveVersion  string             `bson:"active_version"`
+				PolicyContents []struct {
+					Version string `bson:"version"`
+					Policy  string `bson:"policy"`
+				} `bson:"policy_contents"`
+			} `bson:"policies"`
+		}
+		if err := cursor.Decode(&doc); err != nil {
+			return nil, err
+		}
+
+        for _, policy := range doc.Policies {
+            if contains(policy_ids, policy.ID) {
+                for _, content := range policy.PolicyContents {
+                    if content.Version == policy.ActiveVersion {
+                        activePolicies[policy.ID.Hex()] = content.Policy
+                        break
+                    }
+                }
+            }
+        }
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, err
+	}
+
+	return activePolicies, nil
+}
+
+func (r repository) GetUserProperties(ctx context.Context, org_identifier string, identifier string) (*map[string]interface{}, error) {
+
+	filter := bson.M{"identifier": org_identifier, "users.identifier": identifier}
+	projection := bson.M{"users.$": 1}
+	// Find the user document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "User"}
+		}
+		return nil, err
+	}
+
+	return &org.Users[0].UserProperties, nil
+}
+
+func contains(slice []primitive.ObjectID, item primitive.ObjectID) bool {
+    for _, s := range slice {
+        if s == item {
+            return true
+        }
+    }
+    return false
 }
