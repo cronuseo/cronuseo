@@ -77,23 +77,21 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 				return key, nil
 			}
 
-			config := middleware.JWTConfig{
+			jwtMiddleware := middleware.JWTWithConfig(middleware.JWTConfig{
 				KeyFunc: keyFunc,
-			}
-
-			if err := middleware.JWTWithConfig(config)(next)(c); err != nil {
-				logger.Debug("error while validating token", zap.Error(err))
-				if httpErr, ok := err.(*echo.HTTPError); ok {
-					if internalErr, ok := httpErr.Internal.(*jwt.ValidationError); ok {
-						return internalErr.Inner
-					} else {
-						return httpErr
+				ErrorHandlerWithContext: func(err error, c echo.Context) error {
+					logger.Debug("error while validating token", zap.Error(err))
+					if httpErr, ok := err.(*echo.HTTPError); ok {
+						if internalErr, ok := httpErr.Internal.(*jwt.ValidationError); ok {
+							return internalErr.Inner
+						} else {
+							return httpErr
+						}
 					}
-				}
-				return err
-			}
-
-			return next(c)
+					return err
+				},
+			})
+			return jwtMiddleware(next)(c)
 		}
 	}
 }
