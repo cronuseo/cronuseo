@@ -16,7 +16,7 @@ By using Cronuseo, it is possible to create a separate authorization service, ef
 ## Main features:
 
 * Role-based Access Control (RBAC)
-* Attibute-based Access Control (ABAC) with [policy tunnel](https://github.com/shashimalcse/policytunnel)
+* Attribute-based Access Control (ABAC) with [policy tunnel](https://github.com/shashimalcse/policytunnel)
 
 ## Get started
 
