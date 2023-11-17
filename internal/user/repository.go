@@ -120,8 +120,32 @@ func (r repository) Create(ctx context.Context, org_id string, user mongo_entity
 		return err
 	}
 
-	return nil
+	// add roles
+	if len(user.Roles) > 0 {
 
+		for _, roleId := range user.Roles {
+			filter := bson.M{"_id": orgId, "roles._id": roleId}
+			update := bson.M{"$addToSet": bson.M{"roles.$.users": user.ID}}
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// add users
+	if len(user.Groups) > 0 {
+
+		for _, groupId := range user.Groups {
+			filter := bson.M{"_id": orgId, "groups._id": groupId}
+			update := bson.M{"$addToSet": bson.M{"groups.$.users": user.ID}}
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func (r repository) Update(ctx context.Context, org_id string, id string, update_user UpdateUser) error {

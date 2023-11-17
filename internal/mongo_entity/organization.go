@@ -60,6 +60,7 @@ type Group struct {
 	DisplayName string               `json:"display_name" bson:"display_name"`
 	Users       []primitive.ObjectID `json:"users,omitempty" bson:"users"`
 	Roles       []primitive.ObjectID `json:"roles,omitempty" bson:"roles"`
+	Policies    []primitive.ObjectID `json:"policies,omitempty" bson:"policies"`
 }
 
 type Permission struct {

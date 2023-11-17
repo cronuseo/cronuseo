@@ -143,7 +143,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 		}
 	}
 
-	for _, policyId := range req.Groups {
+	for _, policyId := range req.Policies {
 		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
 		if !exists {
 			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
@@ -170,6 +170,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 	} else {
 		policies = req.Policies
 	}
+	
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
 		ID:             userId,
 		Username:       req.Username,

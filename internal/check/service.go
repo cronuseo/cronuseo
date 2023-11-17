@@ -81,7 +81,10 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 		if err != nil {
 			return false, err
 		}
-		active_policies, err := s.repo.GetActivePolicyVersionContents(ctx, org_identifier, *user_policies)
+		user_groups, err := s.repo.GetUserGroups(ctx, org_identifier, req.Identifier)
+		group_policies, err := s.repo.GetGroupPolicies(ctx, org_identifier, *user_groups)
+		polcies := append(*user_policies, *group_policies...)
+		active_policies, err := s.repo.GetActivePolicyVersionContents(ctx, org_identifier, polcies)
 		for _, policy := range active_policies {
 			result := tunnel_go.ValidateTunnelPolicy(policy, string(properties))
 			if !result {

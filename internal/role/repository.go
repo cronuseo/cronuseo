@@ -15,7 +15,6 @@ import (
 type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (*mongo_entity.Role, error)
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.Role, error)
-	// QueryByUserID(ctx context.Context, org_id string, user_id string, filter Filter) ([]entity.Role, error)
 	Create(ctx context.Context, org_id string, user mongo_entity.Role) error
 	Update(ctx context.Context, org_id string, id string, update_role UpdateRole) error
 	Patch(ctx context.Context, org_id string, id string, update_role PatchRole) error
@@ -90,22 +89,25 @@ func (r repository) Create(ctx context.Context, org_id string, role mongo_entity
 	if err != nil {
 		return err
 	}
-
-	for _, userId := range role.Users {
-		filter := bson.M{"_id": orgId, "users._id": userId}
-		update := bson.M{"$addToSet": bson.M{"users.$.roles": role.ID}}
-		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
-		if err != nil {
-			return err
+	if len(role.Users) > 0 {
+		for _, userId := range role.Users {
+			filter := bson.M{"_id": orgId, "users._id": userId}
+			update := bson.M{"$addToSet": bson.M{"users.$.roles": role.ID}}
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	for _, userId := range role.Groups {
-		filter := bson.M{"_id": orgId, "groups._id": userId}
-		update := bson.M{"$addToSet": bson.M{"groups.$.roles": role.ID}}
-		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
-		if err != nil {
-			return err
+	if len(role.Groups) > 0 {
+		for _, userId := range role.Groups {
+			filter := bson.M{"_id": orgId, "groups._id": userId}
+			update := bson.M{"$addToSet": bson.M{"groups.$.roles": role.ID}}
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
 		}
 	}
 	return nil

@@ -25,6 +25,8 @@ type Repository interface {
 	CheckRoleAlreadyAssignToGroupById(ctx context.Context, org_id string, group_id string, role_id string) (bool, error)
 	CheckUserExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckUserAlreadyAssignToGroupById(ctx context.Context, org_id string, group_id string, user_id string) (bool, error)
+	CheckPolicyExistById(ctx context.Context, org_id string, id string) (bool, error)
+	CheckPolicyAlreadyAssignToGroupById(ctx context.Context, org_id string, group_id string, policy_id string) (bool, error)
 }
 
 type repository struct {
@@ -86,6 +88,33 @@ func (r repository) Create(ctx context.Context, org_id string, group mongo_entit
 	_, err = r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
+	}
+
+	// add roles
+	if len(group.Roles) > 0 {
+
+		for _, roleId := range group.Roles {
+			filter := bson.M{"_id": orgId, "roles._id": roleId}
+			update := bson.M{"$addToSet": bson.M{"roles.$.groups": group.ID}}
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// add users
+	if len(group.Users) > 0 {
+
+		for _, userId := range group.Users {
+			filter := bson.M{"_id": orgId, "users._id": userId}
+			update := bson.M{"$addToSet": bson.M{"users.$.groups": group.ID}}
+			_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -194,7 +223,7 @@ func (r repository) Patch(ctx context.Context, org_id string, id string, patch_g
 
 	}
 
-	// remove roles
+	// remove users
 	if len(patch_group.RemovedUsers) > 0 {
 
 		filter := bson.M{"_id": orgId, "groups._id": groupId}
@@ -211,6 +240,30 @@ func (r repository) Patch(ctx context.Context, org_id string, id string, patch_g
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	// add policies
+	if len(patch_group.AddedPolicies) > 0 {
+
+		filter := bson.M{"_id": orgId, "groups._id": groupId}
+		update := bson.M{"$push": bson.M{"groups.$.policies": bson.M{
+			"$each": patch_group.AddedPolicies,
+		}}}
+		_, err = r.mongoColl.UpdateOne(ctx, filter, update)
+		if err != nil {
+			return err
+		}
+	}
+
+	// remove policies
+	if len(patch_group.RemovedPolicies) > 0 {
+
+		filter := bson.M{"_id": orgId, "groups._id": groupId}
+		update := bson.M{"$pull": bson.M{"groups.$.policies": bson.M{"$in": patch_group.RemovedPolicies}}}
+		_, err := r.mongoColl.UpdateOne(ctx, filter, update, options.Update().SetUpsert(false))
+		if err != nil {
+			return err
 		}
 	}
 
@@ -468,5 +521,71 @@ func (r repository) CheckUserAlreadyAssignToGroupById(ctx context.Context, org_i
 	}
 
 	// User ID not found in the group's Users field
+	return false, nil
+}
+
+// Check if policy exists by id.
+func (r repository) CheckPolicyExistById(ctx context.Context, org_id string, id string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	groupId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "policies._id": groupId}
+
+	// Search for the policy in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter)
+
+	// Check if the policy was found
+	if result.Err() == nil {
+		return true, nil
+	} else if result.Err() == mongo.ErrNoDocuments {
+		return false, nil
+	} else {
+		return false, result.Err()
+	}
+}
+
+// Check if policy already assign to group by id.
+func (r repository) CheckPolicyAlreadyAssignToGroupById(ctx context.Context, org_id string, group_id string, policy_id string) (bool, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return false, err
+	}
+
+	userId, err := primitive.ObjectIDFromHex(group_id)
+	if err != nil {
+		return false, err
+	}
+
+	policyId, err := primitive.ObjectIDFromHex(policy_id)
+	if err != nil {
+		return false, err
+	}
+
+	filter := bson.M{"_id": orgId, "groups._id": userId}
+	projection := bson.M{"groups.$": 1}
+	org := mongo_entity.Organization{}
+	// Search for the role in the "organizations" collection
+	err = r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection)).Decode(&org)
+	if err != nil {
+		return false, err
+	}
+	group := org.Groups[0]
+	// Check if the policy ID exists in the user's policies field
+	for _, r := range group.Policies {
+		if r == policyId {
+			return true, nil
+		}
+	}
+
+	// policy ID not found in the user's policies field
 	return false, nil
 }

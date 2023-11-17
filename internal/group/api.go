@@ -9,7 +9,7 @@ import (
 
 func RegisterHandlers(r *echo.Group, service Service) {
 	res := resource{service}
-	router := r.Group("/o/:org_id/group")
+	router := r.Group("/o/:org_id/groups")
 	router.GET("", res.query)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
