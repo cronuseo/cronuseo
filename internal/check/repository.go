@@ -17,7 +17,9 @@ type Repository interface {
 	GetUserRoles(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
 	GetRolePermissions(ctx context.Context, org_identifier string, role_ids []primitive.ObjectID) (*[]mongo_entity.Permission, error)
 	GetGroupRoles(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
+	GetUserGroups(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
 	GetUserPolicies(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error)
+	GetGroupPolicies(ctx context.Context, org_identifier string, group_ids []primitive.ObjectID) (*[]primitive.ObjectID, error)
 	GetUserProperties(ctx context.Context, org_identifier string, identifier string) (*map[string]interface{}, error)
 	GetActivePolicyVersionContents(ctx context.Context, org_identifier string, policy_ids []primitive.ObjectID) (map[string]string, error)
 }
@@ -116,6 +118,26 @@ func (r repository) GetGroupRoles(ctx context.Context, org_identifier string, id
 	return &roleIDs, nil
 }
 
+func (r repository) GetUserGroups(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error) {
+
+	// Define filter to find the user by its ID
+	filter := bson.M{"identifier": org_identifier, "users.identifier": identifier}
+	projection := bson.M{"users.$": 1}
+	// Find the user document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "User"}
+		}
+		return nil, err
+	}
+
+	return &org.Users[0].Groups, nil
+}
+
 func (r repository) GetUserPolicies(ctx context.Context, org_identifier string, identifier string) (*[]primitive.ObjectID, error) {
 
 	// Define filter to find the user by its ID
@@ -134,6 +156,26 @@ func (r repository) GetUserPolicies(ctx context.Context, org_identifier string, 
 	}
 
 	return &org.Users[0].Policies, nil
+}
+
+func (r repository) GetGroupPolicies(ctx context.Context, org_identifier string, group_ids []primitive.ObjectID) (*[]primitive.ObjectID, error) {
+
+	// Define filter to find the user by its ID
+	filter := bson.M{"identifier": org_identifier, "groups._id": bson.M{"$in": group_ids}}
+	projection := bson.M{"groups.$": 1}
+	// Find the user document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "User"}
+		}
+		return nil, err
+	}
+
+	return &org.Groups[0].Policies, nil
 }
 
 func (r repository) GetRolePermissions(ctx context.Context, org_identifier string, role_ids []primitive.ObjectID) (*[]mongo_entity.Permission, error) {
@@ -218,16 +260,16 @@ func (r repository) GetActivePolicyVersionContents(ctx context.Context, org_iden
 			return nil, err
 		}
 
-        for _, policy := range doc.Policies {
-            if contains(policy_ids, policy.ID) {
-                for _, content := range policy.PolicyContents {
-                    if content.Version == policy.ActiveVersion {
-                        activePolicies[policy.ID.Hex()] = content.Policy
-                        break
-                    }
-                }
-            }
-        }
+		for _, policy := range doc.Policies {
+			if contains(policy_ids, policy.ID) {
+				for _, content := range policy.PolicyContents {
+					if content.Version == policy.ActiveVersion {
+						activePolicies[policy.ID.Hex()] = content.Policy
+						break
+					}
+				}
+			}
+		}
 	}
 
 	if err := cursor.Err(); err != nil {
@@ -257,10 +299,10 @@ func (r repository) GetUserProperties(ctx context.Context, org_identifier string
 }
 
 func contains(slice []primitive.ObjectID, item primitive.ObjectID) bool {
-    for _, s := range slice {
-        if s == item {
-            return true
-        }
-    }
-    return false
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
 }
