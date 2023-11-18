@@ -6,6 +6,7 @@ import (
 
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"github.com/shashimalcse/tunnel_go"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 )
 
@@ -24,6 +25,12 @@ type service struct {
 	logger *zap.Logger
 }
 
+type CheckDetails struct {
+	Roles          []primitive.ObjectID
+	Polcies        []primitive.ObjectID
+	UserProperties map[string]interface{}
+}
+
 func NewService(repo Repository, logger *zap.Logger) Service {
 
 	return service{repo: repo, logger: logger}
@@ -39,52 +46,28 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 			return false, &util.UnauthorizedError{}
 		}
 	}
-
-	user_roles, err := s.repo.GetUserRoles(ctx, org_identifier, req.Identifier)
+	checkDetails, err := s.repo.GetCheckDetails(ctx, org_identifier, req.Identifier)
 	if err != nil {
-		if notFoundErr, ok := err.(*util.NotFoundError); ok {
-			return false, notFoundErr
-		}
-		s.logger.Error("Error while retrieving user roles.",
-			zap.String("org_identifier", org_identifier), zap.String("identifier", req.Identifier))
 		return false, err
 	}
-	group_roles, err := s.repo.GetGroupRoles(ctx, org_identifier, req.Identifier)
-	if err != nil {
-		if notFoundErr, ok := err.(*util.NotFoundError); ok {
-			return false, notFoundErr
-		}
-		s.logger.Error("Error while retrieving group roles.",
-			zap.String("org_identifier", org_identifier), zap.String("identifier", req.Identifier))
-		return false, err
-	}
-
-	user_roles_map := append(*user_roles, *group_roles...)
-
-	role_permissions, err := s.repo.GetRolePermissions(ctx, org_identifier, user_roles_map)
 	allow := false
-	for _, permission := range *role_permissions {
-		if permission.Resource == req.Resource && permission.Action == req.Action {
-			allow = true
+	if len(checkDetails.Roles) > 0 {
+		role_permissions, err := s.repo.GetRolePermissions(ctx, org_identifier, checkDetails.Roles)
+		if err != nil {
+			return false, err
+		}
+		for _, permission := range *role_permissions {
+			if permission.Resource == req.Resource && permission.Action == req.Action {
+				allow = true
+			}
 		}
 	}
 	if !skipValidation {
-		user_properties, err := s.repo.GetUserProperties(ctx, org_identifier, req.Identifier)
+		properties, err := json.Marshal(*&checkDetails.UserProperties)
 		if err != nil {
 			return false, err
 		}
-		properties, err := json.Marshal(*user_properties)
-		if err != nil {
-			return false, err
-		}
-		user_policies, err := s.repo.GetUserPolicies(ctx, org_identifier, req.Identifier)
-		if err != nil {
-			return false, err
-		}
-		user_groups, err := s.repo.GetUserGroups(ctx, org_identifier, req.Identifier)
-		group_policies, err := s.repo.GetGroupPolicies(ctx, org_identifier, *user_groups)
-		polcies := append(*user_policies, *group_policies...)
-		active_policies, err := s.repo.GetActivePolicyVersionContents(ctx, org_identifier, polcies)
+		active_policies, err := s.repo.GetActivePolicyVersionContents(ctx, org_identifier, checkDetails.Polcies)
 		for _, policy := range active_policies {
 			result := tunnel_go.ValidateTunnelPolicy(policy, string(properties))
 			if !result {

@@ -13,7 +13,6 @@ COPY go.sum .
 COPY cmd cmd
 COPY config config
 COPY docs docs
-COPY policy policy
 COPY internal internal
 COPY proto proto
 
@@ -25,7 +24,6 @@ WORKDIR /app/
 COPY --from=build /app/check_server .
 COPY --from=build /app/config/*.yml ./config/
 COPY --from=build /app/config/*.yml ./config/
-COPY --from=build /app/policy/*.rego ./policy/
 
 # Create a non-root user
 RUN adduser \
