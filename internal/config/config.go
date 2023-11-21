@@ -25,11 +25,11 @@ type Config struct {
 	} `yaml:"database"`
 	RootOrganization struct {
 		Name            string `yaml:"name" env:"Name"`
-		AdminIdentifier string `yaml:"admin_identfier" env:"AdminIdentifier"`
+		AdminIdentifier string `yaml:"admin_identifier" env:"AdminIdentifier"`
 		AdminName       string `yaml:"admin_name" env:"AdminName"`
 		AdminRoleName   string `yaml:"admin_role_name" env:"AdminRoleName"`
 	} `yaml:"root_organization"`
-	SyetemResources struct {
+	SystemResources struct {
 		Organizations []string `yaml:"organizations"`
 		Users         []string `yaml:"users"`
 		Roles         []string `yaml:"roles"`

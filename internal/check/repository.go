@@ -107,8 +107,7 @@ func (r repository) GetCheckDetails(ctx context.Context, org_identifier string, 
 		return CheckDetails{}, err
 	}
 
-	// If user has no groups, return empty slice
-	if len(org.Users) == 0 || len(org.Users[0].Groups) == 0 {
+	if len(org.Users) == 0 {
 		return CheckDetails{}, nil
 	}
 
@@ -124,7 +123,6 @@ func (r repository) GetCheckDetails(ctx context.Context, org_identifier string, 
 		policyIDMap[policyID] = struct{}{}
 	}
 
-	// Iterate over groups and add role IDs to the map
 	for _, group := range org.Groups {
 		if _, exists := groupIDs[group.ID]; exists {
 			for _, roleID := range group.Roles {
@@ -136,8 +134,8 @@ func (r repository) GetCheckDetails(ctx context.Context, org_identifier string, 
 		}
 	}
 
-	// Convert the map keys to a slice
 	var roleIDs []primitive.ObjectID
+	roleIDs = append(roleIDs, org.Users[0].Roles...)
 	for roleID := range roleIDMap {
 		roleIDs = append(roleIDs, roleID)
 	}
@@ -149,7 +147,7 @@ func (r repository) GetCheckDetails(ctx context.Context, org_identifier string, 
 
 	return CheckDetails{
 		Roles:          roleIDs,
-		Polcies:        roleIDs,
+		Policies:       policyIDs,
 		UserProperties: org.Users[0].UserProperties,
 	}, nil
 }

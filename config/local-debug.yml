@@ -5,13 +5,13 @@ endpoint:
 auth:
   jwks: "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
 database:
-  url : "mongodb://shashimalcse:tltPm2YhaUlAmNGz@ac-ncfur97-shard-00-00.5klckrk.mongodb.net:27017,ac-ncfur97-shard-00-01.5klckrk.mongodb.net:27017,ac-ncfur97-shard-00-02.5klckrk.mongodb.net:27017/?ssl=true&replicaSet=atlas-tlndf9-shard-0&authSource=admin&retryWrites=true&w=majority"
+  url : "mongodb://localhost:27017"
   name : "cronuseo"
-  user: "shashimalcse"
-  password: "tltPm2YhaUlAmNGz"
+  user: "root"
+  password: "rootpassword"
 root_organization:
   name : "super"
-  admin_identfier : "279a5c59-37f5-43e6-a5fb-b250752301a3"
+  admin_identifier : "279a5c59-37f5-43e6-a5fb-b250752301a3"
   admin_name : "admin"
   admin_role_name : "admin"
 system_resources:
