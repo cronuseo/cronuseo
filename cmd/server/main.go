@@ -191,22 +191,22 @@ func initializeAdmin(orgService organization.Service, userService user.Service, 
 	adminObjID, _ := primitive.ObjectIDFromHex(adminId)
 
 	var permissions []mongo_entity.Permission
-	for _, action := range cfg.SyetemResources.Organizations {
+	for _, action := range cfg.SystemResources.Organizations {
 		permissions = append(permissions, mongo_entity.Permission{Resource: "organizations", Action: action})
 	}
-	for _, action := range cfg.SyetemResources.Users {
+	for _, action := range cfg.SystemResources.Users {
 		permissions = append(permissions, mongo_entity.Permission{Resource: "users", Action: action})
 	}
-	for _, action := range cfg.SyetemResources.Groups {
+	for _, action := range cfg.SystemResources.Groups {
 		permissions = append(permissions, mongo_entity.Permission{Resource: "groups", Action: action})
 	}
-	for _, action := range cfg.SyetemResources.Roles {
+	for _, action := range cfg.SystemResources.Roles {
 		permissions = append(permissions, mongo_entity.Permission{Resource: "roles", Action: action})
 	}
-	for _, action := range cfg.SyetemResources.Resources {
+	for _, action := range cfg.SystemResources.Resources {
 		permissions = append(permissions, mongo_entity.Permission{Resource: "resources", Action: action})
 	}
-	for _, action := range cfg.SyetemResources.Polices {
+	for _, action := range cfg.SystemResources.Polices {
 		permissions = append(permissions, mongo_entity.Permission{Resource: "policies", Action: action})
 	}
 	adminRole := role.CreateRoleRequest{
@@ -230,7 +230,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 
 	// Organization resource
 	var orgActions []mongo_entity.Action
-	for _, action := range cfg.SyetemResources.Organizations {
+	for _, action := range cfg.SystemResources.Organizations {
 		orgActions = append(orgActions, mongo_entity.Action{Identifier: action, DisplayName: action})
 	}
 	orgResource := resource.CreateResourceRequest{
@@ -243,7 +243,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 
 	// User resource
 	var userActions []mongo_entity.Action
-	for _, action := range cfg.SyetemResources.Users {
+	for _, action := range cfg.SystemResources.Users {
 		userActions = append(userActions, mongo_entity.Action{Identifier: action, DisplayName: action})
 	}
 	userResource := resource.CreateResourceRequest{
@@ -256,7 +256,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 
 	// Group resource
 	var groupActions []mongo_entity.Action
-	for _, action := range cfg.SyetemResources.Groups {
+	for _, action := range cfg.SystemResources.Groups {
 		groupActions = append(groupActions, mongo_entity.Action{Identifier: action, DisplayName: action})
 	}
 	groupResource := resource.CreateResourceRequest{
@@ -269,7 +269,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 
 	// Role resource
 	var roleActions []mongo_entity.Action
-	for _, action := range cfg.SyetemResources.Roles {
+	for _, action := range cfg.SystemResources.Roles {
 		roleActions = append(roleActions, mongo_entity.Action{Identifier: action, DisplayName: action})
 	}
 	roleResource := resource.CreateResourceRequest{
@@ -282,7 +282,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 
 	// Resource resource
 	var resourceActions []mongo_entity.Action
-	for _, action := range cfg.SyetemResources.Resources {
+	for _, action := range cfg.SystemResources.Resources {
 		resourceActions = append(resourceActions, mongo_entity.Action{Identifier: action, DisplayName: action})
 	}
 	resourceResource := resource.CreateResourceRequest{
@@ -295,7 +295,7 @@ func initializeSystemResources(orgService organization.Service, resourceService 
 
 	// Policy resource
 	var policyActions []mongo_entity.Action
-	for _, action := range cfg.SyetemResources.Polices {
+	for _, action := range cfg.SystemResources.Polices {
 		policyActions = append(policyActions, mongo_entity.Action{Identifier: action, DisplayName: action})
 	}
 	policyResource := resource.CreateResourceRequest{

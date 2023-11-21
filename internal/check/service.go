@@ -27,7 +27,7 @@ type service struct {
 
 type CheckDetails struct {
 	Roles          []primitive.ObjectID
-	Polcies        []primitive.ObjectID
+	Policies       []primitive.ObjectID
 	UserProperties map[string]interface{}
 }
 
@@ -67,7 +67,7 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 		if err != nil {
 			return false, err
 		}
-		active_policies, err := s.repo.GetActivePolicyVersionContents(ctx, org_identifier, checkDetails.Polcies)
+		active_policies, err := s.repo.GetActivePolicyVersionContents(ctx, org_identifier, checkDetails.Policies)
 		for _, policy := range active_policies {
 			result := tunnel_go.ValidateTunnelPolicy(policy, string(properties))
 			if !result {
