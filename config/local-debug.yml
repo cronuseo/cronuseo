@@ -3,7 +3,7 @@ endpoint:
   check_rest : ":8081"
   check_grpc : ":50051"
 auth:
-  jwks: "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
+  jwks: "https://dev-ru0lboqi.us.auth0.com/.well-known/jwks.json"
 database:
   url : "mongodb://localhost:27017"
   name : "cronuseo"
@@ -11,7 +11,7 @@ database:
   password: "rootpassword"
 root_organization:
   name : "super"
-  admin_identifier : "279a5c59-37f5-43e6-a5fb-b250752301a3"
+  admin_identifier : "auth0|6564c35905b0b5595ac91255"
   admin_name : "admin"
   admin_role_name : "admin"
 system_resources:
@@ -73,7 +73,14 @@ endpoints:
       - method: "POST"
         required_permissions:
           - "orgs:update"
-    resource: "organizations"       
+    resource: "organizations"    
+
+  - path: "/api/v1/organizations/[^/]+/regenerate-key"
+    methods:
+      - method: "POST"
+        required_permissions:
+          - "orgs:update"
+    resource: "organizations"     
 
   - path: "/api/v1/o/[^/]+/users$"
     methods:

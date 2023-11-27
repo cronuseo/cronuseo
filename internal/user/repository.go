@@ -28,6 +28,7 @@ type Repository interface {
 	CheckGroupAlreadyAssignToUserById(ctx context.Context, org_id string, user_id string, group_id string) (bool, error)
 	CheckPolicyExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckPolicyAlreadyAssignToUserById(ctx context.Context, org_id string, user_id string, policy_id string) (bool, error)
+	GetOrgIdByIdentifier(ctx context.Context, identifier string) (string, error)
 }
 
 type repository struct {
@@ -418,7 +419,7 @@ func (r repository) CheckUserExistsByIdentifier(ctx context.Context, org_id stri
 	if err != nil {
 		return false, err
 	}
-	filter := bson.M{"_id": orgId, "users.username": identifier}
+	filter := bson.M{"_id": orgId, "users.identifier": identifier}
 
 	// Search for the user in the "organizations" collection
 	count, err := r.mongoColl.CountDocuments(context.Background(), filter)
@@ -628,4 +629,28 @@ func (r repository) CheckPolicyAlreadyAssignToUserById(ctx context.Context, org_
 
 	// policy ID not found in the user's policies field
 	return false, nil
+}
+
+// Get org id by identifier.
+func (r repository) GetOrgIdByIdentifier(ctx context.Context, identifier string) (string, error) {
+
+	// Define filter to find the org by its identifier
+	filter := bson.M{"identifier": identifier}
+	projection := bson.M{"resources": 0, "users": 0, "roles": 0, "groups": 0, "policies": 0}
+	// Find the user document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	if err := result.Err(); err != nil {
+		return "", err
+	}
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return "", &util.NotFoundError{Path: "Org"}
+		}
+		return "", err
+	}
+
+	return org.ID.Hex(), nil
 }

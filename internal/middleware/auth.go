@@ -45,13 +45,13 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 
 				claims, ok := t.Claims.(jwtv4.MapClaims)
 				if !ok {
-					return nil, echo.NewHTTPError(http.StatusUnauthorized,"unexpected claims type")
+					return nil, echo.NewHTTPError(http.StatusUnauthorized, "unexpected claims type")
 				}
 
 				//Extract and validate scopes
 				sub, ok := claims["sub"].(string)
 				if !ok {
-					return nil, echo.NewHTTPError(http.StatusUnauthorized,"invalid or missing sub claim")
+					return nil, echo.NewHTTPError(http.StatusUnauthorized, "invalid or missing sub claim")
 				}
 
 				methodPath := MethodPath{
@@ -59,16 +59,28 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 					Path:   c.Request().URL.Path,
 				}
 
-				endpointPermissions, err := getPermissionsForMethodPath(methodPath, requiredPermissions)
+				pathMatched, err := regexp.MatchString("/api/v1/o/[^/]+/users/sync", methodPath.Path)
 				if err != nil {
 					return nil, err
 				}
+				if pathMatched {
+					orgIdentifier := getOrgIdentifier(methodPath.Path)
+					apiKey := c.Request().Header.Get("API_KEY")
+					validated, _ := checkService.ValidateAPIKey(nil, orgIdentifier, apiKey)
+					if !validated {
+						return nil, echo.NewHTTPError(http.StatusUnauthorized, "insufficient permissions to invoke this endpoint")
+					}
+				} else {
+					endpointPermissions, err := getPermissionsForMethodPath(methodPath, requiredPermissions)
+					if err != nil {
+						return nil, err
+					}
 
-				if !checkPermissions(sub, endpointPermissions, cfg, checkService) {
-					logger.Debug("error while validating permissions")
-					return nil, echo.NewHTTPError(http.StatusUnauthorized, "insufficient permissions to invoke this endpoint")
+					if !checkPermissions(sub, endpointPermissions, cfg, checkService) {
+						logger.Debug("error while validating permissions")
+						return nil, echo.NewHTTPError(http.StatusUnauthorized, "insufficient permissions to invoke this endpoint")
+					}
 				}
-
 				key, keyErr := jwks.Keyfunc(t)
 				if keyErr != nil {
 					return nil, echo.NewHTTPError(http.StatusUnauthorized, "JWT key function error: %w", keyErr)
@@ -135,6 +147,18 @@ func checkPermissions(sub string, requiredPermissions []mongo_entity.Permission,
 		}
 	}
 	return true
+}
+
+func getOrgIdentifier(path string) string {
+
+	re := regexp.MustCompile(`/api/v1/o/([^/]+)/users/sync`)
+	matches := re.FindStringSubmatch(path)
+
+	if len(matches) > 1 {
+		org := matches[1]
+		return org
+	}
+	return ""
 }
 
 func MockAuthHeader() http.Header {
