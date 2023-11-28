@@ -12,6 +12,7 @@ import (
 
 type Service interface {
 	Check(ctx context.Context, org_identifier string, req CheckRequest, apiKey string, skipValidation bool) (bool, error)
+	ValidateAPIKey(ctx context.Context, org_identifier string, apiKey string) (bool, error)
 }
 
 type CheckRequest struct {
@@ -40,7 +41,7 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 
 	// Check resource already exists.
 	if !skipValidation {
-		validated, _ := s.repo.ValidateAPIKey(ctx, org_identifier, apiKey)
+		validated, _ := s.ValidateAPIKey(ctx, org_identifier, apiKey)
 		if !validated {
 			s.logger.Debug("API_KEY is not valid.")
 			return false, &util.UnauthorizedError{}
@@ -76,4 +77,14 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 		}
 	}
 	return allow, nil
+}
+
+func (s service) ValidateAPIKey(ctx context.Context, org_identifier string, apiKey string) (bool, error) {
+
+	validated, _ := s.repo.ValidateAPIKey(ctx, org_identifier, apiKey)
+	if !validated {
+		s.logger.Debug("API_KEY is not valid.")
+		return false, &util.UnauthorizedError{}
+	}
+	return validated, nil
 }

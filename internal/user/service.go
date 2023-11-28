@@ -16,6 +16,7 @@ type Service interface {
 	GetIdByIdentifier(ctx context.Context, org_id string, identifier string) (string, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
+	Sync(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
 	Patch(ctx context.Context, org_id string, id string, input PatchUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) error
@@ -170,7 +171,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 	} else {
 		policies = req.Policies
 	}
-	
+
 	err := s.repo.Create(ctx, org_id, mongo_entity.User{
 		ID:             userId,
 		Username:       req.Username,
@@ -183,6 +184,47 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 
 	if err != nil {
 		s.logger.Error("Error while creating user.",
+			zap.String("organization_id", org_id))
+		return User{}, err
+	}
+	return s.Get(ctx, org_id, userId.Hex())
+}
+
+// Sync user.
+func (s service) Sync(ctx context.Context, org_identifier string, req CreateUserRequest) (User, error) {
+
+	// Validate user request.
+	if err := req.Validate(); err != nil {
+		s.logger.Error("Error while validating user create request.")
+		return User{}, &util.InvalidInputError{Path: "Invalid input for user."}
+	}
+
+	org_id, err := s.repo.GetOrgIdByIdentifier(ctx, org_identifier)
+	if err != nil {
+		s.logger.Error("Error while syncing user. Invalid org identifier", zap.String("organization_identifier", org_identifier))
+		return User{}, err
+	}
+
+	// Check user already exists.
+	exists, _ := s.repo.CheckUserExistsByIdentifier(ctx, org_id, req.Identifier)
+	if exists {
+		s.logger.Debug("User already exists.")
+		id, _ := s.GetIdByIdentifier(ctx, org_id, req.Identifier)
+		return s.Get(ctx, org_id, id)
+
+	}
+
+	// Generate user id.
+	userId := primitive.NewObjectID()
+
+	err = s.repo.Create(ctx, org_id, mongo_entity.User{
+		ID:         userId,
+		Username:   req.Username,
+		Identifier: req.Identifier,
+	})
+
+	if err != nil {
+		s.logger.Error("Error while syncing user.",
 			zap.String("organization_id", org_id))
 		return User{}, err
 	}
@@ -362,7 +404,7 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Use
 	result := []User{}
 	items, err := s.repo.Query(ctx, org_id)
 	if err != nil {
-		s.logger.Error("Error while retrieving all resources.",
+		s.logger.Error("Error while retrieving all user.",
 			zap.String("organization_id", org_id))
 		return []User{}, err
 	}

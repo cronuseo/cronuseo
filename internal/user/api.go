@@ -16,6 +16,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	router.DELETE("/:id", res.delete)
 	router.PUT("/:id", res.update)
 	router.PATCH("/:id", res.patch)
+	router.POST("/sync", res.sync)
 }
 
 type resource struct {
@@ -108,7 +109,7 @@ func (r resource) update(c echo.Context) error {
 	if err != nil {
 		return util.HandleError(err)
 	}
-	return c.JSON(http.StatusCreated, user)
+	return c.JSON(http.StatusOK, user)
 }
 
 // @Description Patch user.
@@ -132,7 +133,7 @@ func (r resource) patch(c echo.Context) error {
 	if err != nil {
 		return util.HandleError(err)
 	}
-	return c.JSON(http.StatusCreated, user)
+	return c.JSON(http.StatusOK, user)
 }
 
 // // @Description Delete user.
@@ -150,4 +151,27 @@ func (r resource) delete(c echo.Context) error {
 		return util.HandleError(err)
 	}
 	return c.JSON(http.StatusNoContent, "")
+}
+
+// @Description Sync user.
+// @Tags        User
+// @Accept      json
+// @Param org_id path string true "Organization ID"
+// @Param request body CreateUserRequest true "body"
+// @Produce     json
+// @Success     201 {object}  User
+// @failure     400,403,500
+// @Router      /{org_id}/user [post]
+func (r resource) sync(c echo.Context) error {
+
+	var input CreateUserRequest
+	if err := c.Bind(&input); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	user, err := r.service.Sync(c.Request().Context(), c.Param("org_id"), input)
+	if err != nil {
+		return util.HandleError(err)
+	}
+
+	return c.JSON(http.StatusOK, user)
 }

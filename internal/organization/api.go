@@ -103,5 +103,5 @@ func (r resource) regenerateAPIKey(c echo.Context) error {
 	if err != nil {
 		return util.HandleError(err)
 	}
-	return c.JSON(http.StatusCreated, organization)
+	return c.JSON(http.StatusOK, organization)
 }
