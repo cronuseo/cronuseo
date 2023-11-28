@@ -173,5 +173,5 @@ func (r resource) sync(c echo.Context) error {
 		return util.HandleError(err)
 	}
 
-	return c.JSON(http.StatusCreated, user)
+	return c.JSON(http.StatusOK, user)
 }
