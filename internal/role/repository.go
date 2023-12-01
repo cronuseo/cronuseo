@@ -14,13 +14,14 @@ import (
 
 type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (*mongo_entity.Role, error)
+	GetRoleByIdentifier(ctx context.Context, org_id string, identifier string) (*mongo_entity.Role, error)
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.Role, error)
 	Create(ctx context.Context, org_id string, user mongo_entity.Role) error
 	Update(ctx context.Context, org_id string, id string, update_role UpdateRole) error
 	Patch(ctx context.Context, org_id string, id string, update_role PatchRole) error
 	Delete(ctx context.Context, org_id string, id string) error
 	CheckRoleExistById(ctx context.Context, org_id string, id string) (bool, error)
-	CheckRoleExistsByIdentifier(ctx context.Context, org_id string, key string) (bool, error)
+	CheckRoleExistsByIdentifier(ctx context.Context, org_id string, identifier string) (bool, error)
 	CheckUserExistById(ctx context.Context, org_id string, id string) (bool, error)
 	CheckUserAlreadyAssignToRoleById(ctx context.Context, org_id string, role_id string, user_id string) (bool, error)
 	GetPermissions(ctx context.Context, org_id string, role_id string) (*[]mongo_entity.Permission, error)
@@ -57,6 +58,33 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 
 	// Define filter to find the role by its ID
 	filter := bson.M{"_id": orgId, "roles._id": roleId}
+	projection := bson.M{"roles.$": 1}
+	// Find the role document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "Role"}
+		}
+		return nil, err
+	}
+
+	return &org.Roles[0], nil
+}
+
+func (r repository) GetRoleByIdentifier(ctx context.Context, org_id string, identifier string) (*mongo_entity.Role, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Define filter to find the role by its ID
+	filter := bson.M{"_id": orgId, "roles.identifier": identifier}
 	projection := bson.M{"roles.$": 1}
 	// Find the role document in the "organizations" collection
 	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))

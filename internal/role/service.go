@@ -13,12 +13,14 @@ import (
 
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (Role, error)
+	GetRoleByIdentifier(ctx context.Context, org_id string, identifier string) (Role, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]Role, error)
 	Create(ctx context.Context, org_id string, input CreateRoleRequest) (Role, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateRoleRequest) (Role, error)
 	Patch(ctx context.Context, org_id string, id string, input PatchRoleRequest) (Role, error)
 	Delete(ctx context.Context, org_id string, id string) error
 	GetPermissions(ctx context.Context, org_id string, role_id string) ([]mongo_entity.Permission, error)
+	CheckRoleExistsByIdentifier(ctx context.Context, org_id string, identifier string) (bool, error)
 }
 
 type Role struct {
@@ -88,6 +90,19 @@ func (s service) Get(ctx context.Context, org_id string, id string) (Role, error
 		s.logger.Error("Error while getting the role.",
 			zap.String("organization_id", org_id),
 			zap.String("role_id", id))
+		return Role{}, &util.NotFoundError{Path: "Role"}
+	}
+	return Role{*role}, nil
+}
+
+// Get role by identifier.
+func (s service) GetRoleByIdentifier(ctx context.Context, org_id string, identifier string) (Role, error) {
+
+	role, err := s.repo.GetRoleByIdentifier(ctx, org_id, identifier)
+	if err != nil {
+		s.logger.Error("Error while getting the role.",
+			zap.String("organization_id", org_id),
+			zap.String("role identifier", identifier))
 		return Role{}, &util.NotFoundError{Path: "Role"}
 	}
 	return Role{*role}, nil
@@ -291,7 +306,7 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchR
 
 	if err := s.repo.Patch(ctx, org_id, id, PatchRole{
 		AddedUsers:         req.AddedUsers,
-		RemovedUsers:        req.RemovedUsers,
+		RemovedUsers:       req.RemovedUsers,
 		AddedGroups:        req.AddedGroups,
 		RemovedGroups:      req.RemovedGroups,
 		AddedPermissions:   req.AddedPermissions,
@@ -363,4 +378,9 @@ func (s service) GetPermissions(ctx context.Context, org_id string, role_id stri
 		result = append(result, mongo_entity.Permission{Action: item.Action, Resource: item.Resource})
 	}
 	return result, err
+}
+
+func (s service) CheckRoleExistsByIdentifier(ctx context.Context, org_id string, identifier string) (bool, error) {
+
+	return s.repo.CheckRoleExistsByIdentifier(ctx, org_id, identifier)
 }

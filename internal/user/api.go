@@ -157,14 +157,14 @@ func (r resource) delete(c echo.Context) error {
 // @Tags        User
 // @Accept      json
 // @Param org_id path string true "Organization ID"
-// @Param request body CreateUserRequest true "body"
+// @Param request body SyncUserRequest true "body"
 // @Produce     json
 // @Success     201 {object}  User
 // @failure     400,403,500
 // @Router      /{org_id}/user [post]
 func (r resource) sync(c echo.Context) error {
 
-	var input CreateUserRequest
+	var input SyncUserRequest
 	if err := c.Bind(&input); err != nil {
 		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
 	}

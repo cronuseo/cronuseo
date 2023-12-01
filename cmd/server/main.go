@@ -128,9 +128,9 @@ func registerServiceHandlers(e *echo.Group, mongodb *db.MongoDB, cfg *config.Con
 
 	// Initialize services with repositories.
 	orgService := organization.NewService(orgRepo, logger)
-	userService := user.NewService(userRepo, logger)
 	resourceService := resource.NewService(resourceRepo, logger)
 	roleService := role.NewService(roleRepo, logger)
+	userService := user.NewService(userRepo, logger, roleService)
 	groupService := group.NewService(groupRepo, logger)
 	policyService := policy.NewService(policyRepo, logger)
 
