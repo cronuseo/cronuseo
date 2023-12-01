@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/shashimalcse/cronuseo/internal/mongo_entity"
+	"github.com/shashimalcse/cronuseo/internal/role"
 	"github.com/shashimalcse/cronuseo/internal/util"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
@@ -16,7 +17,7 @@ type Service interface {
 	GetIdByIdentifier(ctx context.Context, org_id string, identifier string) (string, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
-	Sync(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
+	Sync(ctx context.Context, org_id string, input SyncUserRequest) (User, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
 	Patch(ctx context.Context, org_id string, id string, input PatchUserRequest) (User, error)
 	Delete(ctx context.Context, org_id string, id string) error
@@ -35,10 +36,27 @@ type CreateUserRequest struct {
 	Policies       []primitive.ObjectID   `json:"policies,omitempty" bson:"policies"`
 }
 
+type SyncUserRequest struct {
+	Username       string                 `json:"username" bson:"username"`
+	Identifier     string                 `json:"identifier" bson:"identifier"`
+	UserProperties map[string]interface{} `json:"user_properties" bson:"user_properties"`
+	Roles          []string               `json:"roles,omitempty" bson:"roles"`
+	Groups         []string               `json:"groups,omitempty" bson:"groups"`
+}
+
 func (m CreateUserRequest) Validate() error {
 
 	return validation.ValidateStruct(&m,
 		validation.Field(&m.Username, validation.Required),
+		validation.Field(&m.Identifier, validation.Required),
+	)
+}
+
+func (m SyncUserRequest) Validate() error {
+
+	return validation.ValidateStruct(&m,
+		validation.Field(&m.Username, validation.Required),
+		validation.Field(&m.Identifier, validation.Required),
 	)
 }
 
@@ -75,13 +93,14 @@ func (m UpdateUserRequest) Validate() error {
 }
 
 type service struct {
-	repo   Repository
-	logger *zap.Logger
+	repo        Repository
+	logger      *zap.Logger
+	roleService role.Service
 }
 
-func NewService(repo Repository, logger *zap.Logger) Service {
+func NewService(repo Repository, logger *zap.Logger, roleService role.Service) Service {
 
-	return service{repo: repo, logger: logger}
+	return service{repo: repo, logger: logger, roleService: roleService}
 }
 
 // Get user by id.
@@ -191,7 +210,7 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 }
 
 // Sync user.
-func (s service) Sync(ctx context.Context, org_identifier string, req CreateUserRequest) (User, error) {
+func (s service) Sync(ctx context.Context, org_identifier string, req SyncUserRequest) (User, error) {
 
 	// Validate user request.
 	if err := req.Validate(); err != nil {
@@ -207,28 +226,61 @@ func (s service) Sync(ctx context.Context, org_identifier string, req CreateUser
 
 	// Check user already exists.
 	exists, _ := s.repo.CheckUserExistsByIdentifier(ctx, org_id, req.Identifier)
+	roleIds := []primitive.ObjectID{}
+	if req.Roles != nil && len(req.Roles) > 0 {
+		for _, roleIdentifier := range req.Roles {
+			exists, _ := s.roleService.CheckRoleExistsByIdentifier(ctx, org_id, roleIdentifier)
+			if !exists {
+				roleCreateRequest := role.CreateRoleRequest{
+					Identifier:  roleIdentifier,
+					DisplayName: roleIdentifier,
+				}
+				role, _ := s.roleService.Create(ctx, org_id, roleCreateRequest)
+				roleIds = append(roleIds, role.ID)
+			} else {
+				role, _ := s.roleService.GetRoleByIdentifier(ctx, org_id, roleIdentifier)
+				roleIds = append(roleIds, role.ID)
+			}
+		}
+	}
 	if exists {
 		s.logger.Debug("User already exists.")
 		id, _ := s.GetIdByIdentifier(ctx, org_id, req.Identifier)
+		addedRoles := []primitive.ObjectID{}
+		for _, roleId := range roleIds {
+			already_added, _ := s.repo.CheckRoleAlreadyAssignToUserById(ctx, org_id, id, roleId.Hex())
+			if !already_added {
+				addedRoles = append(addedRoles, roleId)
+			}
+		}
+		if len(addedRoles) > 0 {
+			patchUserRequest := PatchUserRequest{
+				AddedRoles: addedRoles,
+			}
+			s.Patch(ctx, org_id, id, patchUserRequest)
+		}
 		return s.Get(ctx, org_id, id)
 
+	} else {
+		// Generate user id.
+		userId := primitive.NewObjectID()
+
+		err = s.repo.Create(ctx, org_id, mongo_entity.User{
+			ID:         userId,
+			Username:   req.Username,
+			Identifier: req.Identifier,
+			Roles:      roleIds,
+			Groups:     []primitive.ObjectID{},
+			Policies:   []primitive.ObjectID{},
+		})
+
+		if err != nil {
+			s.logger.Error("Error while syncing user.",
+				zap.String("organization_id", org_id))
+			return User{}, err
+		}
+		return s.Get(ctx, org_id, userId.Hex())
 	}
-
-	// Generate user id.
-	userId := primitive.NewObjectID()
-
-	err = s.repo.Create(ctx, org_id, mongo_entity.User{
-		ID:         userId,
-		Username:   req.Username,
-		Identifier: req.Identifier,
-	})
-
-	if err != nil {
-		s.logger.Error("Error while syncing user.",
-			zap.String("organization_id", org_id))
-		return User{}, err
-	}
-	return s.Get(ctx, org_id, userId.Hex())
 }
 
 // // Update user.
