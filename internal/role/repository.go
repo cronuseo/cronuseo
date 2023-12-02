@@ -13,7 +13,7 @@ import (
 )
 
 type Repository interface {
-	Get(ctx context.Context, org_id string, id string) (*mongo_entity.Role, error)
+	Get(ctx context.Context, org_id string, id string) (*RoleResponse, error)
 	GetRoleByIdentifier(ctx context.Context, org_id string, identifier string) (*mongo_entity.Role, error)
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.Role, error)
 	Create(ctx context.Context, org_id string, user mongo_entity.Role) error
@@ -44,7 +44,7 @@ func NewRepository(mongodb *db.MongoDB) Repository {
 }
 
 // Get role by id.
-func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_entity.Role, error) {
+func (r repository) Get(ctx context.Context, org_id string, id string) (*RoleResponse, error) {
 
 	orgId, err := primitive.ObjectIDFromHex(org_id)
 	if err != nil {
@@ -72,8 +72,21 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 		}
 		return nil, err
 	}
-
-	return &org.Roles[0], nil
+	role := org.Roles[0]
+	assignedUsers, err := r.resolveAssignedUsers(ctx, orgId, role.Users)
+	assignedGroups, err := r.resolveAssignedGroups(ctx, orgId, role.Groups)
+	if err != nil {
+		return nil, err
+	}
+	roleResponse := RoleResponse{
+		ID:          role.ID,
+		Identifier:  role.Identifier,
+		DisplayName: role.DisplayName,
+		Users:       assignedUsers,
+		Groups:      assignedGroups,
+		Permissions: role.Permissions,
+	}
+	return &roleResponse, nil
 }
 
 func (r repository) GetRoleByIdentifier(ctx context.Context, org_id string, identifier string) (*mongo_entity.Role, error) {
@@ -622,4 +635,40 @@ func (r repository) CheckGroupAlreadyAssignToRoleById(ctx context.Context, org_i
 
 	// Group ID not found in the user's Groups field
 	return false, nil
+}
+
+func (r repository) resolveAssignedUsers(ctx context.Context, orgId primitive.ObjectID, userIDs []primitive.ObjectID) ([]mongo_entity.AssignedUser, error) {
+
+	filter := bson.M{"_id": orgId, "users._id": bson.M{"$in": userIDs}}
+
+	cursor, err := r.mongoColl.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var users []mongo_entity.AssignedUser
+	if err := cursor.All(ctx, &users); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (r repository) resolveAssignedGroups(ctx context.Context, orgId primitive.ObjectID, groupIDs []primitive.ObjectID) ([]mongo_entity.AssignedGroup, error) {
+
+	filter := bson.M{"_id": orgId, "groups._id": bson.M{"$in": groupIDs}}
+
+	cursor, err := r.mongoColl.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var groups []mongo_entity.AssignedGroup
+	if err := cursor.All(ctx, &groups); err != nil {
+		return nil, err
+	}
+
+	return groups, nil
 }

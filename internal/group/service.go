@@ -12,16 +12,25 @@ import (
 )
 
 type Service interface {
-	Get(ctx context.Context, org_id string, id string) (Group, error)
+	Get(ctx context.Context, org_id string, id string) (GroupResponse, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]Group, error)
-	Create(ctx context.Context, org_id string, input CreateGroupRequest) (Group, error)
-	Update(ctx context.Context, org_id string, id string, input UpdateGroupRequest) (Group, error)
+	Create(ctx context.Context, org_id string, input CreateGroupRequest) (GroupResponse, error)
+	Update(ctx context.Context, org_id string, id string, input UpdateGroupRequest) (GroupResponse, error)
 	Delete(ctx context.Context, org_id string, id string) error
-	Patch(ctx context.Context, org_id string, id string, input PatchGroupRequest) (Group, error)
+	Patch(ctx context.Context, org_id string, id string, input PatchGroupRequest) (GroupResponse, error)
 }
 
 type Group struct {
 	mongo_entity.Group
+}
+
+type GroupResponse struct {
+	ID          primitive.ObjectID            `json:"id" bson:"_id,omitempty"`
+	Identifier  string                        `json:"identifier" bson:"identifier"`
+	DisplayName string                        `json:"display_name" bson:"display_name"`
+	Users       []mongo_entity.AssignedUser   `json:"users,omitempty" bson:"users"`
+	Roles       []mongo_entity.AssignedRole   `json:"roles,omitempty" bson:"roles"`
+	Policies    []mongo_entity.AssignedPolicy `json:"policies,omitempty" bson:"policies"`
 }
 
 type CreateGroupRequest struct {
@@ -80,32 +89,32 @@ func NewService(repo Repository, logger *zap.Logger) Service {
 }
 
 // Get group by id.
-func (s service) Get(ctx context.Context, org_id string, id string) (Group, error) {
+func (s service) Get(ctx context.Context, org_id string, id string) (GroupResponse, error) {
 
 	group, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
 		s.logger.Error("Error while getting the group.",
 			zap.String("organization_id", org_id),
 			zap.String("group_id", id))
-		return Group{}, &util.NotFoundError{Path: "Group"}
+		return GroupResponse{}, &util.NotFoundError{Path: "Group"}
 	}
-	return Group{*group}, err
+	return *group, err
 }
 
 // Create new group.
-func (s service) Create(ctx context.Context, org_id string, req CreateGroupRequest) (Group, error) {
+func (s service) Create(ctx context.Context, org_id string, req CreateGroupRequest) (GroupResponse, error) {
 
 	// Validate group request.
 	if err := req.Validate(); err != nil {
 		s.logger.Error("Error while validating group create request.")
-		return Group{}, &util.InvalidInputError{Path: "Invalid input for group."}
+		return GroupResponse{}, &util.InvalidInputError{Path: "Invalid input for group."}
 	}
 
 	// Check group already exists.
 	exists, _ := s.repo.CheckGroupExistsByIdentifier(ctx, org_id, req.Identifier)
 	if exists {
 		s.logger.Debug("Group already exists.")
-		return Group{}, &util.AlreadyExistsError{Path: "Group : " + req.Identifier}
+		return GroupResponse{}, &util.AlreadyExistsError{Path: "Group : " + req.Identifier}
 
 	}
 
@@ -115,21 +124,21 @@ func (s service) Create(ctx context.Context, org_id string, req CreateGroupReque
 	for _, roleId := range req.Roles {
 		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
 		}
 	}
 
 	for _, userId := range req.Users {
 		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid role id " + userId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid role id " + userId.String()}
 		}
 	}
 
 	for _, policyId := range req.Policies {
 		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
 		}
 	}
 
@@ -166,18 +175,18 @@ func (s service) Create(ctx context.Context, org_id string, req CreateGroupReque
 	if err != nil {
 		s.logger.Error("Error while creating group.",
 			zap.String("organization_id", org_id))
-		return Group{}, err
+		return GroupResponse{}, err
 	}
 	return s.Get(ctx, org_id, groupId.Hex())
 }
 
 // // Update group.
-func (s service) Update(ctx context.Context, org_id string, id string, req UpdateGroupRequest) (Group, error) {
+func (s service) Update(ctx context.Context, org_id string, id string, req UpdateGroupRequest) (GroupResponse, error) {
 
 	_, err := s.Get(ctx, org_id, id)
 	if err != nil {
 		s.logger.Debug("Group not exists.", zap.String("group_id", id))
-		return Group{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
+		return GroupResponse{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
 	}
 
 	if err := s.repo.Update(ctx, org_id, id, UpdateGroup{
@@ -186,35 +195,30 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		s.logger.Error("Error while updating group.",
 			zap.String("organization_id", org_id),
 			zap.String("group_id", id))
-		return Group{}, err
+		return GroupResponse{}, err
 	}
-	updatedGroup, err := s.repo.Get(ctx, org_id, id)
-	if err != nil {
-		s.logger.Debug("Group not exists.", zap.String("group_id", id))
-		return Group{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
-	}
-	return Group{*updatedGroup}, nil
+	return s.Get(ctx, org_id, id)
 }
 
-func (s service) Patch(ctx context.Context, org_id string, id string, req PatchGroupRequest) (Group, error) {
+func (s service) Patch(ctx context.Context, org_id string, id string, req PatchGroupRequest) (GroupResponse, error) {
 
 	_, err := s.Get(ctx, org_id, id)
 	if err != nil {
 		s.logger.Debug("Group not exists.", zap.String("group_id", id))
-		return Group{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
+		return GroupResponse{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
 	}
 
 	// roles
 	for _, roleId := range req.AddedRoles {
 		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
 		}
 	}
 	for _, roleId := range req.RemovedRoles {
 		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
 		}
 	}
 	added_roles := []primitive.ObjectID{}
@@ -237,13 +241,13 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchG
 	for _, userId := range req.AddedUsers {
 		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid user id " + userId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid user id " + userId.String()}
 		}
 	}
 	for _, userId := range req.RemovedUsers {
 		exists, _ := s.repo.CheckUserExistById(ctx, org_id, userId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid user id " + userId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid user id " + userId.String()}
 		}
 	}
 	added_users := []primitive.ObjectID{}
@@ -266,13 +270,13 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchG
 	for _, policyId := range req.AddedPolicies {
 		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
 		}
 	}
 	for _, policyId := range req.RemovedPolicies {
 		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
 		if !exists {
-			return Group{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+			return GroupResponse{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
 		}
 	}
 	added_policies := []primitive.ObjectID{}
@@ -302,14 +306,9 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchG
 		s.logger.Error("Error while updating group.",
 			zap.String("organization_id", org_id),
 			zap.String("group_id", id))
-		return Group{}, err
+		return GroupResponse{}, err
 	}
-	updatedGroup, err := s.repo.Get(ctx, org_id, id)
-	if err != nil {
-		s.logger.Debug("Group not exists.", zap.String("group_id", id))
-		return Group{}, &util.NotFoundError{Path: "Group " + id + " not exists."}
-	}
-	return Group{*updatedGroup}, nil
+	return s.Get(ctx, org_id, id)
 }
 
 // Delete group.

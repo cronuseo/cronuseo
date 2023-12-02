@@ -27,14 +27,14 @@ type Organization struct {
 }
 
 type OrganizationCreationRequest struct {
-	Identifier  string                  `json:"identifier" bson:"identifier"`
-	DisplayName string                  `json:"display_name" bson:"display_name"`
-	API_KEY     string                  `json:"api_key" bson:"api_key"`
-	Resources   []mongo_entity.Resource `json:"resources,omitempty" bson:"resources"`
-	Users       []mongo_entity.User     `json:"users,omitempty" bson:"users"`
-	Roles       []mongo_entity.Role     `json:"roles,omitempty" bson:"roles"`
-	Groups      []mongo_entity.Group    `json:"groups,omitempty" bson:"groups"`
-	Polices     []mongo_entity.Policy   `json:"policies,omitempty" bson:"policies"`
+	Identifier  string `json:"identifier" bson:"identifier"`
+	DisplayName string `json:"display_name" bson:"display_name"`
+	API_KEY     string
+	Resources   []mongo_entity.Resource
+	Users       []mongo_entity.User
+	Roles       []mongo_entity.Role
+	Groups      []mongo_entity.Group
+	Policies    []mongo_entity.Policy
 }
 
 func (m OrganizationCreationRequest) Validate() error {
@@ -90,6 +90,41 @@ func (s service) Create(ctx context.Context, req OrganizationCreationRequest) (O
 
 	}
 
+	var roles []mongo_entity.Role
+	if req.Roles == nil {
+		roles = []mongo_entity.Role{}
+	} else {
+		roles = req.Roles
+	}
+
+	var users []mongo_entity.User
+	if req.Groups == nil {
+		users = []mongo_entity.User{}
+	} else {
+		users = req.Users
+	}
+
+	var groups []mongo_entity.Group
+	if req.Groups == nil {
+		groups = []mongo_entity.Group{}
+	} else {
+		groups = req.Groups
+	}
+
+	var policies []mongo_entity.Policy
+	if req.Policies == nil {
+		policies = []mongo_entity.Policy{}
+	} else {
+		policies = req.Policies
+	}
+
+	var resources []mongo_entity.Resource
+	if req.Resources == nil {
+		resources = []mongo_entity.Resource{}
+	} else {
+		resources = req.Resources
+	}
+
 	// Generate API-Key for organization.
 	key := make([]byte, 32)
 
@@ -103,11 +138,11 @@ func (s service) Create(ctx context.Context, req OrganizationCreationRequest) (O
 		Identifier:  req.Identifier,
 		DisplayName: req.DisplayName,
 		API_KEY:     APIKey,
-		Users:       req.Users,
-		Groups:      req.Groups,
-		Roles:       req.Roles,
-		Resources:   req.Resources,
-		Polices:     req.Polices,
+		Users:       users,
+		Groups:      groups,
+		Roles:       roles,
+		Resources:   resources,
+		Polices:     policies,
 	})
 	if err != nil {
 		s.logger.Error("Error while creating organization.")

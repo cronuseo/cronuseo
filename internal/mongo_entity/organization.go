@@ -45,6 +45,12 @@ type User struct {
 	Policies       []primitive.ObjectID   `json:"policies,omitempty" bson:"policies"`
 }
 
+type AssignedUser struct {
+	ID         primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Username   string             `json:"username" bson:"username"`
+	Identifier string             `json:"identifier" bson:"identifier"`
+}
+
 type Role struct {
 	ID          primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
 	Identifier  string               `json:"identifier" bson:"identifier"`
@@ -54,6 +60,12 @@ type Role struct {
 	Permissions []Permission         `json:"permissions,omitempty" bson:"permissions"`
 }
 
+type AssignedRole struct {
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Identifier  string             `json:"identifier" bson:"identifier"`
+	DisplayName string             `json:"display_name" bson:"display_name"`
+}
+
 type Group struct {
 	ID          primitive.ObjectID   `json:"id" bson:"_id,omitempty"`
 	Identifier  string               `json:"identifier" bson:"identifier"`
@@ -61,6 +73,12 @@ type Group struct {
 	Users       []primitive.ObjectID `json:"users,omitempty" bson:"users"`
 	Roles       []primitive.ObjectID `json:"roles,omitempty" bson:"roles"`
 	Policies    []primitive.ObjectID `json:"policies,omitempty" bson:"policies"`
+}
+
+type AssignedGroup struct {
+	ID          primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Identifier  string             `json:"identifier" bson:"identifier"`
+	DisplayName string             `json:"display_name" bson:"display_name"`
 }
 
 type Permission struct {
@@ -74,6 +92,13 @@ type Policy struct {
 	DisplayName    string             `json:"display_name" bson:"display_name"`
 	ActiveVersion  string             `json:"active_version" bson:"active_version"`
 	PolicyContents []PolicyContent    `json:"policy_contents" bson:"policy_contents"`
+}
+
+type AssignedPolicy struct {
+	ID            primitive.ObjectID `json:"id" bson:"_id,omitempty"`
+	Identifier    string             `json:"identifier" bson:"identifier"`
+	DisplayName   string             `json:"display_name" bson:"display_name"`
+	ActiveVersion string             `json:"active_version" bson:"active_version"`
 }
 
 type PolicyContent struct {
