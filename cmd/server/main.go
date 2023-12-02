@@ -162,7 +162,7 @@ func initializeRootOrganization(orgService organization.Service, userService use
 			Users:       []mongo_entity.User{},
 			Roles:       []mongo_entity.Role{},
 			Groups:      []mongo_entity.Group{},
-			Polices:     []mongo_entity.Policy{},
+			Policies:    []mongo_entity.Policy{},
 		}
 		orgService.Create(nil, rootOrg)
 

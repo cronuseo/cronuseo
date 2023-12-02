@@ -13,18 +13,28 @@ import (
 )
 
 type Service interface {
-	Get(ctx context.Context, org_id string, id string) (User, error)
+	Get(ctx context.Context, org_id string, id string) (UserResponse, error)
 	GetIdByIdentifier(ctx context.Context, org_id string, identifier string) (string, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
-	Create(ctx context.Context, org_id string, input CreateUserRequest) (User, error)
-	Sync(ctx context.Context, org_id string, input SyncUserRequest) (User, error)
-	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (User, error)
-	Patch(ctx context.Context, org_id string, id string, input PatchUserRequest) (User, error)
+	Create(ctx context.Context, org_id string, input CreateUserRequest) (UserResponse, error)
+	Sync(ctx context.Context, org_id string, input SyncUserRequest) (UserResponse, error)
+	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (UserResponse, error)
+	Patch(ctx context.Context, org_id string, id string, input PatchUserRequest) (UserResponse, error)
 	Delete(ctx context.Context, org_id string, id string) error
 }
 
 type User struct {
 	mongo_entity.User
+}
+
+type UserResponse struct {
+	ID             primitive.ObjectID            `json:"id" bson:"_id,omitempty"`
+	Username       string                        `json:"username" bson:"username"`
+	Identifier     string                        `json:"identifier" bson:"identifier"`
+	UserProperties map[string]interface{}        `json:"user_properties" bson:"user_properties"`
+	Roles          []mongo_entity.AssignedRole   `json:"roles,omitempty" bson:"roles"`
+	Groups         []mongo_entity.AssignedGroup  `json:"groups,omitempty" bson:"groups"`
+	Policies       []mongo_entity.AssignedPolicy `json:"policies,omitempty" bson:"policies"`
 }
 
 type CreateUserRequest struct {
@@ -104,16 +114,16 @@ func NewService(repo Repository, logger *zap.Logger, roleService role.Service) S
 }
 
 // Get user by id.
-func (s service) Get(ctx context.Context, org_id string, id string) (User, error) {
+func (s service) Get(ctx context.Context, org_id string, id string) (UserResponse, error) {
 
 	user, err := s.repo.Get(ctx, org_id, id)
 	if err != nil {
 		s.logger.Error("Error while getting the user.",
 			zap.String("organization_id", org_id),
 			zap.String("user_id", id))
-		return User{}, &util.NotFoundError{Path: "User"}
+		return UserResponse{}, &util.NotFoundError{Path: "User"}
 	}
-	return User{*user}, err
+	return *user, err
 }
 
 // Get user id by identifier.
@@ -130,19 +140,19 @@ func (s service) GetIdByIdentifier(ctx context.Context, org_id string, identifie
 }
 
 // Create new user.
-func (s service) Create(ctx context.Context, org_id string, req CreateUserRequest) (User, error) {
+func (s service) Create(ctx context.Context, org_id string, req CreateUserRequest) (UserResponse, error) {
 
 	// Validate user request.
 	if err := req.Validate(); err != nil {
 		s.logger.Error("Error while validating user create request.")
-		return User{}, &util.InvalidInputError{Path: "Invalid input for user."}
+		return UserResponse{}, &util.InvalidInputError{Path: "Invalid input for user."}
 	}
 
 	// Check user already exists.
 	exists, _ := s.repo.CheckUserExistsByIdentifier(ctx, org_id, req.Username)
 	if exists {
 		s.logger.Debug("User already exists.")
-		return User{}, &util.AlreadyExistsError{Path: "User : " + req.Username}
+		return UserResponse{}, &util.AlreadyExistsError{Path: "User : " + req.Username}
 
 	}
 
@@ -152,21 +162,21 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 	for _, roleId := range req.Roles {
 		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
 		}
 	}
 
 	for _, groupId := range req.Groups {
 		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
 		}
 	}
 
 	for _, policyId := range req.Policies {
 		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
 		}
 	}
 
@@ -204,24 +214,24 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 	if err != nil {
 		s.logger.Error("Error while creating user.",
 			zap.String("organization_id", org_id))
-		return User{}, err
+		return UserResponse{}, err
 	}
 	return s.Get(ctx, org_id, userId.Hex())
 }
 
 // Sync user.
-func (s service) Sync(ctx context.Context, org_identifier string, req SyncUserRequest) (User, error) {
+func (s service) Sync(ctx context.Context, org_identifier string, req SyncUserRequest) (UserResponse, error) {
 
 	// Validate user request.
 	if err := req.Validate(); err != nil {
 		s.logger.Error("Error while validating user create request.")
-		return User{}, &util.InvalidInputError{Path: "Invalid input for user."}
+		return UserResponse{}, &util.InvalidInputError{Path: "Invalid input for user."}
 	}
 
 	org_id, err := s.repo.GetOrgIdByIdentifier(ctx, org_identifier)
 	if err != nil {
 		s.logger.Error("Error while syncing user. Invalid org identifier", zap.String("organization_identifier", org_identifier))
-		return User{}, err
+		return UserResponse{}, err
 	}
 
 	// Check user already exists.
@@ -277,19 +287,19 @@ func (s service) Sync(ctx context.Context, org_identifier string, req SyncUserRe
 		if err != nil {
 			s.logger.Error("Error while syncing user.",
 				zap.String("organization_id", org_id))
-			return User{}, err
+			return UserResponse{}, err
 		}
 		return s.Get(ctx, org_id, userId.Hex())
 	}
 }
 
 // // Update user.
-func (s service) Update(ctx context.Context, org_id string, id string, req UpdateUserRequest) (User, error) {
+func (s service) Update(ctx context.Context, org_id string, id string, req UpdateUserRequest) (UserResponse, error) {
 
 	_, err := s.Get(ctx, org_id, id)
 	if err != nil {
 		s.logger.Debug("User not exists.", zap.String("user_id", id))
-		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
+		return UserResponse{}, &util.NotFoundError{Path: "User " + id + " not exists."}
 	}
 
 	if err := s.repo.Update(ctx, org_id, id, UpdateUser{
@@ -298,35 +308,30 @@ func (s service) Update(ctx context.Context, org_id string, id string, req Updat
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),
 			zap.String("user_id", id))
-		return User{}, err
+		return UserResponse{}, err
 	}
-	updatedUser, err := s.repo.Get(ctx, org_id, id)
-	if err != nil {
-		s.logger.Debug("User not exists.", zap.String("user_id", id))
-		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
-	}
-	return User{*updatedUser}, nil
+	return s.Get(ctx, org_id, id)
 }
 
-func (s service) Patch(ctx context.Context, org_id string, id string, req PatchUserRequest) (User, error) {
+func (s service) Patch(ctx context.Context, org_id string, id string, req PatchUserRequest) (UserResponse, error) {
 
 	_, err := s.Get(ctx, org_id, id)
 	if err != nil {
 		s.logger.Debug("User not exists.", zap.String("user_id", id))
-		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
+		return UserResponse{}, &util.NotFoundError{Path: "User " + id + " not exists."}
 	}
 
 	// roles
 	for _, roleId := range req.AddedRoles {
 		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
 		}
 	}
 	for _, roleId := range req.RemovedRoles {
 		exists, _ := s.repo.CheckRoleExistById(ctx, org_id, roleId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid role id " + roleId.String()}
 		}
 	}
 	added_roles := []primitive.ObjectID{}
@@ -349,13 +354,13 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchU
 	for _, groupId := range req.AddedGroups {
 		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
 		}
 	}
 	for _, groupId := range req.RemovedGroups {
 		exists, _ := s.repo.CheckGroupExistById(ctx, org_id, groupId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid group id " + groupId.String()}
 		}
 	}
 	added_groups := []primitive.ObjectID{}
@@ -378,13 +383,13 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchU
 	for _, policyId := range req.AddedPolicies {
 		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
 		}
 	}
 	for _, policyId := range req.RemovedPolicies {
 		exists, _ := s.repo.CheckPolicyExistById(ctx, org_id, policyId.Hex())
 		if !exists {
-			return User{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
+			return UserResponse{}, &util.InvalidInputError{Path: "Invalid policy id " + policyId.String()}
 		}
 	}
 	added_policies := []primitive.ObjectID{}
@@ -415,14 +420,9 @@ func (s service) Patch(ctx context.Context, org_id string, id string, req PatchU
 		s.logger.Error("Error while updating user.",
 			zap.String("organization_id", org_id),
 			zap.String("user_id", id))
-		return User{}, err
+		return UserResponse{}, err
 	}
-	updatedUser, err := s.repo.Get(ctx, org_id, id)
-	if err != nil {
-		s.logger.Debug("User not exists.", zap.String("user_id", id))
-		return User{}, &util.NotFoundError{Path: "User " + id + " not exists."}
-	}
-	return User{*updatedUser}, nil
+	return s.Get(ctx, org_id, id)
 }
 
 // Delete user.
