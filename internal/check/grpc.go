@@ -40,5 +40,5 @@ func (s grpcService) Check(ctx context.Context, req *proto.GrpcCheckRequest) (*p
 		return nil, util.HandleError(err)
 	}
 
-	return &proto.GrpcCheckResponse{Allow: allow.Allow}, nil
+	return &proto.GrpcCheckResponse{Allow: allow.Allowed}, nil
 }
