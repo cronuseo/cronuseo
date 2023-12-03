@@ -22,7 +22,7 @@ type CheckRequest struct {
 }
 
 type CheckResponse struct {
-	Allow bool `json:"allow"`
+	Allowed bool `json:"allowed"`
 }
 
 type service struct {
@@ -80,7 +80,7 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 			}
 		}
 	}
-	return CheckResponse{Allow: allow}, nil
+	return CheckResponse{Allowed: allow}, nil
 }
 
 func (s service) ValidateAPIKey(ctx context.Context, org_identifier string, apiKey string) (bool, error) {
