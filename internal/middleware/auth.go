@@ -142,7 +142,7 @@ func checkPermissions(sub string, requiredPermissions []mongo_entity.Permission,
 			Resource:   permission.Resource,
 		}
 		allow, _ := checkService.Check(nil, cfg.RootOrganization.Name, checkReq, "nil", true)
-		if !allow {
+		if !allow.Allow {
 			return false
 		}
 	}
