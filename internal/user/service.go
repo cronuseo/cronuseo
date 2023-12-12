@@ -17,7 +17,7 @@ type Service interface {
 	GetIdByIdentifier(ctx context.Context, org_id string, identifier string) (string, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]User, error)
 	Create(ctx context.Context, org_id string, input CreateUserRequest) (UserResponse, error)
-	Sync(ctx context.Context, org_id string, input SyncUserRequest) (UserResponse, error)
+	Sync(ctx context.Context, org_id string, input SyncUserRequest) (SyncUserResponse, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateUserRequest) (UserResponse, error)
 	Patch(ctx context.Context, org_id string, id string, input PatchUserRequest) (UserResponse, error)
 	Delete(ctx context.Context, org_id string, id string) error
@@ -31,6 +31,17 @@ type UserResponse struct {
 	ID             primitive.ObjectID            `json:"id" bson:"_id,omitempty"`
 	Username       string                        `json:"username" bson:"username"`
 	Identifier     string                        `json:"identifier" bson:"identifier"`
+	UserProperties map[string]interface{}        `json:"user_properties" bson:"user_properties"`
+	Roles          []mongo_entity.AssignedRole   `json:"roles,omitempty" bson:"roles"`
+	Groups         []mongo_entity.AssignedGroup  `json:"groups,omitempty" bson:"groups"`
+	Policies       []mongo_entity.AssignedPolicy `json:"policies,omitempty" bson:"policies"`
+}
+
+type SyncUserResponse struct {
+	ID             primitive.ObjectID            `json:"id" bson:"_id,omitempty"`
+	Username       string                        `json:"username" bson:"username"`
+	Identifier     string                        `json:"identifier" bson:"identifier"`
+	OrganizationId string                        `json:"organization_id" bson:"organization_id"`
 	UserProperties map[string]interface{}        `json:"user_properties" bson:"user_properties"`
 	Roles          []mongo_entity.AssignedRole   `json:"roles,omitempty" bson:"roles"`
 	Groups         []mongo_entity.AssignedGroup  `json:"groups,omitempty" bson:"groups"`
@@ -220,18 +231,18 @@ func (s service) Create(ctx context.Context, org_id string, req CreateUserReques
 }
 
 // Sync user.
-func (s service) Sync(ctx context.Context, org_identifier string, req SyncUserRequest) (UserResponse, error) {
+func (s service) Sync(ctx context.Context, org_identifier string, req SyncUserRequest) (SyncUserResponse, error) {
 
 	// Validate user request.
 	if err := req.Validate(); err != nil {
 		s.logger.Error("Error while validating user create request.")
-		return UserResponse{}, &util.InvalidInputError{Path: "Invalid input for user."}
+		return SyncUserResponse{}, &util.InvalidInputError{Path: "Invalid input for user."}
 	}
 
 	org_id, err := s.repo.GetOrgIdByIdentifier(ctx, org_identifier)
 	if err != nil {
 		s.logger.Error("Error while syncing user. Invalid org identifier", zap.String("organization_identifier", org_identifier))
-		return UserResponse{}, err
+		return SyncUserResponse{}, err
 	}
 
 	// Check user already exists.
@@ -269,7 +280,20 @@ func (s service) Sync(ctx context.Context, org_identifier string, req SyncUserRe
 			}
 			s.Patch(ctx, org_id, id, patchUserRequest)
 		}
-		return s.Get(ctx, org_id, id)
+		user, err := s.Get(ctx, org_id, id)
+		if err != nil {
+			return SyncUserResponse{}, err
+		}
+		return SyncUserResponse{
+			ID:             user.ID,
+			Username:       user.Username,
+			Identifier:     user.Identifier,
+			OrganizationId: org_id,
+			UserProperties: user.UserProperties,
+			Roles:          user.Roles,
+			Groups:         user.Groups,
+			Policies:       user.Policies,
+		}, nil
 
 	} else {
 		// Generate user id.
@@ -287,9 +311,22 @@ func (s service) Sync(ctx context.Context, org_identifier string, req SyncUserRe
 		if err != nil {
 			s.logger.Error("Error while syncing user.",
 				zap.String("organization_id", org_id))
-			return UserResponse{}, err
+			return SyncUserResponse{}, err
 		}
-		return s.Get(ctx, org_id, userId.Hex())
+		user, err := s.Get(ctx, org_id, userId.Hex())
+		if err != nil {
+			return SyncUserResponse{}, err
+		}
+		return SyncUserResponse{
+			ID:             user.ID,
+			Username:       user.Username,
+			Identifier:     user.Identifier,
+			OrganizationId: org_id,
+			UserProperties: user.UserProperties,
+			Roles:          user.Roles,
+			Groups:         user.Groups,
+			Policies:       user.Policies,
+		}, nil
 	}
 }
 
