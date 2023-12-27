@@ -639,36 +639,58 @@ func (r repository) CheckGroupAlreadyAssignToRoleById(ctx context.Context, org_i
 
 func (r repository) resolveAssignedUsers(ctx context.Context, orgId primitive.ObjectID, userIDs []primitive.ObjectID) ([]mongo_entity.AssignedUser, error) {
 
-	filter := bson.M{"_id": orgId, "users._id": bson.M{"$in": userIDs}}
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$match", Value: bson.M{"_id": orgId}}},
+		bson.D{{Key: "$unwind", Value: "$users"}},
+		bson.D{{Key: "$match", Value: bson.M{"users._id": bson.M{"$in": userIDs}}}},
+		bson.D{{Key: "$group", Value: bson.M{"_id": "$_id", "users": bson.M{"$push": "$users"}}}},
+	}
 
-	cursor, err := r.mongoColl.Find(ctx, filter)
+	cursor, err := r.mongoColl.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var users []mongo_entity.AssignedUser
-	if err := cursor.All(ctx, &users); err != nil {
+	var results []struct {
+		Users []mongo_entity.AssignedUser `bson:"users"`
+	}
+	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
 
-	return users, nil
+	if len(results) == 0 {
+		return nil, &util.NotFoundError{Path: "Org"}
+	}
+
+	return results[0].Users, nil
 }
 
 func (r repository) resolveAssignedGroups(ctx context.Context, orgId primitive.ObjectID, groupIDs []primitive.ObjectID) ([]mongo_entity.AssignedGroup, error) {
 
-	filter := bson.M{"_id": orgId, "groups._id": bson.M{"$in": groupIDs}}
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$match", Value: bson.M{"_id": orgId}}},
+		bson.D{{Key: "$unwind", Value: "$groups"}},
+		bson.D{{Key: "$match", Value: bson.M{"groups._id": bson.M{"$in": groupIDs}}}},
+		bson.D{{Key: "$group", Value: bson.M{"_id": "$_id", "groups": bson.M{"$push": "$groups"}}}},
+	}
 
-	cursor, err := r.mongoColl.Find(ctx, filter)
+	cursor, err := r.mongoColl.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var groups []mongo_entity.AssignedGroup
-	if err := cursor.All(ctx, &groups); err != nil {
+	var results []struct {
+		Groups []mongo_entity.AssignedGroup `bson:"groups"`
+	}
+	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
 
-	return groups, nil
+	if len(results) == 0 {
+		return nil, &util.NotFoundError{Path: "Org"}
+	}
+
+	return results[0].Groups, nil
 }

@@ -607,54 +607,87 @@ func (r repository) CheckPolicyAlreadyAssignToGroupById(ctx context.Context, org
 
 func (r repository) resolveAssignedUsers(ctx context.Context, orgId primitive.ObjectID, userIDs []primitive.ObjectID) ([]mongo_entity.AssignedUser, error) {
 
-	filter := bson.M{"_id": orgId, "users._id": bson.M{"$in": userIDs}}
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$match", Value: bson.M{"_id": orgId}}},
+		bson.D{{Key: "$unwind", Value: "$users"}},
+		bson.D{{Key: "$match", Value: bson.M{"users._id": bson.M{"$in": userIDs}}}},
+		bson.D{{Key: "$group", Value: bson.M{"_id": "$_id", "users": bson.M{"$push": "$users"}}}},
+	}
 
-	cursor, err := r.mongoColl.Find(ctx, filter)
+	cursor, err := r.mongoColl.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var users []mongo_entity.AssignedUser
-	if err := cursor.All(ctx, &users); err != nil {
+	var results []struct {
+		Users []mongo_entity.AssignedUser `bson:"users"`
+	}
+	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
 
-	return users, nil
+	if len(results) == 0 {
+		return nil, &util.NotFoundError{Path: "Org"}
+	}
+
+	return results[0].Users, nil
 }
 
 func (r repository) resolveAssignedRoles(ctx context.Context, orgId primitive.ObjectID, roleIDs []primitive.ObjectID) ([]mongo_entity.AssignedRole, error) {
 
-	filter := bson.M{"_id": orgId, "roles._id": bson.M{"$in": roleIDs}}
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$match", Value: bson.M{"_id": orgId}}},
+		bson.D{{Key: "$unwind", Value: "$roles"}},
+		bson.D{{Key: "$match", Value: bson.M{"roles._id": bson.M{"$in": roleIDs}}}},
+		bson.D{{Key: "$group", Value: bson.M{"_id": "$_id", "roles": bson.M{"$push": "$roles"}}}},
+	}
 
-	cursor, err := r.mongoColl.Find(ctx, filter)
+	cursor, err := r.mongoColl.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var roles []mongo_entity.AssignedRole
-	if err := cursor.All(ctx, &roles); err != nil {
+	var results []struct {
+		Roles []mongo_entity.AssignedRole `bson:"roles"`
+	}
+	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
 
-	return roles, nil
+	if len(results) == 0 {
+		return nil, &util.NotFoundError{Path: "Org"}
+	}
+
+	return results[0].Roles, nil
 }
 
 func (r repository) resolveAssignedPolicies(ctx context.Context, orgId primitive.ObjectID, policyIDs []primitive.ObjectID) ([]mongo_entity.AssignedPolicy, error) {
 
-	filter := bson.M{"_id": orgId, "groups._id": bson.M{"$in": policyIDs}}
+	pipeline := mongo.Pipeline{
+		bson.D{{Key: "$match", Value: bson.M{"_id": orgId}}},
+		bson.D{{Key: "$unwind", Value: "$policies"}},
+		bson.D{{Key: "$match", Value: bson.M{"policies._id": bson.M{"$in": policyIDs}}}},
+		bson.D{{Key: "$group", Value: bson.M{"_id": "$_id", "policies": bson.M{"$push": "$policies"}}}},
+	}
 
-	cursor, err := r.mongoColl.Find(ctx, filter)
+	cursor, err := r.mongoColl.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var policies []mongo_entity.AssignedPolicy
-	if err := cursor.All(ctx, &policies); err != nil {
+	var results []struct {
+		Policies []mongo_entity.AssignedPolicy `bson:"policies"`
+	}
+	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
 
-	return policies, nil
+	if len(results) == 0 {
+		return nil, &util.NotFoundError{Path: "Org"}
+	}
+
+	return results[0].Policies, nil
 }
