@@ -660,7 +660,7 @@ func (r repository) resolveAssignedUsers(ctx context.Context, orgId primitive.Ob
 	}
 
 	if len(results) == 0 {
-		return nil, &util.NotFoundError{Path: "Org"}
+		return []mongo_entity.AssignedUser{}, nil
 	}
 
 	return results[0].Users, nil
@@ -689,7 +689,7 @@ func (r repository) resolveAssignedGroups(ctx context.Context, orgId primitive.O
 	}
 
 	if len(results) == 0 {
-		return nil, &util.NotFoundError{Path: "Org"}
+		return []mongo_entity.AssignedGroup{}, nil
 	}
 
 	return results[0].Groups, nil
