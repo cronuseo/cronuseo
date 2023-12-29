@@ -693,7 +693,7 @@ func (r repository) resolveAssignedRoles(ctx context.Context, orgId primitive.Ob
 	}
 
 	if len(results) == 0 {
-		return nil, &util.NotFoundError{Path: "Org"}
+		return []mongo_entity.AssignedRole{}, nil
 	}
 
 	return results[0].Roles, nil
@@ -722,7 +722,7 @@ func (r repository) resolveAssignedGroups(ctx context.Context, orgId primitive.O
 	}
 
 	if len(results) == 0 {
-		return nil, &util.NotFoundError{Path: "Org"}
+		return []mongo_entity.AssignedGroup{}, nil
 	}
 
 	return results[0].Groups, nil
@@ -751,7 +751,7 @@ func (r repository) resolveAssignedPolicies(ctx context.Context, orgId primitive
 	}
 
 	if len(results) == 0 {
-		return nil, &util.NotFoundError{Path: "Org"}
+		return []mongo_entity.AssignedPolicy{}, nil
 	}
 
 	return results[0].Policies, nil
