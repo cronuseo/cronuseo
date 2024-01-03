@@ -14,6 +14,7 @@ import (
 type Service interface {
 	Get(ctx context.Context, org_id string, id string) (Resource, error)
 	Query(ctx context.Context, org_id string, filter Filter) ([]Resource, error)
+	QueryActions(ctx context.Context, org_id string, filter Filter) ([]Action, error)
 	Create(ctx context.Context, org_id string, input CreateResourceRequest) (Resource, error)
 	Update(ctx context.Context, org_id string, id string, input UpdateResourceRequest) (Resource, error)
 	Patch(ctx context.Context, org_id string, id string, input PatchResourceRequest) (Resource, error)
@@ -54,6 +55,11 @@ type UpdateResource struct {
 type PatchResource struct {
 	AddedActions   []mongo_entity.Action `json:"added_actions,omitempty" bson:"added_actions"`
 	RemovedActions []string              `json:"removed_actions,omitempty" bson:"removed_actions"`
+}
+
+type Action struct {
+	Action   string `json:"action" bson:"action"`
+	Resource string `json:"resource" bson:"resource"`
 }
 
 type service struct {
@@ -234,4 +240,22 @@ func (s service) Query(ctx context.Context, org_id string, filter Filter) ([]Res
 		result = append(result, Resource{item})
 	}
 	return result, err
+}
+
+func (s service) QueryActions(ctx context.Context, org_id string, filter Filter) ([]Action, error) {
+
+	actions := []Action{}
+	resources, err := s.repo.QueryWithActions(ctx, org_id)
+	if err != nil {
+		s.logger.Error("Error while retrieving all resources.",
+			zap.String("organization_id", org_id))
+		return []Action{}, err
+	}
+
+	for _, resource := range *resources {
+		for _, action := range resource.Actions {
+			actions = append(actions, Action{Resource: resource.Identifier, Action: action.Identifier})
+		}
+	}
+	return actions, err
 }

@@ -11,6 +11,7 @@ func RegisterHandlers(r *echo.Group, service Service) {
 	res := resource{service}
 	router := r.Group("/o/:org_id/resources")
 	router.GET("", res.query)
+	router.GET("/actions", res.queryActions)
 	router.GET("/:id", res.get)
 	router.POST("", res.create)
 	router.DELETE("/:id", res.delete)
@@ -64,6 +65,32 @@ func (r resource) query(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, resources)
+}
+
+// @Description Get all actions.
+// @Tags        Resource
+// @Param org_id path string true "Organization ID"
+// @Produce     json
+// @Success     200 {array}  Resource
+// @failure     500
+// @Router      /{org_id}/resources/actions [get]
+func (r resource) queryActions(c echo.Context) error {
+
+	org_id := c.Param("org_id")
+	var filter Filter
+	if err := c.Bind(&filter); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid inputs. Please check your inputs")
+	}
+	if filter.Limit == 0 {
+		filter.Limit = 10
+	}
+	// Get all actions.
+	actions, err := r.service.QueryActions(c.Request().Context(), org_id, filter)
+	if err != nil {
+		return util.HandleError(err)
+	}
+
+	return c.JSON(http.StatusOK, actions)
 }
 
 // @Description Create resource.

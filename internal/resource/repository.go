@@ -15,6 +15,7 @@ import (
 type Repository interface {
 	Get(ctx context.Context, org_id string, id string) (*mongo_entity.Resource, error)
 	Query(ctx context.Context, org_id string) (*[]mongo_entity.Resource, error)
+	QueryWithActions(ctx context.Context, org_id string) (*[]mongo_entity.Resource, error)
 	Create(ctx context.Context, org_id string, resource mongo_entity.Resource) error
 	Update(ctx context.Context, org_id string, id string, update_resource UpdateResource) error
 	Patch(ctx context.Context, org_id string, id string, patch_resource PatchResource) error
@@ -52,9 +53,8 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 
 	// Define filter to find the resource by its ID
 	filter := bson.M{"_id": orgId, "resources._id": resId}
-	projection := bson.M{"resources.$": 1}
 	// Find the resource document in the "organizations" collection
-	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	result := r.mongoColl.FindOne(context.Background(), filter)
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
@@ -167,6 +167,33 @@ func (r repository) Query(ctx context.Context, org_id string) (*[]mongo_entity.R
 	projection := bson.M{"resources.actions": 0}
 	// Find the resource document in the "organizations" collection
 	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
+	if err := result.Err(); err != nil {
+		return nil, err
+	}
+
+	// Decode the organization document into a struct
+	var org mongo_entity.Organization
+	if err := result.Decode(&org); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, &util.NotFoundError{Path: "Resource"}
+		}
+		return nil, err
+	}
+
+	return &org.Resources, nil
+}
+
+func (r repository) QueryWithActions(ctx context.Context, org_id string) (*[]mongo_entity.Resource, error) {
+
+	orgId, err := primitive.ObjectIDFromHex(org_id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Define filter to find the resource by its ID
+	filter := bson.M{"_id": orgId}
+	// Find the resource document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter)
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
