@@ -53,8 +53,9 @@ func (r repository) Get(ctx context.Context, org_id string, id string) (*mongo_e
 
 	// Define filter to find the resource by its ID
 	filter := bson.M{"_id": orgId, "resources._id": resId}
-	// Find the resource document in the "organizations" collection
-	result := r.mongoColl.FindOne(context.Background(), filter)
+	projection := bson.M{"resources.$": 1}
+	// Find the role document in the "organizations" collection
+	result := r.mongoColl.FindOne(context.Background(), filter, options.FindOne().SetProjection(projection))
 	if err := result.Err(); err != nil {
 		return nil, err
 	}
