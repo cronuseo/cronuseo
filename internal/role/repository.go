@@ -524,16 +524,30 @@ func (r repository) CheckPermissionExists(ctx context.Context, org_id string, ro
 		return false, err
 	}
 
-	filter := bson.M{"_id": orgId, "roles._id": roleId, "roles.permissions.resource": resource_identifier, "roles.permissions.action": action_identifier}
-	result := r.mongoColl.FindOne(context.Background(), filter)
+	pipeline := mongo.Pipeline{
+		// Match the organization
+		bson.D{{"$match", bson.M{"_id": orgId}}},
 
-	// Check if the resource was found
-	if result.Err() == nil {
-		return true, nil
-	} else if result.Err() == mongo.ErrNoDocuments {
-		return false, nil
+		// Unwind the roles array
+		bson.D{{"$unwind", "$roles"}},
+
+		// Match the specific role
+		bson.D{{"$match", bson.M{"roles._id": roleId}}},
+
+		// Check if the role has the permission
+		bson.D{{"$match", bson.M{"roles.permissions": bson.M{"$not": bson.M{"$elemMatch": bson.M{"resource": resource_identifier, "action": action_identifier}}}}}},
+	}
+
+	cursor, err := r.mongoColl.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		// handle error
+	}
+
+	// Check if the role without the specified permission exists
+	if cursor.Next(context.Background()) {
+		return false, nil // The role exists without the specified permission
 	} else {
-		return false, result.Err()
+		return true, nil // The role does not exist or already has the permission
 	}
 }
 
