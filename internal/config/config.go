@@ -9,11 +9,9 @@ import (
 )
 
 type Config struct {
-	Endpoint struct {
-		Management string `yaml:"management" env:"Management"`
-		Check_REST string `yaml:"check_rest" env:"Check_REST"`
-		Check_GRPC string `yaml:"check_grpc" env:"Check_GRPC"`
-	} `yaml:"endpoint"`
+	Server struct {
+		Endpoint string `yaml:"endpoint" env:"endpoint"`
+	} `yaml:"server"`
 	Auth struct {
 		JWKS string `yaml:"jwks" env:"JWKS"`
 	} `yaml:"auth"`
@@ -66,9 +64,8 @@ func Nested(target interface{}, fieldRules ...*validation.FieldRules) *validatio
 func (c Config) Validate() error {
 
 	return validation.ValidateStruct(&c,
-		Nested(&c.Endpoint,
-			validation.Field(&c.Endpoint.Management, validation.Required),
-			validation.Field(&c.Endpoint.Check_REST, validation.Required),
+		Nested(&c.Server,
+			validation.Field(&c.Server.Endpoint, validation.Required),
 		),
 		Nested(&c.Database,
 			validation.Field(&c.Database.URL, validation.Required),

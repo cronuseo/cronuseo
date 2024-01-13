@@ -27,7 +27,7 @@ You can use Docker to run cronuseo locally
 
 * ``` curl -LJO https://raw.githubusercontent.com/shashimalcse/cronuseo/HEAD/docker-compose-db.yml | curl -LJO https://raw.githubusercontent.com/shashimalcse/cronuseo/HEAD/docker-compose.yml ```
 * Prepare a [mongodb](https://hub.docker.com/_/mongo) instance ``` docker compose -f docker-compose-database.yml up```
-* Make sure to update the necessary configuration in the `config/local.yml` file, and don't forget to replace the jwks endpoint with the ones provided by your own identity provider and admin user identifier which is sub claim value of the jwt token (user ID). (only tested with [asgardeo](https://wso2.com/asgardeo/))
+* Make sure to update the necessary configuration in the `config/local.yml` file, and don't forget to replace the jwks endpoint with the ones provided by your own identity provider and admin user identifier which is sub claim value of the jwt token (user ID). (only tested with [asgardeo](https://wso2.com/asgardeo/) and Auth0)
 * Start management server and check server (Policy Decision Point) ``` docker compose up --build```
 
 ## How to implement RBAC using cronuseo
@@ -148,7 +148,7 @@ In this example, RBAC will make the following authorization decisions:
 > Use permission check endpoint or SDKs to get authorization decisions
 
 ```
-curl --location --request POST 'localhost:8081/api/v1/o/<org_identifier>/check' \
+curl --location --request POST 'localhost:8080/api/v1/o/<org_identifier>/check' \
 --header 'Content-Type: application/json' \
 --header 'API_KEY: <API_KEY>' \
 --data-raw '{
@@ -157,9 +157,6 @@ curl --location --request POST 'localhost:8081/api/v1/o/<org_identifier>/check' 
   "identifier": "<User Identifier>"
 }'
 ```
-
-> You can check permissions  by GRPC endpoint as well.
-
 > Response will be `true` or `false`
 
 ## cronuseo SDKs for applications

@@ -1,14 +1,12 @@
-endpoint:
-  management : ":8080"
-  check_rest : ":8081"
-  check_grpc : ":50051"
+server:
+  endpoint : ":8080"
 auth:
   jwks: "https://api.asgardeo.io/t/cronuseo/oauth2/jwks"
 database:
-  url : "mongodb://shashimalcse:tltPm2YhaUlAmNGz@ac-ncfur97-shard-00-00.5klckrk.mongodb.net:27017,ac-ncfur97-shard-00-01.5klckrk.mongodb.net:27017,ac-ncfur97-shard-00-02.5klckrk.mongodb.net:27017/?ssl=true&replicaSet=atlas-tlndf9-shard-0&authSource=admin&retryWrites=true&w=majority"
-  name : "cronuseo"
-  user: "shashimalcse"
-  password: "tltPm2YhaUlAmNGz"
+  url : ""
+  name : ""
+  user: ""
+  password: ""
 root_organization:
   name : "super"
   admin_identfier : "279a5c59-37f5-43e6-a5fb-b250752301a3"
