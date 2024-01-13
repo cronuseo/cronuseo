@@ -66,9 +66,9 @@ func main() {
 		logger.Fatal("Failed to initialize MongoDB client", zap.Error(err))
 	}
 
-	logger.Info("Starting server", zap.String("server_endpoint", cfg.Endpoint.Management))
+	logger.Info("Starting server", zap.String("server_endpoint", cfg.Server.Endpoint))
 
-	if err := BuildServer(cfg, logger, mongodb).Start(cfg.Endpoint.Management); err != nil {
+	if err := BuildServer(cfg, logger, mongodb).Start(cfg.Server.Endpoint); err != nil {
 		logger.Fatal("Error while starting server", zap.Error(err))
 	}
 }
@@ -91,6 +91,7 @@ func BuildServer(
 	requiredPermissions := getRequiredPermissions(cfg.APIEndpoints)
 	checkRepo := check.NewRepository(mongodb)
 	checkService := check.NewService(checkRepo, logger)
+	check.RegisterHandlers(apiV1, checkService)
 	// Apply middleware specific to API routes if needed.
 	apiV1.Use(mw.Auth(cfg, logger, requiredPermissions, checkService))
 

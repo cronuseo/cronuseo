@@ -1,7 +1,5 @@
-endpoint:
-  management : ":8080"
-  check_rest : ":8081"
-  check_grpc : ":50051"
+server:
+  endpoint : ":8080"
 auth:
   jwks: "https://dev-ru0lboqi.us.auth0.com/.well-known/jwks.json"
 database:

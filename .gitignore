@@ -13,3 +13,4 @@ coverage*.*
 testdata/postgres
 ./server
 .pid
+.idea/
