@@ -9,6 +9,8 @@ database:
   name : "cronuseo"
   user: "root"
   password: "rootpassword"
+log:
+  enabled: false
 root_organization:
   name : "super"
   admin_identifier : "auth0|6564c35905b0b5595ac91255"

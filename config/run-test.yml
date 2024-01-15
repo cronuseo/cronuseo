@@ -9,6 +9,8 @@ database:
   name : ""
   user: ""
   password: ""
+log:
+  enabled: false
 root_organization:
   name : "super"
   admin_identfier : "279a5c59-37f5-43e6-a5fb-b250752301a3"

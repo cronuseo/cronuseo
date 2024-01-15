@@ -24,6 +24,9 @@ type Config struct {
 		User     string `yaml:"user" env:"User,secret"`
 		Password string `yaml:"password" env:"Password,secret"`
 	} `yaml:"database"`
+	Log struct {
+		Enabled bool `yaml:"enabled" env:"enabled"`
+	} `yaml:"log"`
 	RootOrganization struct {
 		Name            string `yaml:"name" env:"Name"`
 		AdminIdentifier string `yaml:"admin_identifier" env:"AdminIdentifier"`
