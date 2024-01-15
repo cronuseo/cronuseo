@@ -14,7 +14,12 @@ func Init(cfg *config.Config) (*zap.Logger, error) {
 	zap_config.EncodeTime = zapcore.ISO8601TimeEncoder
 	fileEncoder := zapcore.NewJSONEncoder(zap_config)
 	consoleEncoder := zapcore.NewConsoleEncoder(zap_config)
-	logFile, err := os.OpenFile("log.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logDir := "./log"
+	err := os.MkdirAll(logDir, 0755)
+	if err != nil {
+		return nil, err
+	}
+	logFile, err := os.OpenFile("./log/server.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return nil, err
 	}
