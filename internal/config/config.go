@@ -9,6 +9,9 @@ import (
 )
 
 type Config struct {
+	Config struct {
+		Level string `yaml:"level" env:"level"`
+	} `yaml:"config"`
 	Server struct {
 		Endpoint string `yaml:"endpoint" env:"endpoint"`
 	} `yaml:"server"`
