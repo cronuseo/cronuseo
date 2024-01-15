@@ -9,6 +9,8 @@ database:
   name : "<mongo_db_name>"
   user: "<mongo_username>"
   password: "<mongo_password>"
+log:
+  enabled: false
 root_organization:
   name : "super"
   admin_identfier : "<admin_identifier>"
