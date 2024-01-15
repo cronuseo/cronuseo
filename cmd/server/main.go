@@ -60,6 +60,7 @@ func main() {
 		log.Fatalf("Failed to initialize logger: %v\n", err)
 	}
 
+	logger.Info("Config level : ", zap.String("level", cfg.Config.Level))
 	// Mongo client.
 	mongodb, err := db.Init(cfg, logger)
 	if err != nil {

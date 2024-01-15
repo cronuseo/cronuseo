@@ -1,3 +1,5 @@
+config:
+  level: "local"
 server:
   endpoint : ":8080"
 auth:
