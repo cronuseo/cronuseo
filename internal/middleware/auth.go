@@ -58,7 +58,7 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 					Method: c.Request().Method,
 					Path:   c.Request().URL.Path,
 				}
-
+				logger.Debug("path", zap.String("path", methodPath.Path))
 				pathMatched, err := regexp.MatchString("/api/v1/o/[^/]+/users/sync", methodPath.Path)
 				if err != nil {
 					return nil, err
