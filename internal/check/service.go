@@ -47,7 +47,7 @@ func (s service) Check(ctx context.Context, org_identifier string, req CheckRequ
 	if !skipValidation {
 		validated, _ := s.ValidateAPIKey(ctx, org_identifier, apiKey)
 		if !validated {
-			s.logger.Debug("API_KEY is not valid.")
+			s.logger.Error("Error while validating api key for permission check")
 			return CheckResponse{}, &util.UnauthorizedError{}
 		}
 	}

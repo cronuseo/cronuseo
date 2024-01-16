@@ -68,6 +68,7 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 					apiKey := c.Request().Header.Get("API_KEY")
 					validated, _ := checkService.ValidateAPIKey(nil, orgIdentifier, apiKey)
 					if !validated {
+						logger.Error("Error while validating api key for user sync")
 						return nil, echo.NewHTTPError(http.StatusUnauthorized, "insufficient permissions to invoke this endpoint")
 					}
 				} else {
