@@ -66,6 +66,7 @@ func Auth(cfg *config.Config, logger *zap.Logger, requiredPermissions map[Method
 					orgIdentifier := getOrgIdentifier(methodPath.Path)
 					logger.Debug("orgIdentifier", zap.String("orgIdentifier", orgIdentifier))
 					apiKey := c.Request().Header.Get("API_KEY")
+					logger.Debug("API_KEY", zap.String("API_KEY", apiKey))
 					validated, _ := checkService.ValidateAPIKey(nil, orgIdentifier, apiKey)
 					if !validated {
 						return nil, echo.NewHTTPError(http.StatusUnauthorized, "insufficient permissions to invoke this endpoint")
